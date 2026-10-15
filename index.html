@@ -294,7 +294,7 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 /* BAZAR Party : pont entre le jeu et la base Netlify (fonction /api/kv). */
 (function(){
   if(window.claude)return;
-  var API='/api/kv',POLL=1500;
+  var API='/api/kv',POLL=700;
   function par(p){return p.split('/').slice(0,-1).join('/')}
   async function call(body){
     var r;try{r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})}
@@ -349,26 +349,46 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 
 /* ---------- Données : 30 paires ---------- */
 var PAIRS=[
-['Pizza','Lasagnes','Nourriture'],['Sushi','Paella','Nourriture'],['Vin','Cocktail','Boissons'],
-['Chien','Cheval','Animaux'],['Loup','Renard','Animaux'],['Baleine','Requin','Animaux'],
-['Couteau','Hache','Maison'],['Frigo','Placard','Maison'],['Miroir','Photo','Objets'],
-['Gare','Aéroport','Lieux'],['Cinéma','Musée','Lieux'],['Plage','Désert','Voyage / Nature'],
-['Médecin','Vétérinaire','Métiers'],['Avocat','Notaire','Métiers'],['Cuisinier','Pâtissier','Métiers'],
-['Football','Basketball','Sports'],['Tennis','Golf','Sports'],['Échecs','Poker','Jeux'],
-['Soleil','Étoile','Nature'],['Orage','Tempête','Météo'],['Forêt','Jungle','Nature'],
-['Téléphone','Ordinateur','Technologie'],['Appareil photo','Caméra','Technologie'],['Cloud','Disque dur','Technologie'],
-['Chemise','Pull','Vêtements'],['Manteau','Veste','Vêtements'],['Lunettes','Montre','Accessoires'],
-['Cahier','Classeur','École'],['Roman','Poésie','Culture'],['Joie','Surprise','Émotions'],
-['Limonade','Soda','Boissons'],['Thé','Infusion','Boissons'],['Café','Chocolat chaud','Boissons'],['Eau gazeuse','Eau plate','Boissons'],['Bière','Cidre','Boissons'],['Crêpe','Gaufre','Nourriture'],['Burger','Kebab','Nourriture'],['Frites','Potatoes','Nourriture'],['Tarte','Gâteau','Nourriture'],['Confiture','Miel','Nourriture'],['Pâtes','Riz','Nourriture'],['Pain','Baguette','Nourriture'],['Fromage','Yaourt','Nourriture'],['Glace','Sorbet','Nourriture'],['Pomme','Poire','Nourriture'],['Fraise','Framboise','Nourriture'],['Citron','Orange','Nourriture'],['Carotte','Patate douce','Nourriture'],['Pop-corn','Chips','Nourriture'],
-['Chat','Lapin','Animaux'],['Aigle','Faucon','Animaux'],['Dauphin','Orque','Animaux'],['Tortue','Lézard','Animaux'],['Abeille','Guêpe','Animaux'],['Mouton','Chèvre','Animaux'],['Canard','Oie','Animaux'],['Poule','Dinde','Animaux'],['Panda','Koala','Animaux'],['Hérisson','Porc-épic','Animaux'],
-['Stylo','Crayon','École'],['Professeur','Surveillant','Métiers'],['Collège','Lycée','Lieux'],['Bibliothèque','Librairie','Lieux'],['Boulangerie','Pâtisserie','Lieux'],['Hôtel','Camping','Voyage / Nature'],['Île','Péninsule','Voyage / Nature'],['Montagne','Colline','Voyage / Nature'],['Rivière','Fleuve','Voyage / Nature'],['Lac','Étang','Voyage / Nature'],['Cascade','Fontaine','Voyage / Nature'],['Village','Petite ville','Lieux'],['Stade','Gymnase','Lieux'],['Restaurant','Cantine','Lieux'],['Pharmacie','Parfumerie','Lieux'],
-['Infirmier','Médecin','Métiers'],['Pompier','Policier','Métiers'],['Architecte','Décorateur','Métiers'],['Journaliste','Présentateur','Métiers'],['Photographe','Vidéaste','Métiers'],['Acteur','Humoriste','Métiers'],['DJ','Musicien','Métiers'],['Juge','Avocat','Métiers'],['Facteur','Livreur','Métiers'],['Coiffeur','Barbier','Métiers'],
-['Rugby','Football américain','Sports'],['Handball','Basketball','Sports'],['Badminton','Tennis','Sports'],['Ski','Snowboard','Sports'],['Boxe','MMA','Sports'],['Natation','Plongée','Sports'],['Course','Marche rapide','Sports'],['Billard','Bowling','Jeux'],['Dominos','Dés','Jeux'],['Poker','Belote','Jeux'],['Puzzle','Lego','Jeux'],['Cache-cache','Colin-maillard','Jeux'],
-['Pluie','Neige','Météo'],['Brouillard','Brume','Météo'],['Vent','Brise','Météo'],['Éclair','Foudre','Météo'],['Printemps','Automne','Saisons'],['Été','Vacances','Saisons'],['Lune','Planète','Nature'],['Volcan','Geyser','Nature'],['Désert','Savane','Voyage / Nature'],['Jardin','Parc','Lieux'],
-['Tablette','Ordinateur portable','Technologie'],['Écouteurs','Casque audio','Technologie'],['Console','PC gamer','Technologie'],['Télécommande','Manette','Technologie'],['Application','Site internet','Technologie'],['Mot de passe','Code PIN','Technologie'],['Chargeur','Batterie externe','Technologie'],['Wi-Fi','Bluetooth','Technologie'],['Message vocal','Appel vidéo','Technologie'],['Selfie','Portrait','Objets'],
-['Jean','Jogging','Vêtements'],['Baskets','Chaussures de ville','Vêtements'],['Casquette','Bonnet','Accessoires'],['Sac à dos','Valise','Accessoires'],['Bague','Bracelet','Accessoires'],['Boucles d’oreilles','Collier','Accessoires'],['Parapluie','Imperméable','Accessoires'],['Portefeuille','Porte-monnaie','Accessoires'],['Canapé','Fauteuil','Maison'],['Rideau','Store','Maison'],['Balai','Aspirateur','Maison'],['Four','Micro-ondes','Maison'],['Douche','Baignoire','Maison'],['Oreiller','Coussin','Maison'],
-['Film','Série','Culture'],['Roman policier','Thriller','Culture'],['Comédie','Parodie','Culture'],['Concert','Festival','Culture'],['Musique','Chanson','Culture'],['Peinture','Dessin','Culture'],['Musée','Exposition','Culture'],['Podcast','Radio','Culture'],['Acteur principal','Second rôle','Culture'],['Magie','Illusion','Culture'],
-['Peur','Stress','Émotions'],['Colère','Frustration','Émotions'],['Fierté','Confiance','Émotions'],['Nostalgie','Souvenir','Émotions'],['Calme','Patience','Émotions'],['Timidité','Gêne','Émotions'],['Rêve','Objectif','Émotions'],['Chance','Hasard','Émotions'],['Mensonge','Excuse','Vie quotidienne'],['Retard','Oubli','Vie quotidienne'],['Anniversaire','Fête','Vie quotidienne'],['Mariage','Pacs','Vie quotidienne'],['Vacances','Week-end','Vie quotidienne'],['Cadeau','Surprise','Vie quotidienne'],['Colocataire','Voisin','Vie quotidienne'],['Premier rendez-vous','Premier baiser','Vie quotidienne'],['Argent liquide','Carte bancaire','Vie quotidienne'],['Réveil','Alarme','Vie quotidienne'],['Sieste','Sommeil','Vie quotidienne'],['Embouteillage','Bouchon','Vie quotidienne']
+['Pizza','Lasagnes','Nourriture'],['Sushi','Ramen','Nourriture'],['Burger','Kebab','Nourriture'],
+['Steak','Rôti','Nourriture'],['Crêpe','Gaufre','Nourriture'],['Tarte','Clafoutis','Nourriture'],
+['Pâtes','Riz','Nourriture'],['Frites','Purée','Nourriture'],['Soupe','Salade','Nourriture'],
+['Confiture','Miel','Nourriture'],['Charcuterie','Fromage','Nourriture'],['Éclair','Macaron','Nourriture'],
+['Croissant','Baguette','Nourriture'],['Chocolat','Caramel','Nourriture'],['Bonbon','Gâteau','Nourriture'],
+['Café','Thé','Boissons'],['Vin','Bière','Boissons'],['Champagne','Cocktail','Boissons'],
+['Jus','Smoothie','Boissons'],['Chocolat chaud','Limonade','Boissons'],
+['Chat','Chien','Animaux'],['Cheval','Âne','Animaux'],['Vache','Mouton','Animaux'],
+['Tigre','Guépard','Animaux'],['Lion','Panthère','Animaux'],['Loup','Renard','Animaux'],
+['Aigle','Faucon','Animaux'],['Requin','Dauphin','Animaux'],['Tortue','Escargot','Animaux'],
+['Papillon','Abeille','Animaux'],['Serpent','Lézard','Animaux'],['Autruche','Flamant rose','Animaux'],
+['Cuisine','Salle de bain','Maison'],['Table','Lit','Maison'],['Frigo','Four','Maison'],
+['Chaise','Tabouret','Maison'],['Casserole','Poêle','Maison'],['Assiette','Verre','Maison'],
+['Miroir','Fenêtre','Maison'],['Aspirateur','Balai','Maison'],['Oreiller','Couverture','Maison'],['Rideau','Volet','Maison'],
+['Montre','Réveil','Objets'],['Clé','Couteau','Objets'],['Parapluie','Lunettes de soleil','Objets'],
+['Bougie','Lampe','Objets'],['Sac','Valise','Objets'],
+['Chemise','Pull','Vêtements'],['Jupe','Pantalon','Vêtements'],['Manteau','Écharpe','Vêtements'],
+['Chaussettes','Gants','Vêtements'],['Bonnet','Casquette','Vêtements'],['Robe','Combinaison','Vêtements'],['Baskets','Bottes','Vêtements'],
+['Lunettes','Chapeau','Accessoires'],['Bague','Collier','Accessoires'],['Bracelet','Boucles d\'oreilles','Accessoires'],
+['Plage','Montagne','Lieux'],['Cinéma','Restaurant','Lieux'],['Hôpital','École','Lieux'],
+['Musée','Parc','Lieux'],['Gare','Aéroport','Lieux'],['Marché','Supermarché','Lieux'],
+['Hôtel','Camping','Lieux'],['Bibliothèque','Piscine','Lieux'],['Théâtre','Stade','Lieux'],['Château','Gratte-ciel','Lieux'],
+['Football','Tennis','Sports'],['Natation','Course','Sports'],['Ski','Surf','Sports'],
+['Boxe','Yoga','Sports'],['Vélo','Roller','Sports'],['Escalade','Randonnée','Sports'],['Basket','Handball','Sports'],
+['Échecs','Poker','Jeux'],['Scrabble','Monopoly','Jeux'],['Billard','Fléchettes','Jeux'],
+['Cartes','Dominos','Jeux'],['Mots croisés','Sudoku','Jeux'],
+['Téléphone','Ordinateur','Technologie'],['Photo','Vidéo','Technologie'],['Écouteurs','Enceinte','Technologie'],
+['Clavier','Écran','Technologie'],['Drone','Robot','Technologie'],['GPS','Wi-Fi','Technologie'],
+['Soleil','Lune','Nature'],['Fleur','Arbre','Nature'],['Rivière','Mer','Nature'],
+['Montagne','Volcan','Nature'],['Étoile','Nuage','Nature'],['Feuille','Racine','Nature'],
+['Cascade','Geyser','Nature'],['Forêt','Désert','Nature'],
+['Neige','Grêle','Météo'],['Vent','Canicule','Météo'],['Éclair','Tonnerre','Météo'],
+['Livre','Film','Culture'],['Opéra','Concert','Culture'],['Peinture','Sculpture','Culture'],
+['Danse','Théâtre','Culture'],['Poésie','Roman','Culture'],['Comédie','Drame','Culture'],
+['Amour','Amitié','Émotions'],['Peur','Colère','Émotions'],['Rire','Pleurs','Émotions'],
+['Joie','Surprise','Émotions'],['Jalousie','Admiration','Émotions'],['Stress','Ennui','Émotions'],
+['Médecin','Vétérinaire','Métiers'],['Pompier','Policier','Métiers'],['Cuisinier','Serveur','Métiers'],
+['Pilote','Steward','Métiers'],['Avocat','Juge','Métiers'],['Journaliste','Écrivain','Métiers'],
+['Avion','Bateau','Voyage / Nature'],['Train','Voiture','Voyage / Nature'],['Valise','Sac à dos','Voyage / Nature'],['Tente','Bungalow','Voyage / Nature'],
+['Cahier','Classeur','École'],['Stylo','Crayon','École'],['Gomme','Règle','École']
 ];
 var CATS=[];PAIRS.forEach(function(p){if(CATS.indexOf(p[2])<0)CATS.push(p[2])});
 var PAL=[['#B8FF45','#10152A'],['#7957FF','#FFFFFF'],['#F4F4F8','#10152A'],['#AB9BFF','#10152A'],['#8DBF2E','#10152A'],['#5A3FD6','#FFFFFF'],['#D5F89B','#10152A'],['#C9CEEA','#10152A']];
@@ -2053,7 +2073,7 @@ async function olJoinDisplay(){
 /* ---------- Musique d'ambiance : composée sur place avec Web Audio (aucun fichier, donc libre de droits) ---------- */
 var MU={on:true,ctx:null,bus:null,step:0,next:0,tm:0,started:false};
 try{if(localStorage.getItem('bazar-music')==='off')MU.on=false}catch(e){}
-var MBPM=72,MCH=[
+var MBPM=100,MCH=[
   {r:53,k:[57,60,64,65]},  /* Fmaj7 */
   {r:52,k:[55,59,62,64]},  /* Em7 */
   {r:50,k:[53,57,60,64]},  /* Dm9 */
@@ -2089,22 +2109,16 @@ function muNoise(B,t,len,v,type,freq,echo){var c=B.ctx,s=c.createBufferSource();
 function muStep(B,step,t){
   var bar=Math.floor(step/16)%4,p=step%16,ch=MCH[bar],q=60/MBPM/4;
   var sw=(p%4===2)?q*.28:0,T=t+sw;
-  /* accords de piano électrique */
-  if(p===0){ch.k.forEach(function(m,i){muTone(B,'triangle',mtof(m),T+i*.012,2.4,.075,.02,.3);muTone(B,'sine',mtof(m)*2,T+i*.012,1.1,.02,.01,.2,6)})}
-  if(p===6||p===11){ch.k.slice(1).forEach(function(m,i){muTone(B,'triangle',mtof(m),T+i*.01,.7,.05,.012,.35)})}
-  /* nappe douce */
-  if(p===0){ch.k.forEach(function(m){muTone(B,'sine',mtof(m-12),t,q*16*.98,.03,1.2,.15,-5)})}
-  /* basse */
-  if(p===0)muTone(B,'sine',mtof(ch.r-12),T,.9,.2,.015,0);
-  if(p===10)muTone(B,'sine',mtof(ch.r-12),T,.5,.15,.015,0);
-  if(p===7&&(bar===1||bar===3))muTone(B,'sine',mtof(ch.r-5),T,.3,.12,.015,0);
-  /* batterie */
-  /* pas de grosse percussion : ambiance douce et discrète */
-  
-  if(p===12)muNoise(B,T,.07,.018,'highpass',6500,0);
-  
-  /* petite mélodie, rare, qui flotte */
-  if(p%4===0&&Math.random()<(p===0?.06:.12)){var m=MSC[Math.floor(Math.random()*MSC.length)];muTone(B,'triangle',mtof(m),T,1.1,.05,.01,.7)}}
+  if(p%2===0){var m=ch.k[(p/2)%ch.k.length];muTone(B,'triangle',mtof(m),T,.35,.06,.008,.35);muTone(B,'sine',mtof(m+12),T,.5,.025,.008,.4,8)}
+  if(p===0){ch.k.forEach(function(m,i){muTone(B,'triangle',mtof(m),T+i*.008,1.8,.055,.015,.25)})}
+  if(p===0){ch.k.forEach(function(m){muTone(B,'sine',mtof(m-12),t,q*16*.98,.02,1.2,.15,-5)})}
+  if(p===0||p===8)muTone(B,'sine',mtof(ch.r-12),T,.7,.18,.012,0);
+  if(p===4||p===12)muTone(B,'sine',mtof(ch.r-12),T,.5,.14,.012,0);
+  if(p===0||p===8)muNoise(B,T,.1,.05,'lowpass',180,0);
+  if(p%4===2)muNoise(B,T,.045,.022,'highpass',7000,0);
+  if(p===4||p===12)muNoise(B,T,.08,.04,'bandpass',1600,.15);
+  if(p===0||p===6||p===10){var mi=MSC[(bar*2+(p===10?1:0))%MSC.length];muTone(B,'triangle',mtof(mi),T,.9,.075,.008,.5)}
+  if(bar===3&&p===14){var me=MSC[7];muTone(B,'triangle',mtof(me),T,1.2,.08,.01,.7)}}
 function muTick(){var c=MU.ctx;if(!c||!MU.on)return;
   var q=60/MBPM/4;
   while(MU.next<c.currentTime+.3){muStep(MU.bus,MU.step,MU.next);MU.step=(MU.step+1)%64;MU.next+=q}}
@@ -2114,7 +2128,7 @@ function muStart(){
     if(!MU.ctx){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;MU.ctx=new AC();MU.bus=muBuild(MU.ctx);MU.next=MU.ctx.currentTime+.15;MU.step=0}
     var c=MU.ctx;if(c.state==='suspended')c.resume();
     MU.next=Math.max(MU.next,c.currentTime+.1);
-    MU.bus.out.gain.cancelScheduledValues(c.currentTime);MU.bus.out.gain.setTargetAtTime(.24,c.currentTime,1.2);
+    MU.bus.out.gain.cancelScheduledValues(c.currentTime);MU.bus.out.gain.setTargetAtTime(.20,c.currentTime,1.2);
     clearInterval(MU.tm);MU.tm=setInterval(muTick,60);muTick();MU.started=true
   }catch(e){}}
 function muStop(){clearInterval(MU.tm);var c=MU.ctx;if(!c)return;
