@@ -613,12 +613,19 @@ function vRules(){return topbar('Comment jouer','home')+'<div class="wrap">'+
 function vSetup(){
   fixSettings();
   var st=S.settings,n=nP(),rec=recommendedUC(n),mx=maxUC(n,st.mw),mwx=maxMW(n,st.uc);
-  var rows=S.players.map(function(p,i){return '<div class="prow">'+av(p)+'<input class="field" id="pn-'+p.id+'" data-input="name" data-id="'+p.id+'" value="'+esc(p.name)+'" maxlength="16" placeholder="Prénom" aria-label="Prénom du joueur '+(i+1)+'" autocomplete="off" enterkeyhint="done"><button class="icon-btn" data-act="rm" data-id="'+p.id+'" aria-label="Retirer '+esc(p.name||'ce joueur')+'"'+(n<=3?' disabled':'')+'>'+I.x+'</button></div>'}).join('');
+  var rows=S.players.map(function(p,i){return '<div class="prow" style="align-items:center">'+
+    av(p)+
+    '<div style="display:flex;flex-direction:column;gap:2px;min-width:28px">'+
+    '<button class="icon-btn" style="width:28px;height:22px;min-width:28px;border-radius:8px;font-size:11px;line-height:1" data-act="up" data-id="'+p.id+'" aria-label="Monter"'+(i===0?' disabled':'')+'>▲</button>'+
+    '<button class="icon-btn" style="width:28px;height:22px;min-width:28px;border-radius:8px;font-size:11px;line-height:1" data-act="down" data-id="'+p.id+'" aria-label="Descendre"'+(i===n-1?' disabled':'')+'>▼</button>'+
+    '</div>'+
+    '<input class="field" id="pn-'+p.id+'" data-input="name" data-id="'+p.id+'" value="'+esc(p.name)+'" maxlength="16" placeholder="Prénom du joueur '+(i+1)+'" aria-label="Prénom du joueur '+(i+1)+'" autocomplete="off" enterkeyhint="done">'+
+    '<button class="icon-btn" data-act="rm" data-id="'+p.id+'" aria-label="Retirer '+esc(p.name||'ce joueur')+'"'+(n<=3?' disabled':'')+'>'+I.x+'</button></div>'}).join('');
   var chips=CATS.map(function(c){return '<button class="chip" data-act="cat" data-c="'+esc(c)+'" aria-pressed="'+(st.cats.indexOf(c)>=0)+'">'+esc(c)+' · '+catCount(c)+'</button>'}).join('');
   var timers=[0,20,30,45,60].map(function(t){return '<button data-act="timer" data-t="'+t+'" aria-pressed="'+(st.timer===t)+'">'+(t?t+' s':'Aucun')+'</button>'}).join('');
   return topbar('Nouvelle partie','home')+'<div class="wrap">'+
-  '<section class="card"><h2>Joueurs<span class="count">'+n+' / 12</span></h2><div class="plist">'+rows+'</div>'+(n<12?'<button class="btn btn-secondary btn-sm" data-act="add">'+I.plus+' Ajouter un joueur</button>':'')+'</section>'+
-  '<section class="card"><h2>Prénoms enregistrés</h2><p class="muted small">Colle une liste de prénoms (un par ligne ou séparés par des virgules). Elle est mémorisée sur cet appareil pour les prochaines parties.</p><textarea class="field" id="savednames" rows=4 placeholder="Emma, Lucas, Inès…">'+esc(S.players.map(function(p){return p.name}).join('\n'))+'</textarea><button class="btn btn-secondary btn-sm" data-act="importnames">Utiliser cette liste</button></section>'+
+  '<section class="card"><h2>Joueurs<span class="count">'+n+' / 12</span></h2><p class="muted small">L\'ordre de la liste est l\'ordre de parole. Utilise ▲▼ pour réordonner.</p><div class="plist">'+rows+'</div>'+(n<12?'<button class="btn btn-secondary btn-sm" data-act="add">'+I.plus+' Ajouter un joueur</button>':'')+'</section>'+
+  '<section class="card"><h2>Mes listes de prénoms</h2><p class="muted small">Enregistre ta liste habituelle, puis recharge-la en un tap la prochaine fois.</p><div class="chips" id="savedlists"><span class="muted small">Chargement…</span></div><div class="links"><button class="link" data-act="openimport">Importer une liste</button><button class="link" data-act="savelist">Enregistrer cette liste</button><button class="link" data-act="clearlists">Tout effacer</button></div></section>'+
   '<section class="card"><h2>Rôles</h2>'+
   '<div class="row"><div class="lbl"><b>Undercover</b><span class="muted small">Conseillé : '+rec+'</span></div><div class="step"><button class="icon-btn" data-act="ucm" aria-label="Moins d\'Undercover"'+(st.uc<=0?' disabled':'')+'>−</button><span class="num" id="ucn" aria-live="polite">'+st.uc+'</span><button class="icon-btn" data-act="ucp" aria-label="Plus d\'Undercover"'+(st.uc>=mx?' disabled':'')+'>+</button></div></div>'+
   '<div class="row"><div class="lbl"><b>Mr White</b><span class="muted small">'+(n<5?'À partir de 5 joueurs':'Joueurs sans mot · jusqu\'à '+mwx)+'</span></div><div class="step"><button class="icon-btn" data-act="mwm" aria-label="Moins de Mr White"'+(st.mw<=0?' disabled':'')+'>−</button><span class="num" id="mwn" aria-live="polite">'+st.mw+'</span><button class="icon-btn" data-act="mwp" aria-label="Plus de Mr White"'+(st.mw>=mwx?' disabled':'')+'>+</button></div></div>'+
@@ -634,7 +641,10 @@ function refreshSetup(){
   var s=document.getElementById('sumroles');if(s)s.textContent=c+' Civil'+(c>1?'s':'')+' · '+st.uc+' Undercover'+(st.mw?' · '+st.mw+' Mr White':'');
   var i=document.getElementById('issue');if(i)i.textContent=is;
   var b=document.getElementById('start');if(b)b.disabled=!!is||!rolesOk();
-  S.players.forEach(function(p){var el=document.getElementById('pn-'+p.id);if(el){var a=el.previousElementSibling;if(a)a.outerHTML=av(p)}})
+  S.players.forEach(function(p){var el=document.getElementById('pn-'+p.id);if(el){var a=el.previousElementSibling;if(a&&a.tagName==='SPAN')a.outerHTML=av(p)}});
+  var z=document.getElementById('savedlists');
+  if(z){var sl=savedLists(),ks=Object.keys(sl);
+    z.innerHTML=ks.length?ks.map(function(k){return '<button class="chip" data-act="loadlist" data-k="'+esc(k)+'" style="padding-right:34px;position:relative">'+esc(k)+' ('+sl[k].length+')<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);opacity:.6;font-size:14px" data-act="dellist" data-k="'+esc(k)+'">×</span></button>'}).join(''):'<span class="muted small">Aucune liste enregistrée pour l\'instant.</span>'}
 }
 
 function vReveal(){
