@@ -719,6 +719,9 @@ function vPeek(){
 
 function vSheet(){
   if(!S.sheet)return '';
+  if(S.sheet==='importnames'){
+    return '<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true"><h2>Importer une liste</h2><p class="muted small">Colle tes prénoms, un par ligne ou séparés par des virgules. Entre 3 et 12 prénoms.</p><textarea class="field ta" id="impnames" rows="5" placeholder="Emma&#10;Lucas&#10;Inès&#10;Adam" autocomplete="off" autocapitalize="words" style="width:100%;height:auto;min-height:140px;padding:12px 14px;line-height:1.4"></textarea><button class="btn btn-primary" data-act="doimport">Utiliser cette liste</button><button class="btn btn-ghost" data-act="closesheet">Annuler</button></div></div>';
+  }
   if(S.screen==='online'&&['rules','mrules','lrules','drules'].indexOf(S.sheet)<0)return olSheet();
   var c='';
   if(S.sheet==='menu'){
