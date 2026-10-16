@@ -426,7 +426,36 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify({p:S.players.map(fun
   if(d.st){var s=d.st;S.settings.uc=+s.uc||1;S.settings.mw=Math.max(0,Math.min(3,Math.floor(+s.mw||0)));S.settings.reveal=s.reveal!==false;S.settings.vote=s.vote==='secret'?'secret':'hand';S.settings.timer=[0,20,30,45,60].indexOf(+s.timer)>=0?+s.timer:0;
     if(Array.isArray(s.cats)){var c=s.cats.filter(function(x){return CATS.indexOf(x)>=0});if(c.length)S.settings.cats=c}}
 }catch(e){}})();
-
+/* ---------- Listes de prénoms sauvegardées ---------- */
+function savedLists(){try{var d=JSON.parse(localStorage.getItem('bazar-name-lists')||'{}');return d&&typeof d==='object'?d:{}}catch(e){return {}}}
+function writeLists(d){try{localStorage.setItem('bazar-name-lists',JSON.stringify(d))}catch(e){}}
+function saveCurrentList(){
+  var names=S.players.map(function(p){return p.name.trim()}).filter(Boolean);
+  if(names.length<3){toast('Ajoute au moins 3 prénoms avant d\'enregistrer.');return}
+  var name=prompt('Nom de la liste (par exemple : Famille, Amis, Anniv Léa)','Ma liste');
+  if(!name)return;name=name.trim().slice(0,30);if(!name)return;
+  var d=savedLists();d[name]=names;writeLists(d);render();
+  toast('Liste « '+name+' » enregistrée');
+}
+function loadSavedList(k){
+  var d=savedLists();if(!d[k])return;
+  var names=d[k].slice(0,12);
+  if(names.length<3){toast('Cette liste a moins de 3 prénoms.');return}
+  S.players=names.map(function(x){return mkPlayer(x)});
+  fixSettings();save();render();
+  toast('Liste « '+k+' » rechargée');
+}
+function deleteSavedList(k){var d=savedLists();delete d[k];writeLists(d);render();toast('Liste supprimée')}
+function clearAllSavedLists(){if(!confirm('Supprimer toutes les listes enregistrées ?'))return;writeLists({});render()}
+function openImport(){S.sheet='importnames';render()}
+function doImport(){
+  var ta=document.getElementById('impnames');if(!ta)return;
+  var names=ta.value.split(/[\n,;]+/).map(function(x){return x.trim().slice(0,16)}).filter(Boolean);
+  if(names.length<3){toast('Il faut au moins 3 prénoms.');return}
+  if(names.length>12){names=names.slice(0,12);toast('Seuls les 12 premiers sont gardés.')}
+  S.players=names.map(function(x){return mkPlayer(x)});
+  fixSettings();save();S.sheet=null;render();
+}
 function pl(id){for(var i=0;i<S.players.length;i++)if(S.players[i].id===id)return S.players[i];return null}
 function nP(){return S.players.length}
 function rolesOk(){var st=S.settings,inf=st.uc+st.mw,c=nP()-inf;return st.uc>=0&&inf>=1&&c>=2&&c>inf}
@@ -436,9 +465,9 @@ function fixSettings(){var n=nP(),s=S.settings;if(n<5)s.mw=0;
     if(!rolesOk()){s.uc=Math.max(1,Math.min(recommendedUC(n),maxUC(n,0)));s.mw=0}}}
 function issue(){var n=nP();if(n<3)return 'Il faut au moins 3 joueurs.';
   var names=S.players.map(function(p){return p.name.trim().toLowerCase()});
-  if(names.some(function(x){return !x}))return 'Chaque joueur a besoin d\'un prénom.';
-  var seen={};for(var i=0;i<names.length;i++){if(seen[names[i]])return 'Deux joueurs ont le même prénom.';seen[names[i]]=1}
-  if(!S.settings.cats.length)return 'Choisis au moins une catégorie de mots.';
+  if(names.some(function(x){return !x}))return 'Un ou plusieurs joueurs n'ont pas de prénom.';
+  var seen={};for(var i=0;i<names.length;i++){if(seen[names[i]])return 'Deux joueurs portent le même prénom.';seen[names[i]]=1}
+  if(!S.settings.cats.length)return 'Choisis au moins une catégorie pour piocher les mots.';
   return ''}
 function catCount(c){return PAIRS.filter(function(p){return p[2]===c}).length}
 
@@ -582,12 +611,19 @@ function vRules(){return topbar('Comment jouer','home')+'<div class="wrap">'+
 function vSetup(){
   fixSettings();
   var st=S.settings,n=nP(),rec=recommendedUC(n),mx=maxUC(n,st.mw),mwx=maxMW(n,st.uc);
-  var rows=S.players.map(function(p,i){return '<div class="prow">'+av(p)+'<input class="field" id="pn-'+p.id+'" data-input="name" data-id="'+p.id+'" value="'+esc(p.name)+'" maxlength="16" placeholder="Prénom" aria-label="Prénom du joueur '+(i+1)+'" autocomplete="off" enterkeyhint="done"><button class="icon-btn" data-act="rm" data-id="'+p.id+'" aria-label="Retirer '+esc(p.name||'ce joueur')+'"'+(n<=3?' disabled':'')+'>'+I.x+'</button></div>'}).join('');
+  var rows=S.players.map(function(p,i){return '<div class="prow" style="align-items:center">'+
+    av(p)+
+    '<div style="display:flex;flex-direction:column;gap:2px;min-width:28px">'+
+    '<button class="icon-btn" style="width:28px;height:22px;min-width:28px;border-radius:8px;font-size:11px;line-height:1" data-act="up" data-id="'+p.id+'" aria-label="Monter"'+(i===0?' disabled':'')+'>▲</button>'+
+    '<button class="icon-btn" style="width:28px;height:22px;min-width:28px;border-radius:8px;font-size:11px;line-height:1" data-act="down" data-id="'+p.id+'" aria-label="Descendre"'+(i===n-1?' disabled':'')+'>▼</button>'+
+    '</div>'+
+    '<input class="field" id="pn-'+p.id+'" data-input="name" data-id="'+p.id+'" value="'+esc(p.name)+'" maxlength="16" placeholder="Prénom du joueur '+(i+1)+'" aria-label="Prénom du joueur '+(i+1)+'" autocomplete="off" enterkeyhint="done">'+
+    '<button class="icon-btn" data-act="rm" data-id="'+p.id+'" aria-label="Retirer '+esc(p.name||'ce joueur')+'"'+(n<=3?' disabled':'')+'>'+I.x+'</button></div>'}).join('');
   var chips=CATS.map(function(c){return '<button class="chip" data-act="cat" data-c="'+esc(c)+'" aria-pressed="'+(st.cats.indexOf(c)>=0)+'">'+esc(c)+' · '+catCount(c)+'</button>'}).join('');
   var timers=[0,20,30,45,60].map(function(t){return '<button data-act="timer" data-t="'+t+'" aria-pressed="'+(st.timer===t)+'">'+(t?t+' s':'Aucun')+'</button>'}).join('');
   return topbar('Nouvelle partie','home')+'<div class="wrap">'+
-  '<section class="card"><h2>Joueurs<span class="count">'+n+' / 12</span></h2><div class="plist">'+rows+'</div>'+(n<12?'<button class="btn btn-secondary btn-sm" data-act="add">'+I.plus+' Ajouter un joueur</button>':'')+'</section>'+
-  '<section class="card"><h2>Prénoms enregistrés</h2><p class="muted small">Colle une liste de prénoms (un par ligne ou séparés par des virgules). Elle est mémorisée sur cet appareil pour les prochaines parties.</p><textarea class="field" id="savednames" rows=4 placeholder="Emma, Lucas, Inès…">'+esc(S.players.map(function(p){return p.name}).join('\n'))+'</textarea><button class="btn btn-secondary btn-sm" data-act="importnames">Utiliser cette liste</button></section>'+
+  '<section class="card"><h2>Joueurs<span class="count">'+n+' / 12</span></h2><p class="muted small">L\'ordre de la liste est l\'ordre de parole. Utilise ▲▼ pour réordonner.</p><div class="plist">'+rows+'</div>'+(n<12?'<button class="btn btn-secondary btn-sm" data-act="add">'+I.plus+' Ajouter un joueur</button>':'')+'</section>'+
+  '<section class="card"><h2>Mes listes de prénoms</h2><p class="muted small">Enregistre ta liste habituelle, puis recharge-la en un tap la prochaine fois.</p><div class="chips" id="savedlists"><span class="muted small">Chargement…</span></div><div class="links"><button class="link" data-act="openimport">Importer une liste</button><button class="link" data-act="savelist">Enregistrer cette liste</button><button class="link" data-act="clearlists">Tout effacer</button></div></section>'+
   '<section class="card"><h2>Rôles</h2>'+
   '<div class="row"><div class="lbl"><b>Undercover</b><span class="muted small">Conseillé : '+rec+'</span></div><div class="step"><button class="icon-btn" data-act="ucm" aria-label="Moins d\'Undercover"'+(st.uc<=0?' disabled':'')+'>−</button><span class="num" id="ucn" aria-live="polite">'+st.uc+'</span><button class="icon-btn" data-act="ucp" aria-label="Plus d\'Undercover"'+(st.uc>=mx?' disabled':'')+'>+</button></div></div>'+
   '<div class="row"><div class="lbl"><b>Mr White</b><span class="muted small">'+(n<5?'À partir de 5 joueurs':'Joueurs sans mot · jusqu\'à '+mwx)+'</span></div><div class="step"><button class="icon-btn" data-act="mwm" aria-label="Moins de Mr White"'+(st.mw<=0?' disabled':'')+'>−</button><span class="num" id="mwn" aria-live="polite">'+st.mw+'</span><button class="icon-btn" data-act="mwp" aria-label="Plus de Mr White"'+(st.mw>=mwx?' disabled':'')+'>+</button></div></div>'+
@@ -603,7 +639,10 @@ function refreshSetup(){
   var s=document.getElementById('sumroles');if(s)s.textContent=c+' Civil'+(c>1?'s':'')+' · '+st.uc+' Undercover'+(st.mw?' · '+st.mw+' Mr White':'');
   var i=document.getElementById('issue');if(i)i.textContent=is;
   var b=document.getElementById('start');if(b)b.disabled=!!is||!rolesOk();
-  S.players.forEach(function(p){var el=document.getElementById('pn-'+p.id);if(el){var a=el.previousElementSibling;if(a)a.outerHTML=av(p)}})
+  S.players.forEach(function(p){var el=document.getElementById('pn-'+p.id);if(el){var a=el.previousElementSibling;if(a&&a.tagName==='SPAN')a.outerHTML=av(p)}});
+  var z=document.getElementById('savedlists');
+  if(z){var sl=savedLists(),ks=Object.keys(sl);
+    z.innerHTML=ks.length?ks.map(function(k){return '<button class="chip" data-act="loadlist" data-k="'+esc(k)+'" style="padding-right:34px;position:relative">'+esc(k)+' ('+sl[k].length+')<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);opacity:.6;font-size:14px" data-act="dellist" data-k="'+esc(k)+'">×</span></button>'}).join(''):'<span class="muted small">Aucune liste enregistrée pour l\'instant.</span>'}
 }
 
 function vReveal(){
@@ -667,7 +706,7 @@ function vEnd(){
   '<div class="words"><div><span class="muted small">Mot des Civils</span><b>'+esc(g.civ)+'</b></div><div><span class="muted small">Mot des Undercover</span><b>'+esc(g.uc)+'</b></div></div>'+
   '<section class="card"><h3>Les rôles</h3><div class="plist">'+roles+'</div></section>'+
   '<section class="card"><h3>Classement du salon</h3><div class="plist">'+board+'</div></section></div>'+
-  '<div class="dock"><button class="btn btn-primary" data-act="again">Rejouer</button><button class="btn btn-secondary" data-act="create">Modifier la partie</button><button class="btn btn-ghost" data-act="home">Accueil</button></div>'}
+  '<div class="dock"><button class="btn btn-primary" data-act="again">Rejouer avec les mêmes joueurs</button><button class="btn btn-secondary" data-act="create">Changer les joueurs ou les règles</button><button class="btn btn-ghost" data-act="home">Accueil</button></div>'}
 
 function vPeek(){
   var g=S.game,pk=S.peek;
@@ -678,6 +717,9 @@ function vPeek(){
 
 function vSheet(){
   if(!S.sheet)return '';
+  if(S.sheet==='importnames'){
+    return '<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true"><h2>Importer une liste</h2><p class="muted small">Colle tes prénoms, un par ligne ou séparés par des virgules. Entre 3 et 12 prénoms.</p><textarea class="field ta" id="impnames" rows="5" placeholder="Emma&#10;Lucas&#10;Inès&#10;Adam" autocomplete="off" autocapitalize="words" style="width:100%;height:auto;min-height:140px;padding:12px 14px;line-height:1.4"></textarea><button class="btn btn-primary" data-act="doimport">Utiliser cette liste</button><button class="btn btn-ghost" data-act="closesheet">Annuler</button></div></div>';
+  }
   if(S.screen==='online'&&['rules','mrules','lrules','drules'].indexOf(S.sheet)<0)return olSheet();
   var c='';
   if(S.sheet==='menu'){
@@ -773,7 +815,7 @@ function vMEnd(){var m=S.M,w=m.winner,nm=S.my.names;
   '<div class="win tm t'+w+'"><span class="eyebrow">Fin de partie</span><h1>'+sym(w,'bigsym')+'L\'équipe '+esc(nm[w])+' gagne !</h1><p class="lead">'+esc(m.why)+'</p></div>'+
   '<section class="card"><h3>Victoires</h3><div class="row"><span class="lg t0">'+sym(0,'inl')+esc(nm[0])+'</span><b class="num">'+S.my.wins[0]+'</b></div><div class="row"><span class="lg t1">'+sym(1,'inl')+esc(nm[1])+'</span><b class="num">'+S.my.wins[1]+'</b></div></section>'+
   '<section class="card"><h3>La clé de la grille</h3>'+boardHtml(2)+legend()+'</section></div>'+
-  '<div class="dock"><button class="btn btn-primary" data-act="magain">Rejouer</button><button class="btn btn-secondary" data-act="mcreate">Modifier la partie</button><button class="btn btn-ghost" data-act="home">Accueil</button></div>'}
+  '<div class="dock"><button class="btn btn-primary" data-act="magain">Rejouer avec les mêmes joueurs</button><button class="btn btn-secondary" data-act="mcreate">Changer les joueurs ou les règles</button><button class="btn btn-ghost" data-act="home">Accueil</button></div>'}
 
 function vMRules(){return topbar('Règles de BAZAR Codenames','mrback')+'<div class="wrap">'+
   '<section class="hero"><h1 style="font-size:32px">Retrouve tes agents.</h1><p class="lead">Deux équipes, une grille de mots. Seuls les chefs espions savent qui est qui.</p></section>'+
@@ -888,7 +930,14 @@ function act(a,d){
     case 'home':S.game=g&&S.screen!=='end'?null:S.game;go('home');break;
     case 'rules':go('rules');break;
     case 'create':go('setup');break;
-    case 'importnames':{var ta=document.getElementById('savednames'),names=ta?ta.value.split(/[\n,;]+/).map(function(x){return x.trim().slice(0,16)}).filter(Boolean):[];if(names.length<3){alert('Ajoute au moins 3 prénoms.');break}if(names.length>12){alert('12 joueurs maximum. Seuls les 12 premiers seront utilisés.');names=names.slice(0,12)}S.players=names.map(function(n){return mkPlayer(n)});fixSettings();save();render();break}
+    case 'savelist':saveCurrentList();break;
+    case 'loadlist':loadSavedList(d.k);break;
+    case 'dellist':deleteSavedList(d.k);break;
+    case 'clearlists':clearAllSavedLists();break;
+    case 'openimport':openImport();break;
+    case 'doimport':doImport();break;
+    case 'up':{var ia=S.players.map(function(p){return p.id}).indexOf(+d.id);if(ia>0){var ta2=S.players[ia-1];S.players[ia-1]=S.players[ia];S.players[ia]=ta2;save();render()}break}
+    case 'down':{var ib=S.players.map(function(p){return p.id}).indexOf(+d.id);if(ib>=0&&ib<S.players.length-1){var tb2=S.players[ib+1];S.players[ib+1]=S.players[ib];S.players[ib]=tb2;save();render()}break}
     case 'add':if(nP()<12){var p=mkPlayer('');S.players.push(p);fixSettings();save();render();var el=document.getElementById('pn-'+p.id);if(el)el.focus()}break;
     case 'rm':if(nP()>3){S.players=S.players.filter(function(p){return p.id!==+d.id});fixSettings();save();render()}break;
     case 'ucm':st.uc=Math.max(0,st.uc-1);save();render();break;
@@ -1174,7 +1223,7 @@ function olPushCfg(){if(!OL.host)return;OL.cpend++;
   OL.cq=OL.cq.then(function(){return Rr(OL.code).update({cfg:JSON.stringify(OL.cfg),v:Date.now()})}).catch(function(){}).then(function(){OL.cpend=Math.max(0,OL.cpend-1)})}
 function olIssueU(){var n=OL.plist.length,c=OL.cfg;
   if(n<3)return 'Il faut au moins 3 joueurs.';
-  if(!(c.cats||[]).length)return 'Choisis au moins une catégorie de mots.';
+  if(!(c.cats||[]).length)return 'Choisis au moins une catégorie pour piocher les mots.';
   if(!cfgOk(n,c))return 'Les rôles choisis ne conviennent pas pour '+n+' joueurs.';
   return ''}
 function olIssueM(){var n=OL.plist.length,c=OL.cfg,nm=c.names||['',''],t=[[],[]],sp=[0,0],k;
