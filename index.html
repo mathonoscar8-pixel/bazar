@@ -427,6 +427,37 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify({p:S.players.map(fun
     if(Array.isArray(s.cats)){var c=s.cats.filter(function(x){return CATS.indexOf(x)>=0});if(c.length)S.settings.cats=c}}
 }catch(e){}})();
 
+/* ---------- Listes de prénoms sauvegardées ---------- */
+function savedLists(){try{var d=JSON.parse(localStorage.getItem('bazar-name-lists')||'{}');return d&&typeof d==='object'?d:{}}catch(e){return {}}}
+function writeLists(d){try{localStorage.setItem('bazar-name-lists',JSON.stringify(d))}catch(e){}}
+function saveCurrentList(){
+  var names=S.players.map(function(p){return p.name.trim()}).filter(Boolean);
+  if(names.length<3){toast('Ajoute au moins 3 prénoms avant d\'enregistrer.');return}
+  var name=prompt('Nom de la liste (par exemple : Famille, Amis, Anniv Léa)','Ma liste');
+  if(!name)return;name=name.trim().slice(0,30);if(!name)return;
+  var d=savedLists();d[name]=names;writeLists(d);render();
+  toast('Liste « '+name+' » enregistrée');
+}
+function loadSavedList(k){
+  var d=savedLists();if(!d[k])return;
+  var names=d[k].slice(0,12);
+  if(names.length<3){toast('Cette liste a moins de 3 prénoms.');return}
+  S.players=names.map(function(x){return mkPlayer(x)});
+  fixSettings();save();render();
+  toast('Liste « '+k+' » rechargée');
+}
+function deleteSavedList(k){var d=savedLists();delete d[k];writeLists(d);render();toast('Liste supprimée')}
+function clearAllSavedLists(){if(!confirm('Supprimer toutes les listes enregistrées ?'))return;writeLists({});render()}
+function openImport(){S.sheet='importnames';render()}
+function doImport(){
+  var ta=document.getElementById('impnames');if(!ta)return;
+  var names=ta.value.split(/[\n,;]+/).map(function(x){return x.trim().slice(0,16)}).filter(Boolean);
+  if(names.length<3){toast('Il faut au moins 3 prénoms.');return}
+  if(names.length>12){names=names.slice(0,12);toast('Seuls les 12 premiers sont gardés.')}
+  S.players=names.map(function(x){return mkPlayer(x)});
+  fixSettings();save();S.sheet=null;render();
+}
+
 function pl(id){for(var i=0;i<S.players.length;i++)if(S.players[i].id===id)return S.players[i];return null}
 function nP(){return S.players.length}
 function rolesOk(){var st=S.settings,inf=st.uc+st.mw,c=nP()-inf;return st.uc>=0&&inf>=1&&c>=2&&c>inf}
