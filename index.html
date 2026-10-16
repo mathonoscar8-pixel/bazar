@@ -929,7 +929,14 @@ function act(a,d){
     case 'home':S.game=g&&S.screen!=='end'?null:S.game;go('home');break;
     case 'rules':go('rules');break;
     case 'create':go('setup');break;
-    case 'importnames':{var ta=document.getElementById('savednames'),names=ta?ta.value.split(/[\n,;]+/).map(function(x){return x.trim().slice(0,16)}).filter(Boolean):[];if(names.length<3){alert('Ajoute au moins 3 prénoms.');break}if(names.length>12){alert('12 joueurs maximum. Seuls les 12 premiers seront utilisés.');names=names.slice(0,12)}S.players=names.map(function(n){return mkPlayer(n)});fixSettings();save();render();break}
+    case 'savelist':saveCurrentList();break;
+    case 'loadlist':loadSavedList(d.k);break;
+    case 'dellist':deleteSavedList(d.k);break;
+    case 'clearlists':clearAllSavedLists();break;
+    case 'openimport':openImport();break;
+    case 'doimport':doImport();break;
+    case 'up':{var ia=S.players.map(function(p){return p.id}).indexOf(+d.id);if(ia>0){var ta2=S.players[ia-1];S.players[ia-1]=S.players[ia];S.players[ia]=ta2;save();render()}break}
+    case 'down':{var ib=S.players.map(function(p){return p.id}).indexOf(+d.id);if(ib>=0&&ib<S.players.length-1){var tb2=S.players[ib+1];S.players[ib+1]=S.players[ib];S.players[ib]=tb2;save();render()}break}
     case 'add':if(nP()<12){var p=mkPlayer('');S.players.push(p);fixSettings();save();render();var el=document.getElementById('pn-'+p.id);if(el)el.focus()}break;
     case 'rm':if(nP()>3){S.players=S.players.filter(function(p){return p.id!==+d.id});fixSettings();save();render()}break;
     case 'ucm':st.uc=Math.max(0,st.uc-1);save();render();break;
