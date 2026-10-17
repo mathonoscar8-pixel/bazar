@@ -746,10 +746,52 @@ function vHome(){return '<div class="wrap">'+
  '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · sur un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
  '</section>'+
 
- '<div style="display:flex;flex-direction:column;gap:12px;margin-top:20px"><button class="btn btn-primary" data-act="ohome" style="background:var(--violet);color:#fff">Créer un salon en ligne '+I.spark+'</button><button class="btn btn-secondary" data-act="games">Voir tous les jeux sur ce téléphone</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
+ '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="avatar" style="font-size:16px;background:var(--surface);padding:10px 20px;border-radius:99px;border:1px solid var(--line)">🎨 Mon Avatar</button></div>'+
+ '<div style="display:flex;flex-direction:column;gap:12px"><button class="btn btn-primary" data-act="ohome" style="background:var(--violet);color:#fff">Créer un salon en ligne '+I.spark+'</button><button class="btn btn-secondary" data-act="games">Voir tous les jeux sur ce téléphone</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
  '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
  '</div>'}
 
+/* ---------- Studio d'Avatar ---------- */
+var AV_BASES=['🦊','🐼','🐯','🐸','🐙','🦄','🤖','👽','👻','🐵','🐶','🐱','🦁','🐷','🐔','🦉'];
+var AV_HATS=['','🎩','👑','🎓','🎧','🧢','🎃','🍄','⛑️','🎀'];
+var AV_COLORS=['#B8FF45','#8466FF','#FF7EB6','#F5A524','#2F7DF6','#2F9E44','#E5484D','#F7D154'];
+
+function vAvatarStudio(){
+  // On initialise l'avatar temporaire s'il n'existe pas
+  if(!S.tempAvatar) S.tempAvatar={base:0,hat:0,color:0};
+  var ta=S.tempAvatar;
+  
+  // Construction de l'aperçu
+  var bgColor=AV_COLORS[ta.color];
+  var baseEmoji=AV_BASES[ta.base];
+  var hatEmoji=AV_HATS[ta.hat];
+  var preview='<div style="position:relative;width:120px;height:120px;border-radius:50%;background:'+bgColor+';display:grid;place-items:center;margin:0 auto 20px;box-shadow:0 10px 25px rgba(0,0,0,0.3)">'+
+              '<span style="font-size:70px;line-height:1">'+baseEmoji+'</span>'+
+              (hatEmoji?'<span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-size:40px;line-height:1;filter:drop-shadow(0 4px 4px rgba(0,0,0,0.3))">'+hatEmoji+'</span>':'')+
+              '</div>';
+
+  return topbar('Mon Avatar','home')+'<div class="wrap">'+
+  '<section class="hero" style="text-align:center"><h1 style="font-size:28px">Crée ton personnage</h1><p class="lead">Choisis une base, un accessoire et une couleur.</p></section>'+
+  
+  '<section class="card" style="align-items:center;padding-top:30px">'+
+  preview+
+  '<h2 style="text-align:center;margin-bottom:10px">Ton personnage</h2>'+
+  '</section>'+
+  
+  '<section class="card"><h2>1. La base</h2><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">'+
+  AV_BASES.map(function(e,i){return '<button data-act="av_base" data-i="'+i+'" style="width:48px;height:48px;font-size:28px;background:'+(ta.base===i?'var(--lime)':'var(--surface-2)')+';border-radius:12px;border:2px solid '+(ta.base===i?'var(--lime)':'transparent')+';cursor:pointer;display:grid;place-items:center;padding:0">'+e+'</button>'}).join('')+
+  '</div></section>'+
+  
+  '<section class="card"><h2>2. L\'accessoire</h2><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">'+
+  AV_HATS.map(function(e,i){return '<button data-act="av_hat" data-i="'+i+'" style="width:48px;height:48px;font-size:26px;background:'+(ta.hat===i?'var(--lime)':'var(--surface-2)')+';border-radius:12px;border:2px solid '+(ta.hat===i?'var(--lime)':'transparent')+';cursor:pointer;display:grid;place-items:center;padding:0">'+(e||'❌')+'</button>'}).join('')+
+  '</div></section>'+
+  
+  '<section class="card"><h2>3. La couleur</h2><div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">'+
+  AV_COLORS.map(function(c,i){return '<button data-act="av_color" data-i="'+i+'" style="width:44px;height:44px;border-radius:50%;background:'+c+';border:3px solid '+(ta.color===i?'#fff':'transparent')+';cursor:pointer;box-shadow:0 0 10px rgba(0,0,0,0.2)"></button>'}).join('')+
+  '</div></section>'+
+  
+  '</div><div class="dock"><button class="btn btn-primary" data-act="av_save">Enregistrer mon avatar</button></div>'
+}
 function vRules(){return topbar('Comment jouer','home')+'<div class="wrap">'+
  '<section class="hero"><h1 style="font-size:32px">Démasque les imposteurs.</h1><p class="lead">Chacun reçoit un mot en secret. Presque tout le monde a le même mot. Quelques joueurs ont un mot voisin, ou aucun.</p></section>'+
  '<ol class="steps">'+
@@ -1094,7 +1136,7 @@ function mVal(){var m=S.M;if(m.sel==null)return;var i=m.sel,c=m.cards[i],me=m.tu
 function render(){
   var y=window.scrollY,h;
   switch(S.screen){
-    case 'home':h=vHome();break;case 'rules':h=vRules();break;case 'setup':h=vSetup();break;
+    case 'home':h=vHome();break;case 'avatar_studio':h=vAvatarStudio();break;case 'rules':h=vRules();break;case 'setup':h=vSetup();break;
     case 'reveal':h=vReveal();break;case 'clues':h=vClues();break;case 'vote':h=vVote();break;
     case 'result':h=vResult();break;case 'mwguess':h=vMw();break;case 'end':h=vEnd();break;case 'peek':h=vPeek();break;
     case 'games':h=vGames();break;case 'msetup':h=vMSetup();break;case 'mgame':h=vMGame();break;case 'mkey':h=vMKey();break;case 'mend':h=vMEnd();break;case 'mrulespage':h=vMRules();break;
@@ -1759,7 +1801,11 @@ function olShareNative(){var url=olLink(OL.code);
   if(navigator.share){navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){})}else olCopy()}
 function olAct(a,d){var c=OL.cfg||{},i;
   switch(a){
-    case 'ohome':OH.err='';go('ohome');break;case 'opick_debat':OL.pick=d.id;render();break;case 'ovote_debat':if(OL.pick){OL.my.vote=OL.s.vk;sendAct('vote',{v:OL.pick,k:OL.s.vk});olRender();}break;case 'ocont_debat':sendAct('close_vote');break;case 'onext_debat':sendAct('cont');break;case 'debat':OH.game='dd';OH.err='';go('ohome');break; case 'suscept':OH.game='s';OH.err='';go('ohome');break;
+    case 'ohome':OH.err='';go('ohome');break;case 'avatar':go('avatar_studio');break;
+case 'av_base':S.tempAvatar.base=+d.i;S._fresh=true;render();break;
+case 'av_hat':S.tempAvatar.hat=+d.i;S._fresh=true;render();break;
+case 'av_color':S.tempAvatar.color=+d.i;S._fresh=true;render();break;
+case 'av_save':try{localStorage.setItem('bazar-my-avatar',JSON.stringify(S.tempAvatar))}catch(e){};toast('Avatar enregistré !');setTimeout(function(){go('home');},800);break;case 'opick_debat':OL.pick=d.id;render();break;case 'ovote_debat':if(OL.pick){OL.my.vote=OL.s.vk;sendAct('vote',{v:OL.pick,k:OL.s.vk});olRender();}break;case 'ocont_debat':sendAct('close_vote');break;case 'onext_debat':sendAct('cont');break;case 'debat':OH.game='dd';OH.err='';go('ohome');break; case 'suscept':OH.game='s';OH.err='';go('ohome');break;
     case 'omode':OH.game=d.g;OH.err='';go('ohome');break;
     case 'ogame':OH.game=d.g;render();break;
     case 'ocreate':olCreate();break;
