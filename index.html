@@ -475,6 +475,31 @@ var TABOU=[
 ];
 
 function maxTabou(n){return n<=3?1:(n<=8?2:3)}
+var DEBATS=[
+"Le pain au chocolat est meilleur que la chocolatine",
+"Les pâtes sans fromage sont un crime",
+"Le réveil à 5h du matin rend heureux",
+"Les chats sont plus intelligents que les chiens",
+"Le télétravail est la fin de la civilisation",
+"Le papier toilette doit se dérouler par-dessus",
+"L'ananas sur la pizza est une invention géniale",
+"Mieux vaut être en retard qu'en avance",
+"Le silence est la meilleure des réponses",
+"Les réseaux sociaux ont rendu les gens plus gentils",
+"Le café sans sucre est un élixir de vie",
+"Les escargots sont des animaux de compagnie idéaux",
+"Le lundi devrait être un jour férié mondial",
+"Dormir 4 heures par nuit suffit amplement",
+"Les ados d'aujourd'hui sont plus polis qu'avant",
+"Le chocolat noir est meilleur que le chocolat au lait",
+"Les jeux vidéo devraient être obligatoires à l'école",
+"Le Père Noël est plus fort que le Marchand de Sable",
+"Le foot est le plus grand sport de l'histoire",
+"Les vacances à la montagne sont meilleures qu'à la mer",
+"Le fromage qui pue est le plus délicieux",
+"Les voitures volantes seront plus rapides que les avions",
+"Le meilleur dessert c'est la salade de fruits"
+];
 var CATS=[];PAIRS.forEach(function(p){if(CATS.indexOf(p[2])<0)CATS.push(p[2])});
 var PAL=[['#B8FF45','#10152A'],['#7957FF','#FFFFFF'],['#F4F4F8','#10152A'],['#AB9BFF','#10152A'],['#8DBF2E','#10152A'],['#5A3FD6','#FFFFFF'],['#D5F89B','#10152A'],['#C9CEEA','#10152A']];
 var ROLE={civil:'Civil',uc:'Undercover',mw:'Mr White'};
@@ -713,6 +738,7 @@ function vHome(){return '<div class="wrap">'+
  '<button class="game" data-act="ogo" data-g="d"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote · en ligne, 3 à 10 joueurs</span></span><span class="badge on">En ligne</span></button>'+
 '<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits · un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
 '<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne, 3 à 12 joueurs</span></span><span class="badge on">En ligne</span></button>'+
+'<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
  '</section>'+
  '<div style="display:flex;flex-direction:column;gap:12px;margin-top:6px"><button class="btn btn-primary" data-act="games">Créer une partie '+I.spark+'</button><button class="btn btn-secondary" data-act="ohome">Jouer en ligne · code ou QR code</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
  '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
@@ -952,6 +978,7 @@ function vGames(){return topbar('Choisir un jeu','home')+'<div class="wrap"><sec
   '<button class="game" data-act="ogo" data-g="d"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote · en ligne, 3 à 10 joueurs</span></span><span class="badge on">En ligne</span></button>'+
 '<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits · un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
 '<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne, 3 à 12 joueurs</span></span><span class="badge on">En ligne</span></button>'+
+'<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
  '</section><button class="btn btn-secondary" data-act="ohome">Jouer en ligne · chacun son téléphone</button><p class="note">À la même table sur un seul téléphone, ou à distance avec un code et un QR code.</p></div>'}
 
 function vTabouSetup(){
