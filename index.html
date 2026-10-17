@@ -460,6 +460,21 @@ var PAIRS=[
 ['Avion','Bateau','Voyage / Nature'],['Train','Voiture','Voyage / Nature'],['Valise','Sac à dos','Voyage / Nature'],['Tente','Bungalow','Voyage / Nature'],
 ['Cahier','Classeur','École'],['Stylo','Crayon','École'],['Gomme','Règle','École']
 ];
+/* ---------- Données : Le Mot Interdit ---------- */
+var TABOU=[
+['Pizza','Fromage','Italie','Ronde'],['Plage','Sable','Mer','Soleil'],['Chien','Aboie','Os','Fidèle'],
+['Voiture','Roue','Route','Permis'],['Ordinateur','Écran','Clavier','Souris'],['Mariage','Bague','Robe','Église'],
+['Cinéma','Film','Pop-corn','Acteur'],['Noël','Sapin','Cadeau','Père'],['Football','Ballon','But','Équipe'],
+['Paris','Tour Eiffel','France','Seine'],['Glace','Froid','Boule','Cornet'],['Lit','Dormir','Oreiller','Couverture'],
+['Téléphone','Appel','Écran','Poche'],['Soleil','Brille','Chaud','Étoile'],['Banane','Jaune','Singe','Fruit'],
+['Aspirateur','Bruit','Poussière','Maison'],['Lune','Nuit','Étoile','Croissant'],['Fourchette','Manger','Bouche','Pique'],
+['Docteur','Médecin','Malade','Hôpital'],['Guitare','Corde','Musique','Jouer'],['Pluie','Eau','Parapluie','Nuage'],
+['Livre','Page','Lire','Histoire'],['Fleur','Rose','Jardin','Parfum'],['Dentiste','Dent','Bouche','Mal'],
+['Bureau','Travail','Chaise','Ordinateur'],['Bouteille','Eau','Verre','Bouchon'],['Montagne','Neige','Sommet','Grimper'],
+['Avion','Voler','Aile','Aéroport'],['Four','Chaud','Cuisine','Manger'],['Miroir','Reflet','Visage','Verre']
+];
+
+function maxTabou(n){return n<=3?1:(n<=8?2:3)}
 var CATS=[];PAIRS.forEach(function(p){if(CATS.indexOf(p[2])<0)CATS.push(p[2])});
 var PAL=[['#B8FF45','#10152A'],['#7957FF','#FFFFFF'],['#F4F4F8','#10152A'],['#AB9BFF','#10152A'],['#8DBF2E','#10152A'],['#5A3FD6','#FFFFFF'],['#D5F89B','#10152A'],['#C9CEEA','#10152A']];
 var ROLE={civil:'Civil',uc:'Undercover',mw:'Mr White'};
@@ -600,6 +615,18 @@ function clueTimer(){if(S.settings.timer>0&&S.screen==='clues'){startT(S.setting
 /* ---------- Moteur ---------- */
 function order(g){var al=g.base.filter(function(id){return g.alive.indexOf(id)>=0});if(!al.length)return al;var r=(g.round-1)%al.length;al=al.slice(r).concat(al.slice(0,r));if(al.length>1&&g.roles[al[0]]==='mw'){var j=al.findIndex(function(id){return g.roles[id]!=='mw'});if(j>0){var t=al[0];al[0]=al[j];al[j]=t}}return al}
 function wordOf(g,id){var r=g.roles[id];return r==='civil'?g.civ:(r==='uc'?g.uc:null)}
+/* ---------- Logique Le Mot Interdit ---------- */
+function startTabou(){S.screen='tabou_setup';if(!S.tabou)S.tabou={timeLimit:60,teamA:0,teamB:0,round:1};S._fresh=true;render()}
+function tabouTeam(t){S.tabou.curTeam=t;S.tabou.cards=[];S.tabou.score=0;S.tabou.time=S.tabou.timeLimit||60;S.screen='tabou_game';S._fresh=true;render();startTabouTimer()}
+function startTabouTimer(){clearInterval(S.tabou.tid);S.tabou.tid=setInterval(function(){
+  S.tabou.time--;var l=document.getElementById('tabouTime');
+  if(l){l.textContent=S.tabou.time+' s';l.classList.toggle('low',S.tabou.time<=5)}
+  if(S.tabou.time<=0){clearInterval(S.tabou.tid);endTabouRound()}
+},1000)}
+function endTabouRound(){clearInterval(S.tabou.tid);S.screen='tabou_result';S._fresh=true;render();vib([100,50,100])}
+function nextTabouCard(ok){if(ok)S.tabou.score++;S.tabou.cur=(S.tabou.cur+1)%TABOU.length;S.tabou.cards.push(S.tabou.cur);S._fresh=true;render()}
+function saveTabouScore(){if(S.tabou.curTeam===0)S.tabou.teamA+=S.tabou.score;else S.tabou.teamB+=S.tabou.score;S.screen='tabou_score';S._fresh=true;render()}
+function nextTabouRound(){S.tabou.round++;S.screen='tabou_setup';S._fresh=true;render()}
 function startGame(){
   fixSettings();
   S.players.forEach(function(p){p.name=p.name.trim()});
@@ -656,6 +683,7 @@ function vHome(){return '<div class="wrap">'+
  '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · 4 joueurs et plus</span></span><span class="badge on">Jouable</span></button>'+
  '<button class="game" data-act="ogo" data-g="l"><span class="tile v" style="background:var(--lime);color:var(--lime-ink)">'+I.abc+'</span><span class="gt"><b>BAZAR Petit Bac</b><span class="muted small">Petit bac et phrases à trous · en ligne, 3 joueurs et plus</span></span><span class="badge on">En ligne</span></button>'+
  '<button class="game" data-act="ogo" data-g="d"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote · en ligne, 3 à 10 joueurs</span></span><span class="badge on">En ligne</span></button>'+
+'<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits · un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
  '</section>'+
  '<div style="display:flex;flex-direction:column;gap:12px;margin-top:6px"><button class="btn btn-primary" data-act="games">Créer une partie '+I.spark+'</button><button class="btn btn-secondary" data-act="ohome">Jouer en ligne · code ou QR code</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
  '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
@@ -838,13 +866,74 @@ function boardHtml(mode){var m=S.M,k=mode>0;
     var on=!k&&!c.rev&&m.phase==='guess';
     return '<button class="'+cls+'" data-i="'+i+'"'+(on?' data-act="msel"':' tabindex="-1" aria-disabled="true"')+' aria-label="'+esc(c.w)+(c.rev?' (révélée)':'')+'">'+esc(c.w)+((c.rev||k)?sym(c.t):'')+'</button>'}).join('')+'</div>'}
 
+function vTabouGame(){
+  if(!S.tabou.cards||S.tabou.cards.length===0)S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);
+  var cardIdx=S.tabou.cards[0];
+  var card=TABOU[cardIdx];
+  var isLow=S.tabou.time<=10;
+  return '<div class="bar"><span class="meta">Manche '+S.tabou.round+' · Équipe '+(S.tabou.curTeam===0?'A':'B')+'</span><button class="icon-btn" data-act="tabou_quit" aria-label="Menu">'+I.dots+'</button></div>'+
+  '<div class="wrap"><div class="card" style="flex:1;justify-content:center;text-align:center;border-color:'+(isLow?'var(--danger)':'var(--lime)')+';box-shadow:0 0 20px '+(isLow?'rgba(255,122,122,.3)':'rgba(184,255,69,.15)')+'">'+
+  '<span class="eyebrow">Mot à deviner</span><h1 style="font-size:clamp(40px,10vw,64px);color:var(--fg);margin:10px 0 30px">'+esc(card[0])+'</h1>'+
+  '<div style="background:var(--surface-2);border-radius:var(--r-sm);padding:15px 10px"><span class="eyebrow" style="color:var(--danger)">Interdits</span><div style="font-size:20px;font-weight:700;margin-top:8px;line-height:1.4">'+esc(card[1])+'<br>'+esc(card[2])+'<br>'+esc(card[3])+'</div></div>'+
+  '</div>'+
+  '<div style="text-align:center;margin:10px 0"><span class="tl '+(isLow?'low':'')+'" id="tabouTime" style="font-size:32px">'+S.tabou.time+' s</span></div>'+
+  '</div><div class="dock">'+
+  '<button class="btn btn-primary" data-act="tabou_ok" style="background:var(--lime)">Mot trouvé (+1)</button>'+
+  '<button class="btn btn-secondary" data-act="tabou_pass" style="border-color:var(--danger);color:var(--danger)">Mot interdit / Passer</button>'+
+  '</div>'}
+function vTabouResult(){
+  var nextT = S.tabou.curTeam===0 ? 'B' : 'A';
+  return '<div class="bar"><span class="meta">Manche '+S.tabou.round+' terminée</span><span style="width:44px"></span></div>'+
+  '<div class="wrap"><div class="win"><span class="eyebrow">Temps écoulé !</span><h1>Équipe '+(S.tabou.curTeam===0?'A':'B')+'</h1><p class="lead">a marqué <b style="color:var(--lime);font-size:30px">'+S.tabou.score+'</b> point'+(S.tabou.score>1?'s':'')+'</p></div>'+
+  '<section class="card"><h2>Scores</h2><div class="row"><span class="lg">Équipe A</span><b class="num">'+(S.tabou.teamA+(S.tabou.curTeam===0?S.tabou.score:0))+'</b></div><div class="row"><span class="lg">Équipe B</span><b class="num">'+(S.tabou.teamB+(S.tabou.curTeam===1?S.tabou.score:0))+'</b></div></section>'+
+  '</div><div class="dock">'+
+  '<button class="btn btn-primary" data-act="tabou_nextteam" style="background:var(--violet)">Au tour de l\'équipe '+nextT+'</button>'+
+  '<button class="btn btn-secondary" data-act="tabou_quit">Terminer la partie</button>'+
+  '</div>'}
+function vTabouSetup(){
+  if(!S.tabou)S.tabou={timeLimit:60,teamA:0,teamB:0,round:1};
+  var t=S.tabou.timeLimit||60;
+  return topbar('Le Mot Interdit','home')+'<div class="wrap">'+
+  '<section class="hero"><h1 style="font-size:32px">Fais deviner sans les mots interdits.</h1><p class="lead">Le téléphone passe de main en main. Fais deviner un mot à ton équipe sans prononcer les 3 mots interdits.</p></section>'+
+  '<section class="card"><h2>Temps par manche</h2><div class="seg">'+
+  [30,45,60,90].map(function(sec){return '<button data-act="tabou_time" data-t="'+sec+'" aria-pressed="'+(t===sec)+'">'+sec+' s</button>'}).join('')+
+  '</div><p class="muted small">Le chrono tourne pendant que ton équipe devine. Si tu dis un mot interdit, passe au suivant !</p></section>'+
+  '<section class="card"><h2>Score actuel</h2><div class="row"><span class="lg">Équipe A</span><b class="num">'+(S.tabou.teamA||0)+'</b></div><div class="row"><span class="lg">Équipe B</span><b class="num">'+(S.tabou.teamB||0)+'</b></div><button class="link" data-act="tabou_reset" style="margin-top:10px;align-self:flex-start">Remettre les scores à zéro</button></section>'+
+  '</div><div class="dock"><button class="btn btn-primary" data-act="tabou_start">Lancer la manche</button></div>'}
+
+function vTabouGame(){
+  if(!S.tabou.cards||S.tabou.cards.length===0)S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);
+  var cardIdx=S.tabou.cards[0];
+  var card=TABOU[cardIdx];
+  var isLow=S.tabou.time<=10;
+  return '<div class="bar"><span class="meta">Manche '+S.tabou.round+' · Équipe '+(S.tabou.curTeam===0?'A':'B')+'</span><button class="icon-btn" data-act="tabou_quit" aria-label="Menu">'+I.dots+'</button></div>'+
+  '<div class="wrap"><div class="card" style="flex:1;justify-content:center;text-align:center;border-color:'+(isLow?'var(--danger)':'var(--lime)')+';box-shadow:0 0 20px '+(isLow?'rgba(255,122,122,.3)':'rgba(184,255,69,.15)')+'">'+
+  '<span class="eyebrow">Mot à deviner</span><h1 style="font-size:clamp(40px,10vw,64px);color:var(--fg);margin:10px 0 30px">'+esc(card[0])+'</h1>'+
+  '<div style="background:var(--surface-2);border-radius:var(--r-sm);padding:15px 10px"><span class="eyebrow" style="color:var(--danger)">Interdits</span><div style="font-size:20px;font-weight:700;margin-top:8px;line-height:1.4">'+esc(card[1])+'<br>'+esc(card[2])+'<br>'+esc(card[3])+'</div></div>'+
+  '</div>'+
+  '<div style="text-align:center;margin:10px 0"><span class="tl '+(isLow?'low':'')+'" id="tabouTime" style="font-size:32px">'+S.tabou.time+' s</span></div>'+
+  '</div><div class="dock">'+
+  '<button class="btn btn-primary" data-act="tabou_ok" style="background:var(--lime)">Mot trouvé (+1)</button>'+
+  '<button class="btn btn-secondary" data-act="tabou_pass" style="border-color:var(--danger);color:var(--danger)">Mot interdit / Passer</button>'+
+  '</div>'}
 function vGames(){return topbar('Choisir un jeu','home')+'<div class="wrap"><section style="display:flex;flex-direction:column;gap:12px" aria-label="Jeux">'+
   '<button class="game" data-act="sheet" data-s="mode-u"><span class="tile v">'+I.eye+'</span><span class="gt"><b>Undercover</b><span class="muted small">Bluff et déduction · 3 à 12 joueurs</span></span><span class="badge on">Jouable</span></button>'+
   '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · 4 joueurs et plus</span></span><span class="badge on">Jouable</span></button>'+
   '<button class="game" data-act="ogo" data-g="l"><span class="tile v" style="background:var(--lime);color:var(--lime-ink)">'+I.abc+'</span><span class="gt"><b>BAZAR Petit Bac</b><span class="muted small">Petit bac et phrases à trous · en ligne, 3 joueurs et plus</span></span><span class="badge on">En ligne</span></button>'+
   '<button class="game" data-act="ogo" data-g="d"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote · en ligne, 3 à 10 joueurs</span></span><span class="badge on">En ligne</span></button>'+
+'<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits · un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
  '</section><button class="btn btn-secondary" data-act="ohome">Jouer en ligne · chacun son téléphone</button><p class="note">À la même table sur un seul téléphone, ou à distance avec un code et un QR code.</p></div>'}
 
+function vTabouSetup(){
+  if(!S.tabou)S.tabou={timeLimit:60,teamA:0,teamB:0,round:1};
+  var t=S.tabou.timeLimit||60;
+  return topbar('Le Mot Interdit','home')+'<div class="wrap">'+
+  '<section class="hero"><h1 style="font-size:32px">Fais deviner sans les mots interdits.</h1><p class="lead">Le téléphone passe de main en main. Fais deviner un mot à ton équipe sans prononcer les 3 mots interdits.</p></section>'+
+  '<section class="card"><h2>Temps par manche</h2><div class="seg">'+
+  [30,45,60,90].map(function(sec){return '<button data-act="tabou_time" data-t="'+sec+'" aria-pressed="'+(t===sec)+'">'+sec+' s</button>'}).join('')+
+  '</div><p class="muted small">Le chrono tourne pendant que ton équipe devine. Si tu dis un mot interdit, passe au suivant !</p></section>'+
+  '<section class="card"><h2>Score actuel</h2><div class="row"><span class="lg">Équipe A</span><b class="num">'+(S.tabou.teamA||0)+'</b></div><div class="row"><span class="lg">Équipe B</span><b class="num">'+(S.tabou.teamB||0)+'</b></div><button class="link" data-act="tabou_reset" style="margin-top:10px;align-self:flex-start">Remettre les scores à zéro</button></section>'+
+  '</div><div class="dock"><button class="btn btn-primary" data-act="tabou_start">Lancer la manche</button></div>'}
 function vMSetup(){var m=S.my,c=counts(m.size);
   var teams=[0,1].map(function(t){return '<div class="prow"><span class="av tdot t'+t+'" aria-hidden="true">'+sym(t,'inl2')+'</span><input class="field" id="tn-'+t+'" data-input="tname" data-t="'+t+'" value="'+esc(m.names[t])+'" maxlength="14" placeholder="Nom de l\'équipe" aria-label="Nom de l\'équipe '+(t+1)+'" autocomplete="off" enterkeyhint="done"></div>'}).join('');
   var sizes=[15,20,25].map(function(n){return '<button data-act="msize" data-n="'+n+'" aria-pressed="'+(m.size===n)+'">'+n+' mots</button>'}).join('');
@@ -947,7 +1036,9 @@ function render(){
     case 'result':h=vResult();break;case 'mwguess':h=vMw();break;case 'end':h=vEnd();break;case 'peek':h=vPeek();break;
     case 'games':h=vGames();break;case 'msetup':h=vMSetup();break;case 'mgame':h=vMGame();break;case 'mkey':h=vMKey();break;case 'mend':h=vMEnd();break;case 'mrulespage':h=vMRules();break;
     case 'ohome':h=vOHome();break;case 'online':h=vOnline();break;
-    default:h=vHome()}
+        case 'tabou_setup':h=vTabouSetup();break;case 'tabou_game':h=vTabouGame();break;
+    case 'tabou_result':h=vTabouResult();break;
+default:h=vHome()}
   app.style.animation='none'; void app.offsetWidth; app.style.animation='';
 app.className=S._fresh?'enter':'';S._fresh=false;
   app.innerHTML=h+vSheet();
@@ -1004,6 +1095,7 @@ function act(a,d){
     case 'home':S.game=g&&S.screen!=='end'?null:S.game;go('home');break;
     case 'rules':go('rules');break;
     case 'create':go('setup');break;
+    case 'tabou':startTabou();break;
     case 'savelist':saveCurrentList();break;
     case 'loadlist':loadSavedList(d.k);break;
     case 'dellist':deleteSavedList(d.k);break;
@@ -1059,7 +1151,16 @@ function act(a,d){
     case 'mfin':if(S.M.made>=1){mEndTurn('L\'équipe '+S.my.names[S.M.turn]+' passe la main.');S._fresh=true;render();window.scrollTo(0,0)}break;
     case 'mkey':S.sheet=null;go('mkey');break;
     case 'mkeydone':go('mgame');mTimer();break;
-    default:olAct(a,d)
+        case 'tabou':startTabou();break;
+    case 'tabou_time':S.tabou.timeLimit=+d.t;S._fresh=true;render();break;
+    case 'tabou_reset':S.tabou.teamA=0;S.tabou.teamB=0;S._fresh=true;render();break;
+    case 'tabou_start':S.tabou.curTeam=S.tabou.round%2;S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);S.tabou.score=0;S.tabou.time=S.tabou.timeLimit;S.screen='tabou_game';S._fresh=true;render();startTabouTimer();break;
+    case 'tabou_ok':sfxPop();S.tabou.score++;S.tabou.cards.shift();if(S.tabou.cards.length===0)S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);S._fresh=true;render();break;
+    case 'tabou_pass':sfxError();S.tabou.cards.shift();if(S.tabou.cards.length===0)S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);S._fresh=true;render();break;
+    case 'tabou_quit':clearInterval(S.tabou.tid);S.screen='home';S._fresh=true;render();break;
+    case 'tabou_savescore':saveTabouScore();break;
+    case 'tabou_nextteam':S.tabou.round++;S.tabou.curTeam=S.tabou.round%2;S.tabou.score=0;S.tabou.time=S.tabou.timeLimit;S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);S.screen='tabou_game';S._fresh=true;render();startTabouTimer();break;
+default:olAct(a,d)
   }
 }
 
