@@ -1635,7 +1635,7 @@ function vOLobbyM(){var c=OL.cfg,h=OL.host,me=OL.players[PID]||{team:0},nm=c.nam
 
 function vOnline(){
   if(!OL.on||!OL.room)return vOLoad('Connexion au salon…');
-  var cok=OL.cfg&&(OL.game==='m'?OL.cfg.names&&OL.cfg.size:(OL.game==='l'?OL.cfg.np:(OL.game==='d'?OL.cfg.tdraw:OL.cfg.uc!=null)));
+  var cok=OL.cfg&&(OL.game==='s'?true:(OL.game==='m'?OL.cfg.names&&OL.cfg.size:(OL.game==='l'?OL.cfg.np:(OL.game==='d'?OL.cfg.tdraw:OL.cfg.uc!=null))));
   if(!cok)return vOLoad('Chargement du salon…');
   if(OL.display&&OL.game==='d')return vODisplay();if(OL.game==='s'){if(OL.status==='lobby'||!OL.s)return vOLobbyS();if(OL.s.ph==='play')return vOSusceptVote();return vOSusceptResult();}
   if(OL.status==='lobby'||!OL.s)return (OL.status==='play'&&!OL.s)?vOLoad('Chargement de la partie…'):(OL.game==='m'?vOLobbyM():(OL.game==='l'?vOLobbyL():(OL.game==='d'?vOLobbyD():vOLobbyU())));
