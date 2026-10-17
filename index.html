@@ -570,7 +570,7 @@ function tick(){fxc.clearRect(0,0,fx.width,fx.height);
   fxc.globalAlpha=1;
   if(PS.length){raf=requestAnimationFrame(tick)}else{raf=0;fxc.clearRect(0,0,fx.width,fx.height)}}
 function centerOf(el){var r=el.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2]}
-function celebrate(el,big){var c=el?centerOf(el):[innerWidth/2,innerHeight/2.5];burst(c[0],c[1],big?90:55,{speed:big?10:8,size:big?14:11});vib(big?[30,40,30,40,60]:[40])}
+function celebrate(el,big){sfxWin();var c=el?centerOf(el):[innerWidth/2,innerHeight/2.5];burst(c[0],c[1],big?90:55,{speed:big?10:8,size:big?14:11});vib(big?[30,40,30,40,60]:[40])}
 function fanfare(cols){if(RM)return;var w=innerWidth,h=innerHeight;
   function o(x){x.cols=cols||COLS;return x}
   burst(w*.2,h*.35,50,o({speed:9}));
@@ -578,7 +578,7 @@ function fanfare(cols){if(RM)return;var w=innerWidth,h=innerHeight;
   setTimeout(function(){burst(w*.5,h*.25,80,o({speed:11,size:14}))},460);
   var n=0,iv=setInterval(function(){burst(Math.random()*w,-10,6,o({speed:2,up:-2,g:.12,life:130}));if(++n>14)clearInterval(iv)},140);
   vib([40,50,40,50,120])}
-function sad(el){if(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')}
+function sad(el){sfxError();sfxError();if(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')}
   if(el&&!RM){var c=centerOf(el);burst(c[0],c[1],18,{cols:['#FF8585','#AAB0CC','#323A68'],speed:4,g:.3,size:8,life:50})}vib([60,40,100])}
 function tapSparkle(el){if(!el||RM)return;var c=centerOf(el);burst(c[0],c[1],8,{speed:5,size:8,life:40})}
 
@@ -969,7 +969,7 @@ function bindHold(){
 app.addEventListener('click',function(e){
   var b=e.target.closest('[data-act]');if(!b||b.disabled)return;
   if(b.dataset.act==='scrim'&&e.target!==b)return;
-  if(b.classList.contains('btn-primary'))tapSparkle(b);
+  if(b.classList.contains('btn-primary'))tapSparkle(b);sfxPop();
   act(b.dataset.act,b.dataset);
 });
 app.addEventListener('input',function(e){
@@ -2237,6 +2237,31 @@ function muStep(B,step,t){
 function muTick(){var c=MU.ctx;if(!c||!MU.on)return;
   var q=60/MBPM/4;
   while(MU.next<c.currentTime+.3){muStep(MU.bus,MU.step,MU.next);MU.step=(MU.step+1)%64;MU.next+=q}}
+/* ---------- Effets sonores (SFX) ---------- */
+var SFX={ctx:null,on:true};
+try{if(localStorage.getItem('bazar-sfx')==='off')SFX.on=false}catch(e){}
+function sfxInit(){if(!SFX.ctx){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;SFX.ctx=new AC()}
+  if(SFX.ctx.state==='suspended')SFX.ctx.resume()}
+function sfxTone(f1,f2,dur,type,vol){
+  if(!SFX.on)return;sfxInit();var c=SFX.ctx;if(!c)return;
+  var o=c.createOscillator(),g=c.createGain();o.type=type||'sine';
+  o.frequency.setValueAtTime(f1,c.currentTime);
+  if(f2)o.frequency.exponentialRampToValueAtTime(f2,c.currentTime+dur);
+  g.gain.setValueAtTime(0.0001,c.currentTime);
+  g.gain.linearRampToValueAtTime(vol||0.1,c.currentTime+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);
+  o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+dur+0.05)}
+function sfxClick(){sfxTone(400,700,0.08,'triangle',0.08)}
+function sfxPop(){sfxTone(600,1200,0.12,'sine',0.1)}
+function sfxWin(){sfxTone(500,800,0.15,'triangle',0.12);setTimeout(function(){sfxTone(800,1200,0.2,'triangle',0.12)},100);setTimeout(function(){sfxTone(1200,1600,0.3,'sine',0.1)},220)}
+function sfxError(){sfxTone(300,150,0.2,'sawtooth',0.08)}
+function sfxWhoosh(){if(!SFX.on)return;sfxInit();var c=SFX.ctx;if(!c)return;
+  var buf=c.createBuffer(1,c.sampleRate*0.3,c.sampleRate),d=buf.getChannelData(0);
+  for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  var s=c.createBufferSource();s.buffer=buf;
+  var f=c.createBiquadFilter();f.type='bandpass';f.frequency.setValueAtTime(2000,c.currentTime);f.frequency.exponentialRampToValueAtTime(500,c.currentTime+0.3);
+  var g=c.createGain();g.gain.setValueAtTime(0.05,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.3);
+  s.connect(f);f.connect(g);g.connect(c.destination);s.start();s.stop(c.currentTime+0.35)}
 function muStart(){
   if(!MU.on)return;
   try{
