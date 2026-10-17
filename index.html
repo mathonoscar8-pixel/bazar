@@ -732,19 +732,21 @@ function vHome(){return '<div class="wrap">'+
  '<span class="star" style="width:17px;height:17px;bottom:0;right:26%;animation-delay:-2.4s,-1.8s">'+STAR+'</span></header>'+
  '<section class="hero"><h1>La soirée commence ici.</h1><p class="lead">Des jeux, des potes, du bluff et un peu de chaos.</p></section>'+
  '<section style="display:flex;flex-direction:column;gap:12px" aria-label="Nos jeux">'+
+ '<span class="eyebrow" style="margin-top:10px">🕵️ BLUFF & MENSONGES</span>'+
  '<button class="game" data-act="sheet" data-s="mode-u"><span class="tile v">'+I.eye+'</span><span class="gt"><b>Undercover</b><span class="muted small">3 à 12 joueurs · un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
- '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · 4 joueurs et plus</span></span><span class="badge on">Jouable</span></button>'+
- '<button class="game" data-act="ogo" data-g="l"><span class="tile v" style="background:var(--lime);color:var(--lime-ink)">'+I.abc+'</span><span class="gt"><b>BAZAR Petit Bac</b><span class="muted small">Petit bac et phrases à trous · en ligne, 3 joueurs et plus</span></span><span class="badge on">En ligne</span></button>'+
+ '<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits · un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
+ '<span class="eyebrow" style="margin-top:10px">🎨 CRÉATIF & RIRES</span>'+
  '<button class="game" data-act="ogo" data-g="d"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote · en ligne, 3 à 10 joueurs</span></span><span class="badge on">En ligne</span></button>'+
-'<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits · un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
-'<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne, 3 à 12 joueurs</span></span><span class="badge on">En ligne</span></button>'+
-'<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
+ '<button class="game" data-act="ogo" data-g="l"><span class="tile v" style="background:var(--lime);color:var(--lime-ink)">'+I.abc+'</span><span class="gt"><b>BAZAR Petit Bac</b><span class="muted small">Petit bac et phrases à trous · en ligne, 3 joueurs et plus</span></span><span class="badge on">En ligne</span></button>'+
+ '<span class="eyebrow" style="margin-top:10px">🎉 APÉRO & DISCUSSIONS</span>'+
+ '<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne, 3 à 12 joueurs</span></span><span class="badge on">En ligne</span></button>'+
+ '<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
+ '<span class="eyebrow" style="margin-top:10px">🧩 À PART</span>'+
+ '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · 4 joueurs et plus</span></span><span class="badge on">Jouable</span></button>'+
  '</section>'+
  '<div style="display:flex;flex-direction:column;gap:12px;margin-top:6px"><button class="btn btn-primary" data-act="games">Créer une partie '+I.spark+'</button><button class="btn btn-secondary" data-act="ohome">Jouer en ligne · code ou QR code</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
  '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
- '</div>'}
-
-function vRules(){return topbar('Comment jouer','home')+'<div class="wrap">'+
+ '</div>'}function vRules(){return topbar('Comment jouer','home')+'<div class="wrap">'+
  '<section class="hero"><h1 style="font-size:32px">Démasque les imposteurs.</h1><p class="lead">Chacun reçoit un mot en secret. Presque tout le monde a le même mot. Quelques joueurs ont un mot voisin, ou aucun.</p></section>'+
  '<ol class="steps">'+
  '<li><span class="n">1</span><div><h3>Découvre ton mot</h3><p class="muted">Le téléphone passe de main en main. Maintiens la carte pour lire ton mot, puis passe au suivant. Personne ne sait quel rôle il a.</p></div></li>'+
