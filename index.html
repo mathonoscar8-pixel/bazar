@@ -2165,7 +2165,7 @@ function dAct(a,d){var c=OL.cfg||{},s=OL.s;
     case 'dheart':if(OL.dv&&!OL.dv.sent){OL.dv.heart=OL.dv.heart===d.id?null:d.id;vib(10);render()}break;
     case 'dvote':dSendVote();break;
     case 'ojoind':olJoinDisplay();break;
-    case 'music':musicToggle();break;
+    case 'music':musicToggle();break;case 'sfx':sfxToggle();break;
     default:return false}}
 app.addEventListener('input',function(e){var t=e.target,d=t.dataset||{};
   if(d.input==='dfake'&&OL.on){OL.dfake.w=t.value;OL.dfake.msg='';var b=document.getElementById('dfs');if(b)b.disabled=OL.dfake.sent||t.value.trim().length<3;var m=document.getElementById('dfm');if(m)m.textContent=''}
@@ -2275,12 +2275,27 @@ function muStop(){clearInterval(MU.tm);var c=MU.ctx;if(!c)return;
   try{MU.bus.out.gain.cancelScheduledValues(c.currentTime);MU.bus.out.gain.setTargetAtTime(0,c.currentTime,.15);setTimeout(function(){if(!MU.on&&MU.ctx&&MU.ctx.state==='running')MU.ctx.suspend()},900)}catch(e){}}
 function musicToggle(){MU.on=!MU.on;try{localStorage.setItem('bazar-music',MU.on?'on':'off')}catch(e){}
   if(MU.on)muStart();else muStop();musicPaint();vib(10)}
+function sfxHtml(fix){return '<button class="icon-btn mus'+(fix?' fix':'')+'" data-act="sfx" aria-pressed="'+SFX.on+'" aria-label="'+(SFX.on?'Couper les effets sonores':'Activer les effets sonores')+'" style="'+(fix?'top:calc(10px + env(safe-area-inset-top));right:64px':'')+'">'+(SFX.on?'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 9c1 1 1 5 0 6"/><path d="M19 6c3 3 3 9 0 12"/></svg>':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>')+'</button>'}
+function sfxToggle(){SFX.on=!SFX.on;try{localStorage.setItem('bazar-sfx',SFX.on?'on':'off')}catch(e){}
+  if(SFX.on)sfxPop();render();vib(10)}
 function musicHtml(fix){return '<button class="icon-btn mus'+(fix?' fix':'')+'" data-act="music" aria-pressed="'+MU.on+'" aria-label="'+(MU.on?'Couper la musique':'Activer la musique')+'">'+(MU.on?'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/><path d="M3 3l18 18"/></svg>')+'</button>'}
 function musicPaint(){var l=app.querySelectorAll('.mus');for(var i=0;i<l.length;i++){var fix=l[i].classList.contains('fix'),t=document.createElement('div');t.innerHTML=musicHtml(fix);l[i].replaceWith(t.firstChild)}}
-function musicPost(){if(app.querySelector('.mus'))return;
+function musicPost(){
   var bar=app.querySelector('.bar');
-  if(bar&&bar.lastElementChild){bar.lastElementChild.insertAdjacentHTML('beforebegin',musicHtml(false))}
-  else app.insertAdjacentHTML('beforeend',musicHtml(true))}
+  if(bar&&bar.lastElementChild){
+    if(!bar.querySelector('.mus')){
+      bar.lastElementChild.insertAdjacentHTML('beforebegin',sfxHtml(false)+musicHtml(false));
+    } else if(!bar.querySelector('[data-act="sfx"]')){
+      bar.lastElementChild.insertAdjacentHTML('beforebegin',sfxHtml(false));
+    }
+  } else {
+    if(!app.querySelector('.mus')){
+      app.insertAdjacentHTML('beforeend',sfxHtml(true)+musicHtml(true));
+    } else if(!app.querySelector('[data-act="sfx"]')){
+      app.insertAdjacentHTML('beforeend',sfxHtml(true));
+    }
+  }
+}
 (function(){function first(){if(MU.started){['pointerup','touchend','click','keydown'].forEach(function(e){document.removeEventListener(e,first,true)});return}muStart()}
   ['pointerup','touchend','click','keydown'].forEach(function(e){document.addEventListener(e,first,true)});
   document.addEventListener('visibilitychange',function(){var c=MU.ctx;if(!c||!MU.on)return;if(document.hidden){clearInterval(MU.tm);c.suspend()}else{c.resume();MU.next=c.currentTime+.1;clearInterval(MU.tm);MU.tm=setInterval(muTick,60)}})})();
