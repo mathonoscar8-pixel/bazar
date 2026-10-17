@@ -14,12 +14,12 @@
 <style>
 /* Concept : une colonne mobile sur bleu nuit, une seule action principale par écran, le violet réservé aux cartes et au secret, le vert citron réservé à l'action. */
 :root{
-  --bg:#10152A; --surface:#1B2140; --surface-2:#252C52; --line:#323A68;
-  --fg:#F4F4F8; --muted:#AAB0CC;
-  --lime:#B8FF45; --lime-ink:#10152A;
-  --violet:#7957FF; --violet-soft:#AB9BFF;
-  --danger:#FF8585;
-  --field:#E9EBF7; --field-ink:#10152A; --field-hint:#646B91;
+  --bg:#0B0F1E; --surface:#161C35; --surface-2:#202848; --line:#2D3768;
+  --fg:#F7F8FC; --muted:#A3ACCF;
+  --lime:#B8FF45; --lime-ink:#0B0F1E;
+  --violet:#8466FF; --violet-soft:#B3A5FF;
+  --danger:#FF7A7A;
+  --field:#EDF0FC; --field-ink:#0B0F1E; --field-hint:#5A6293;
   --display:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
   --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   --r:18px; --r-sm:12px;
@@ -42,7 +42,7 @@ p{margin:0}
 .icon-btn:disabled{opacity:.35;cursor:not-allowed}
 .icon-btn svg{width:22px;height:22px}
 :focus-visible{outline:3px solid var(--lime);outline-offset:3px}
-.btn{min-height:56px;width:100%;border-radius:var(--r);border:2px solid transparent;font:700 18px var(--display);padding:0 22px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;text-align:center}
+.btn{min-height:58px;width:100%;border-radius:var(--r);border:2px solid transparent;font:700 18px var(--display);padding:0 22px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .15s ease, box-shadow .2s ease}
 .btn svg{width:20px;height:20px}
 .btn-primary{background:var(--lime);color:var(--lime-ink)}
 .btn-secondary{background:transparent;color:var(--fg);border-color:var(--violet)}
@@ -51,7 +51,7 @@ p{margin:0}
 .btn-sm{min-height:46px;font-size:16px;width:auto;align-self:flex-start;padding:0 18px}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn:active:not(:disabled){transform:scale(.985)}
-.card{background:var(--surface);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--surface);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0;box-shadow:0 6px 24px rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.03)}
 .lead{font-size:18px;color:var(--muted);text-wrap:pretty}
 .muted{color:var(--muted)}
 .small{font-size:14px}
