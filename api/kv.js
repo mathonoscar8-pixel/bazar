@@ -7,6 +7,27 @@ const redis = new Redis({
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
+      // Nettoyage des vieux salons (plus de 24h)
+    try {
+      const keys = await redis.keys('rooms/*');
+      if (keys.length > 0) {
+        const rooms = await redis.mget(...keys);
+        for (let i = 0; i < keys.length; i++) {
+          const room = rooms[i];
+          if (room && room.ts) {
+            const age = Date.now() - room.ts;
+            if (age > 24 * 60 * 60 * 1000) { // 24 heures
+              await redis.del(keys[i]);
+              const roomCode = keys[i].replace('rooms/', '');
+              const subKeys = await redis.keys('rooms/' + roomCode + '/*');
+              if (subKeys.length > 0) await redis.del(...subKeys);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Nettoyage échoué :', e);
+    }
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
