@@ -51,7 +51,7 @@ p{margin:0}
 .btn-ghost{background:transparent;color:var(--muted);border-color:var(--line)}
 .btn-sm{min-height:46px;font-size:16px;width:auto;align-self:flex-start;padding:0 18px}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.btn:active:not(:disabled){transform:scale(.985)}
+.btn:active:not(:disabled){transform:scale(.96);transition:transform .05s}
 .btn-primary:not(:disabled){animation:btnPulse 2s infinite}
 @keyframes btnPulse{...}
 .card{background:var(--surface);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0;box-shadow:0 6px 24px rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.03)}
@@ -116,6 +116,8 @@ p{margin:0}
 .hold.show .front{display:none}
 .hold.show .back{display:flex}
 .word{font:700 clamp(38px,13vw,58px) var(--display);overflow-wrap:anywhere;line-height:1.05}
+@keyframes wordPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.hold.show .word{animation:wordPop .35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both}
 .order{display:flex;flex-direction:column;gap:8px}
 .orow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-sm);background:var(--surface);border:2px solid transparent}
 .orow.cur{border-color:var(--lime);background:var(--surface-2)}
@@ -165,6 +167,8 @@ summary{font:600 16px var(--display);cursor:pointer}
 details p{margin-top:8px;color:var(--muted)}
 .scrim{position:fixed;inset:0;background:rgba(8,10,22,.72);display:flex;align-items:flex-end;justify-content:center;z-index:20}
 .sheet{width:100%;max-width:520px;background:var(--surface);border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:88%;overflow:auto}
+@keyframes slideUpSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet{animation:slideUpSheet .3s cubic-bezier(0.16, 1, 0.3, 1) both}
 .sheet ul{margin:0;padding-left:20px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 .note{font-size:14px;color:var(--muted);text-align:center}
 canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
@@ -189,6 +193,7 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 .wrap>.hold{animation:float 3.4s ease-in-out infinite}
 .wrap>.hold.show{animation:none}
 .pick[aria-pressed="true"]{animation:pop .28s ease-out}
+.pick:active{transform:scale(.95)}
 .shake{animation:shake .6s}
 .timer.low i{background:var(--danger)}
 .tl.low{color:var(--danger);animation:beat .5s ease-in-out infinite alternate}
