@@ -375,6 +375,92 @@ h2 {
   color: var(--violet-soft) !important;
   font-weight: 700 !important;
 }
+/* ===== BARRE DE NAVIGATION BASSE ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; width: 100%;
+  background: rgba(11, 15, 30, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 100;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
+}
+.bottom-nav button {
+  background: none; border: none;
+  color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font: 600 11px var(--display);
+  cursor: pointer;
+  flex: 1;
+  transition: color 0.2s;
+  position: relative;
+}
+.bottom-nav button svg {
+  width: 24px; height: 24px;
+  fill: currentColor;
+  transition: transform 0.2s;
+}
+.bottom-nav button.active {
+  color: var(--lime);
+}
+.bottom-nav button.active svg {
+  transform: translateY(-2px) scale(1.15);
+}
+.bottom-nav button.active::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 30px; height: 30px;
+  background: var(--lime);
+  filter: blur(20px);
+  opacity: 0.3;
+  border-radius: 50%;
+  z-index: -1;
+}
+/* On ajoute un espace de 90px en bas pour que le contenu ne soit jamais caché */
+#app { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)) !important; }
+body { padding-bottom: 0 !important; }
+/* ===== ROUE DE LA CHANCE PREMIUM ===== */
+.wheel-container { position: relative; width: 300px; height: 300px; margin: 30px auto; }
+.wheel-bg {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: conic-gradient(
+    #7957FF 0deg 60deg, #B8FF45 60deg 120deg, 
+    #F5A524 120deg 180deg, #E5484D 180deg 240deg, 
+    #8466FF 240deg 300deg, #2F9DF6 300deg 360deg
+  );
+  box-shadow: 0 15px 40px rgba(0,0,0,0.6), inset 0 0 0 10px #10152A, inset 0 0 20px rgba(0,0,0,0.5);
+  transition: transform 5s cubic-bezier(0.1, 0.8, 0.1, 1);
+  position: relative;
+  border: 4px solid #10152A;
+}
+.wheel-bg::after {
+  content: "B"; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px; height: 60px; background: linear-gradient(135deg, #B8FF45, #8DBF2E); border-radius: 50%;
+  display: grid; place-items: center; color: #10152A; font: 900 32px 'Outfit', sans-serif;
+  box-shadow: 0 0 20px rgba(184,255,69,0.5); border: 3px solid #10152A; z-index: 2;
+}
+.wheel-pointer {
+  position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+  width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent;
+  border-top: 35px solid #B8FF45; z-index: 10; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.6));
+}
+.wheel-label {
+  position: absolute; top: 50%; left: 50%; font: 800 16px 'Outfit', sans-serif; color: #10152A;
+  transform-origin: 0 0; pointer-events: none; display: flex; align-items: center; gap: 4px;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.3);
+}
+.coin-icon {
+  display: inline-block; width: 16px; height: 16px; border-radius: 50%;
+  background: linear-gradient(135deg, #B8FF45, #8DBF2E); border: 2px solid #10152A;
+  box-shadow: 0 0 5px rgba(184,255,69,0.6); vertical-align: middle;
+}
 </style>
 <title>BAZAR Party</title>
 <link rel="manifest" href="manifest.json">
@@ -1031,7 +1117,16 @@ var I={
  spark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>'
 };
 function logo(sz){return '<svg viewBox="0 0 64 64" width="'+sz+'" height="'+sz+'" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#B8FF45"/><rect x="13" y="15" width="22" height="31" rx="4.5" fill="none" stroke="#10152A" stroke-width="3.2" transform="rotate(-14 24 30)"/><rect x="25" y="18" width="24" height="32" rx="4.5" fill="#10152A" transform="rotate(8 37 34)"/><circle cx="37" cy="35" r="5" fill="#B8FF45"/><circle cx="37" cy="35" r="1.9" fill="#10152A"/></svg>'}
-function av(p,small){var sz=small?'36':'44';var st='width:'+sz+'px;height:'+sz+'px;min-width:'+sz+'px;border-radius:50%;display:grid;place-items:center;font:700 '+(small?'15':'18')+'px var(--display);';if(p.avatar){var bg=AV_COLORS[p.avatar.color]||'#333';var base=AV_BASES[p.avatar.base]||'';var hat=AV_HATS[p.avatar.hat]||'';var pos=AV_POS[p.avatar.base]||{t:0,s:1};var scale=small?0.8:1;return '<span class="av'+(small?' sm':'')+'" style="'+st+'background:'+bg+';position:relative;overflow:visible" aria-hidden="true"><span style="font-size:'+(small?'20':'26')+'px;line-height:1;z-index:1">'+base+'</span>'+(hat?'<span style="position:absolute;top:'+((pos.t||0)*scale)+'px;left:50%;transform:translateX(-50%) scale('+pos.s+');font-size:'+(small?'16':'22')+'px;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3))">'+hat+'</span>':'')+'</span>'}var c=PAL[p.ci%PAL.length];var ini=(p.name.trim().charAt(0)||'?').toUpperCase();return '<span class="av'+(small?' sm':'')+'" style="'+st+'background:'+c[0]+';color:'+c[1]+'" aria-hidden="true">'+esc(ini)+'</span>'}
+function av(p,small){var sz=small?'36':'44';var st='width:'+sz+'px;height:'+sz+'px;min-width:'+sz+'px;border-radius:50%;display:grid;place-items:center;font:700 '+(small?'15':'18')+'px var(--display);';
+  // Si le joueur a un avatar, on l'affiche (avec ou sans chapeau)
+  if(p.avatar && p.avatar.base!=null){
+    var bg=AV_COLORS[p.avatar.color]||'#333';var base=AV_BASES[p.avatar.base]||'';var hat=AV_HATS[p.avatar.hat]||'';var pos=AV_POS[p.avatar.base]||{t:0,s:1};var scale=small?0.8:1;
+    return '<span class="av'+(small?' sm':'')+'" style="'+st+'background:'+bg+';position:relative;overflow:visible" aria-hidden="true"><span style="font-size:'+(small?'20':'26')+'px;line-height:1;z-index:1">'+base+'</span>'+(hat?'<span style="position:absolute;top:'+((pos.t||0)*scale)+'px;left:50%;transform:translateX(-50%) scale('+pos.s+');font-size:'+(small?'16':'22')+'px;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3))">'+hat+'</span>':'')+'</span>'
+  }
+  // Sinon (ou si l'avatar est vide), on affiche l'initiale
+  var c=PAL[p.ci%PAL.length];var ini=(p.name.trim().charAt(0)||'?').toUpperCase();
+  return '<span class="av'+(small?' sm':'')+'" style="'+st+'background:'+c[0]+';color:'+c[1]+'" aria-hidden="true">'+esc(ini)+'</span>'
+}
 
 /* ---------- Effets : étoiles qui jaillissent ---------- */
 var STAR='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg>';
@@ -1153,9 +1248,6 @@ function vHome(){return '<div class="wrap">'+
  '<span class="eyebrow" style="margin-top:10px">🧩 À PART</span>'+
  '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · sur un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
  '</section>'+
- '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="share_score" data-g="all" style="font-size:16px;background:var(--violet);color:#fff;padding:10px 20px;border-radius:99px;border:1px solid var(--line)">📸 Partager le classement</button></div>'+
- '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="avatar" style="font-size:16px;background:var(--surface);padding:10px 20px;border-radius:99px;border:1px solid var(--line)">🎨 Mon Avatar</button></div>'+
- '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="tournament" style="font-size:16px;background:linear-gradient(135deg,var(--violet),var(--lime));color:#fff;padding:12px 24px;border-radius:99px;border:1px solid var(--line);font-weight:800;box-shadow:0 4px 15px rgba(184,255,69,0.3)">🏆 Mode Tournoi</button></div>'+
  '<div style="display:flex;flex-direction:column;gap:12px"><button class="btn btn-primary" data-act="ohome">Créer un salon en ligne '+I.spark+'</button><button class="btn btn-secondary" data-act="games">Voir tous les jeux sur ce téléphone</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
  '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
  (function(){try{if(localStorage.getItem('bazar-tuto-done'))return '';return '<div class="card" style="margin-top:20px;border:2px solid var(--violet);background:rgba(121,87,255,0.1)"><h3>👋 Bienvenue sur BAZAR Party !</h3><p class="muted small" style="margin-bottom:10px">Deux façons de jouer :</p><ul style="font-size:14px;color:var(--muted);margin-left:18px;margin-bottom:15px"><li><b>Sur ce téléphone</b> : Passez l\'appareil de main en main.</li><li><b>En ligne</b> : Cliquez sur "Créer un salon" et donnez le code à vos amis.</li></ul><button class="btn btn-secondary" data-act="close_tuto" style="min-height:44px;font-size:15px">J\'ai compris !</button></div>'}catch(e){return ''}})()+
@@ -1474,21 +1566,168 @@ function vOLobbyT(){
     return names[g] || g;
   }).join(' ➔ ') : 'Aucun';
   
+  // Le bouton de lancement spécifique au tournoi
+  var startBtn = h 
+    ? '<button class="btn btn-primary" data-act="start_tourney"'+(iss?' disabled':'')+'>Lancer le Tournoi !</button>'
+    : '<p class="note">En attente de l\'hôte…</p>';
+
   return obar('Tournoi BAZAR')+'<div class="wrap">'+olShare()+olPlayers()+
   '<section class="card"><h2>Les jeux du tournoi</h2><p class="muted" style="font-weight:600;color:var(--lime)">'+gamesList+'</p>'+
   '<p class="muted small" style="margin-top:10px">Les points de chaque jeu s\'additionneront pour un grand classement final !</p></section>'+
-  '</div>'+olDock(iss)
+  '</div><div class="dock"><p class="issue" role="status">'+(h?iss:'')+'</p>'+startBtn+'</div>'
+}
+function bottomNav(){
+  // On ne l'affiche pas pendant une partie en ligne
+  if(S.screen==='online'||S.screen==='reveal'||S.screen==='clues'||S.screen==='vote'||S.screen==='result'||S.screen==='mgame'||S.screen==='mkey'||S.screen==='tabou_game')return '';
+  
+  var active = S.screen;
+  function btn(act, icon, label, target){
+    var isActive = (active===target) ? ' active' : '';
+    return '<button data-act="'+act+'" class="'+isActive+'">'+icon+'<span>'+label+'</span></button>';
+  }
+  
+  var iconHome = '<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>';
+  var iconTrophy = '<svg viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>';
+  var iconWheel = '<svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg>'; // Un design de cadeau
+  var iconUser = '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+
+  return '<div class="bottom-nav">'+
+    btn('home', iconHome, 'Accueil', 'home')+
+    btn('tournament', iconTrophy, 'Tournoi', 'tournament')+
+    btn('wheel', iconWheel, 'Roue', 'wheel')+
+    btn('profile', iconUser, 'Profil', 'profile')+
+  '</div>';
+}
+function vShop(){
+  var myStats = {tokens: 0, played: 0, wins: 0, time: 0, borders: []};
+  try{ var s = localStorage.getItem('bazar-stats'); if(s) myStats = JSON.parse(s); }catch(e){}
+  if(!myStats.borders) myStats.borders = [];
+
+  var borders = [
+    {id:'b_violet', name:'Aura Violette', price:50, css:'0 0 20px 5px rgba(121,87,255,0.6)'},
+    {id:'b_lime', name:'Aura Citron', price:50, css:'0 0 20px 5px rgba(184,255,69,0.6)'},
+    {id:'b_gold', name:'Aura Dorée', price:150, css:'0 0 25px 8px rgba(247,209,84,0.8)'},
+    {id:'b_fire', name:'Aura de Feu', price:300, css:'0 0 25px 8px rgba(229,72,77,0.8)'}
+  ];
+
+  var list = borders.map(function(b){
+    var isBought = myStats.borders.indexOf(b.id) >= 0;
+    var canBuy = myStats.tokens >= b.price;
+    return '<div class="prow" style="flex-wrap:wrap;justify-content:space-between;background:var(--surface-2);padding:15px;border-radius:12px;margin-bottom:10px">'+
+      '<div style="display:flex;align-items:center;gap:15px">'+
+        '<div style="width:40px;height:40px;border-radius:50%;background:var(--surface);box-shadow:'+b.css+'"></div>'+
+        '<div><b style="font-size:16px">'+b.name+'</b><div class="muted small" style="display:flex;align-items:center;gap:4px"><span class="coin-icon"></span>'+b.price+'</div></div>'+
+      '</div>'+
+      (isBought 
+        ? '<button class="btn btn-ghost" style="width:auto;padding:0 15px;min-height:40px" disabled>Acheté</button>'
+        : '<button class="btn '+(canBuy?'btn-primary':'btn-ghost')+'" data-act="buy_item" data-id="'+b.id+'" data-price="'+b.price+'" style="width:auto;padding:0 15px;min-height:40px"'+(canBuy?'':' disabled')+'>Acheter</button>')+
+    '</div>';
+  }).join('');
+
+  return topbar('Boutique','home')+'<div class="wrap">'+
+  '<section class="hero" style="text-align:center"><h1 style="font-size:32px">La Boutique</h1><p class="lead">Dépense tes Jetons BAZAR pour personnaliser ton profil.</p></section>'+
+  
+  '<section class="card" style="text-align:center;background:linear-gradient(135deg, rgba(121,87,255,0.2), rgba(184,255,69,0.1))">'+
+    '<h2 style="display:flex;align-items:center;justify-content:center;gap:10px"><span class="coin-icon" style="width:24px;height:24px"></span> '+myStats.tokens+'</h2>'+
+    '<p class="muted small">Ton solde de Jetons</p>'+
+  '</section>'+
+  
+  '<section class="card"><h2>Bordures d\'Avatar</h2><div class="plist">'+list+'</div></section>'+
+  
+  '<section class="card" style="opacity:0.5;margin-top:20px">'+
+    '<h3>Packs de questions (Bientôt)</h3>'+
+    '<p class="muted small">Achète des packs de questions exclusifs avec de l\'argent réel.</p>'+
+  '</section>'+
+  '</div>'
+}
+function vProfile(){
+  var myAv = getMyAvatar();
+  var myStats = {tokens: 0, played: 0, wins: 0, time: 0, borders: []};
+  try{ var s = localStorage.getItem('bazar-stats'); if(s) myStats = JSON.parse(s); }catch(e){}
+  
+  var avatarHtml = '<span class="av" style="width:80px;height:80px;font-size:32px;background:var(--surface-2)">?</span>';
+  if(myAv) {
+var activeBorder = myStats.borders && myStats.borders.length ? myStats.borders[myStats.borders.length-1] : null;
+var borderCss = '';
+if(activeBorder === 'b_violet') borderCss = '0 0 20px 5px rgba(121,87,255,0.6)';
+if(activeBorder === 'b_lime') borderCss = '0 0 20px 5px rgba(184,255,69,0.6)';
+if(activeBorder === 'b_gold') borderCss = '0 0 25px 8px rgba(247,209,84,0.8)';
+if(activeBorder === 'b_fire') borderCss = '0 0 25px 8px rgba(229,72,77,0.8)';
+    var activeBorder = myStats.borders && myStats.borders.length ? myStats.borders[myStats.borders.length-1] : null;
+var borderCss = '';
+if(activeBorder === 'b_violet') borderCss = '0 0 20px 5px rgba(121,87,255,0.6)';
+if(activeBorder === 'b_lime') borderCss = '0 0 20px 5px rgba(184,255,69,0.6)';
+if(activeBorder === 'b_gold') borderCss = '0 0 25px 8px rgba(247,209,84,0.8)';
+if(activeBorder === 'b_fire') borderCss = '0 0 25px 8px rgba(229,72,77,0.8)';
+var bg = AV_COLORS[myAv.color];
+    var base = AV_BASES[myAv.base];
+    var hat = AV_HATS[myAv.hat];
+    avatarHtml = '<div style="position:relative;width:100px;height:100px;border-radius:50%;background:'+bg+';display:grid;place-items:center;margin:0 auto;box-shadow:'+ (borderCss || '0 10px 25px rgba(0,0,0,0.3)') +'"><span style="font-size:60px;line-height:1">'+base+'</span>'+(hat?'<span style="position:absolute;top:-5px;left:50%;transform:translateX(-50%);font-size:35px;filter:drop-shadow(0 4px 4px rgba(0,0,0,0.3))">'+hat+'</span>':'')+'</div>';
+  }
+
+  return topbar('Mon Profil','home')+'<div class="wrap">'+
+  '<section class="card" style="text-align:center;padding-top:30px">'+
+    avatarHtml+
+    '<h2 style="margin-top:20px">Mon Personnage</h2>'+
+    '<button class="btn btn-secondary btn-sm" data-act="avatar" style="margin-top:10px">Modifier mon avatar</button>'+
+'<button class="btn btn-secondary btn-sm" data-act="shop" style="margin-top:10px;margin-left:10px;background:var(--lime);color:#10152A">🛒 Boutique</button>'+
+  '</section>'+
+  
+  '<section class="card"><h2>Statistiques</h2>'+
+    '<b class="num" style="color:var(--lime);display:flex;align-items:center;justify-content:flex-end;gap:8px"><span class="coin-icon"></span>'+myStats.tokens+'</b>'+
+    '<div class="row" style="margin-bottom:12px"><div class="lbl"><b>Parties jouées</b></div><b class="num">'+myStats.played+'</b></div>'+
+    '<div class="row" style="margin-bottom:12px"><div class="lbl"><b>Victoires</b></div><b class="num" style="color:var(--violet-soft)">'+myStats.wins+'</b></div>'+
+    '<div class="row"><div class="lbl"><b>Temps de jeu</b></div><b class="num">'+myStats.time+' min</b></div>'+
+  '</section>'+
+   
+  '<section class="card" style="opacity:0.6"><h3>Boutique (Bientôt)</h3><p class="muted small">Ici, tu pourras acheter des bordures d\'avatar, des surnoms et des packs de questions avec tes jetons.</p></section>'+
+  '</div>'
+}
+function vWheel(){
+  var lastSpin = 0;
+  try{ lastSpin = +localStorage.getItem('bazar-last-spin') || 0; }catch(e){}
+  var now = Date.now();
+  var canSpin = (now - lastSpin) > (24 * 60 * 60 * 1000);
+  
+  var myStats = {tokens: 0, played: 0, wins: 0, time: 0};
+  try{ var s = localStorage.getItem('bazar-stats'); if(s) myStats = JSON.parse(s); }catch(e){}
+
+  // Les récompenses (dans l'ordre des parts de la roue)
+  var labels = ['10', '50', '20', '100', '30', '5'];
+
+  return topbar('Roue de la Chance','home')+'<div class="wrap">'+
+  '<section class="hero" style="text-align:center"><h1 style="font-size:32px">La Roue du Jour</h1><p class="lead">Tourne la roue pour gagner des Jetons BAZAR !</p></section>'+
+  
+  '<section class="card" style="text-align:center;padding:30px 20px;overflow:hidden">'+
+    '<div class="wheel-container">'+
+      '<div class="wheel-pointer"></div>'+
+      '<div class="wheel-bg" id="wheel-graphic">'+
+        labels.map(function(txt, i){
+          var angle = i * 60 + 30; // Le milieu de la part
+          return '<div class="wheel-label" style="transform: rotate('+angle+'deg) translate(85px) rotate(-'+angle+'deg)"><span class="coin-icon"></span>'+txt+'</div>';
+        }).join('')+
+      '</div>'+
+    '</div>'+
+    (canSpin 
+      ? '<button class="btn btn-primary" id="spin-btn" data-act="spin_wheel" style="font-size:20px;height:64px;margin-top:20px">Tourner la roue !</button>'
+      : '<div style="margin-top:20px;background:var(--surface-2);padding:15px;border-radius:var(--r-sm)"><h3>Reviens demain !</h3><p class="muted small">Tu as déjà tourné la roue aujourd\'hui.</p></div>')+
+  '</section>'+
+  
+  '<section class="card">'+
+    '<div class="row"><div class="lbl"><b>Mon Solde</b><span class="muted small">Jetons BAZAR</span></div><b class="num" style="color:var(--lime);display:flex;align-items:center;gap:8px"><span class="coin-icon"></span>'+myStats.tokens+'</b></div>'+
+  '</section>'+
+  '</div>'
 }
 function vGames(){return topbar('Choisir un jeu','home')+'<div class="wrap"><section style="display:flex;flex-direction:column;gap:12px" aria-label="Jeux">'+
   '<button class="game" data-act="sheet" data-s="mode-u"><span class="tile v">'+I.eye+'</span><span class="gt"><b>Undercover</b><span class="muted small">Bluff et déduction · 3 à 12 joueurs</span></span><span class="badge on">Jouable</span></button>'+
   '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · 4 joueurs et plus</span></span><span class="badge on">Jouable</span></button>'+
   '<button class="game" data-act="ogo" data-g="l"><span class="tile v" style="background:var(--lime);color:var(--lime-ink)">'+I.abc+'</span><span class="gt"><b>BAZAR Petit Bac</b><span class="muted small">Petit bac et phrases à trous · en ligne, 3 joueurs et plus</span></span><span class="badge on">En ligne</span></button>'+
   '<button class="game" data-act="ogo" data-g="d"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote · en ligne, 3 à 10 joueurs</span></span><span class="badge on">En ligne</span></button>'+
-'<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits · un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
-'<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne, 3 à 12 joueurs</span></span><span class="badge on">En ligne</span></button>'+
-'<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
-'<button class="game" data-act="confess"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span><span class="badge on">En ligne</span></button>'+
-'<button class="game" data-act="fauxavis"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span><span class="badge on">En ligne</span></button>'+
+  '<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits</span></span><span class="badge on">Jouable</span></button>'+
+  '<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne</span></span><span class="badge on">En ligne</span></button>'+
+  '<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
+  '<button class="game" data-act="confess"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span><span class="badge on">En ligne</span></button>'+
+  '<button class="game" data-act="fauxavis"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span><span class="badge on">En ligne</span></button>'+
  '</section><button class="btn btn-secondary" data-act="ohome">Jouer en ligne · chacun son téléphone</button><p class="note">À la même table sur un seul téléphone, ou à distance avec un code et un QR code.</p></div>'}
 
 function vTabouSetup(){
@@ -1602,7 +1841,7 @@ var y=window.scrollY,h;
     case 'home':h=vHome();break;case 'avatar_studio':h=vAvatarStudio();break;case 'rules':h=vRules();break;case 'setup':h=vSetup();break;
     case 'reveal':h=vReveal();break;case 'clues':h=vClues();break;case 'vote':h=vVote();break;
     case 'result':h=vResult();break;case 'mwguess':h=vMw();break;case 'end':h=vEnd();break;case 'peek':h=vPeek();break;
-    case 'games':h=vGames();break;case 'tournament':h=vTournament();break;case 'msetup':h=vMSetup();break;case 'mgame':h=vMGame();break;case 'mkey':h=vMKey();break;case 'mend':h=vMEnd();break;case 'mrulespage':h=vMRules();break;
+    case 'games':h=vGames();break;case 'tournament':h=vTournament();break;case 'wheel':h=vWheel();break;case 'shop':h=vShop();break;case 'profile':h=vProfile();break;case 'msetup':h=vMSetup();break;case 'mgame':h=vMGame();break;case 'mkey':h=vMKey();break;case 'mend':h=vMEnd();break;case 'mrulespage':h=vMRules();break;
     case 'ohome':h=vOHome();break;case 'online':h=vOnline();break;
         case 'tabou_setup':h=vTabouSetup();break;case 'tabou_game':h=vTabouGame();break;
     case 'tabou_result':h=vTabouResult();break;
@@ -1611,6 +1850,7 @@ default:h=vHome()}
 app.className=S._fresh?'enter':'';S._fresh=false;
   if(S.players)updateAvatars();
 app.innerHTML=h+vSheet();
+app.innerHTML += bottomNav();
   if(S.screen==='setup')refreshSetup();
   bindHold();
   var mi=document.getElementById('mwin');if(mi&&!S._mwf){S._mwf=1;try{mi.focus()}catch(e){}}
@@ -2408,10 +2648,76 @@ function olShareNative(){var url=olLink(OL.code);
   if(navigator.share){navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){})}else olCopy()}
 function olAct(a,d){var c=OL.cfg||{},i;
   switch(a){
-    case 'ohome':OH.err='';go('ohome');break;
+    case 'ohome':OH.err='';go('ohome');break;case 'profile':go('profile');break;case 'wheel':go('wheel');break;case 'shop':go('shop');break;
+case 'buy_item':{
+  var st = {tokens: 0, borders: []};
+  try{ var s = localStorage.getItem('bazar-stats'); if(s) st = JSON.parse(s); }catch(e){}
+  if(!st.borders) st.borders = [];
+  var price = +d.price;
+  
+  if(st.tokens >= price && st.borders.indexOf(d.id) < 0){
+    st.tokens -= price;
+    st.borders.push(d.id);
+    try{ localStorage.setItem('bazar-stats', JSON.stringify(st)); }catch(e){}
+    sfxWin();
+    toast('Achat réussi !');
+    setTimeout(function(){ go('shop'); }, 100); // On rafraîchit l'écran de la boutique
+  } else {
+    toast('Tu n\'as pas assez de jetons !');
+  }
+  break;
+}
+case 'spin_wheel':{
+  var prizes = [10, 50, 20, 100, 30, 5];
+  var winIndex = Math.floor(Math.random() * prizes.length);
+  var won = prizes[winIndex];
+  
+  // On ajoute 5 tours complets (5 * 360) pour l'effet
+  var targetAngle = (360 * 5) + (360 - (winIndex * 60)); 
+  
+  var wg = document.getElementById('wheel-graphic');
+  var btn = document.getElementById('spin-btn');
+  if(wg && btn) {
+    btn.style.display = 'none';
+    wg.style.transform = 'rotate(' + targetAngle + 'deg)';
+    
+    // On attend la fin de l'animation CSS (5 secondes)
+    setTimeout(function(){
+      var st = {tokens: 0, played: 0, wins: 0, time: 0};
+      try{ var s = localStorage.getItem('bazar-stats'); if(s) st = JSON.parse(s); }catch(e){}
+      st.tokens += won;
+      try{ 
+        localStorage.setItem('bazar-stats', JSON.stringify(st));
+        localStorage.setItem('bazar-last-spin', Date.now());
+      }catch(e){}
+      
+      sfxWin();
+      toast('🎉 Tu as gagné ' + won + ' Jetons BAZAR !');
+      render(); // On rafraîchit pour afficher "Reviens demain"
+    }, 5200);
+  }
+  break;
+}
 case 'tournament':go('tournament');break;
 case 'tog_tourney':{var idx=S.tourneySel.indexOf(d.g);if(idx>=0){if(S.tourneySel.length>1)S.tourneySel.splice(idx,1);}else{S.tourneySel.push(d.g);}render();break;}
 case 'otournament':OH.game='t';OH.err='';go('ohome');break;
+case 'start_tourney':{
+  if(!OL.host || !OL.cfg.games || !OL.cfg.games.length) return;
+  var firstGame = OL.cfg.games[0];
+  OL.game = firstGame; // On change le jeu du salon pour le premier jeu
+  // On prépare la configuration pour ce jeu spécifique
+  var cfg = {};
+  if(firstGame==='l') cfg = {np:6, rounds:2, secs:90, cats:LCATS.slice()};
+  else if(firstGame==='d') cfg = {rounds:2, per:1, tdraw:60, tfake:40, tvote:25, cats:DCATS.slice(), custom:'', clear:false, dbl:true, hearts:true, hint:true, who:true, display:true};
+  else if(firstGame==='s') cfg = {size:S.my.size, names:[S.my.names[0],S.my.names[1]]};
+  else if(firstGame==='u') cfg = {uc:1, mw:0, cats:CATS.slice(), reveal:true};
+  
+  OL.cfg = cfg;
+  Rr(OL.code).update({game:firstGame, cfg:JSON.stringify(cfg)}).then(function(){
+    olStart(); // La fonction qui lance la partie
+  });
+  break;
+}
 case 'share_score':generateShareImage(d.g);break;case 'fauxavis':OH.game='f';OH.err='';go('ohome');break;
 case 'opick_faux':OL.pick=+d.i;render();break;
 case 'ovote_faux':if(OL.pick!=null){OL.my.vote=OL.s.vk;sendAct('vote',{i:OL.pick});olRender();}break;
