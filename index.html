@@ -1340,7 +1340,8 @@ function vEnd(){
   '<div class="words"><div><span class="muted small">Mot des Civils</span><b>'+esc(g.civ)+'</b></div><div><span class="muted small">Mot des Undercover</span><b>'+esc(g.uc)+'</b></div></div>'+
   '<section class="card"><h3>Les rôles</h3><div class="plist">'+roles+'</div></section>'+
   '<section class="card"><h3>Classement du salon</h3><div class="plist">'+board+'</div></section></div>'+
-  '<div class="dock"><button class="btn btn-primary" data-act="again">Rejouer</button><button class="btn btn-secondary" data-act="create">Modifier la partie</button><button class="btn btn-ghost" data-act="home">Accueil</button></div>'}
+  '<div style="text-align:center;margin:20px 0"><button class="btn btn-secondary" data-act="share_score" data-g="u">📸 Partager le classement</button></div>'+
+'<div class="dock"><button class="btn btn-primary" data-act="again">Rejouer</button><button class="btn btn-secondary" data-act="create">Modifier la partie</button><button class="btn btn-ghost" data-act="home">Accueil</button></div>'}
 
 function vPeek(){
   var g=S.game,pk=S.peek;
@@ -2250,11 +2251,101 @@ function olCopy(){var url=olLink(OL.code),el=document.getElementById('olink');
   fallback();toast('Lien sélectionné : copie-le')}
 function toast(msg){var t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.setAttribute('role','status');document.body.appendChild(t)}
   t.textContent=msg;t.className='show';clearTimeout(toast.t);toast.t=setTimeout(function(){t.className=''},1800)}
+function generateShareImage(gameType){
+  var canvas=document.createElement('canvas');
+  canvas.width=1080; canvas.height=1920;
+  var ctx=canvas.getContext('2d');
+  
+  // Fond premium
+  var grad=ctx.createLinearGradient(0,0,0,1920);
+  grad.addColorStop(0,'#0B0F1E'); grad.addColorStop(1,'#161C35');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,1080,1920);
+  
+  // Effet Constellation
+  ctx.fillStyle='rgba(184,255,69,0.4)';
+  for(var i=0;i<80;i++){
+    var x=Math.random()*1080, y=Math.random()*1920, r=Math.random()*3+1;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+  
+  // Logo BAZAR
+  ctx.fillStyle='#B8FF45';
+  ctx.font='900 90px Outfit, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('BAZAR', 540, 180);
+  ctx.fillStyle='#FFFFFF';
+  ctx.font='700 40px Outfit, sans-serif';
+  ctx.fillText('PARTY', 540, 230);
+  
+  // Titre
+  var title = gameType==='u' ? 'Résultat Undercover' : 'Le classement de la soirée';
+  ctx.fillStyle='#AAB0CC';
+  ctx.font='40px Inter, sans-serif';
+  ctx.fillText(title, 540, 320);
+  
+  // Liste des joueurs (on prend les 6 premiers max)
+  var sorted = S.players.slice().sort(function(a,b){return b.score-a.score});
+  var displayPlayers = sorted.slice(0,6);
+  
+  displayPlayers.forEach(function(p, idx){
+    var y = 480 + (idx * 180);
+    // Cercle de fond pour l'avatar
+    ctx.fillStyle = idx===0 ? 'rgba(184,255,69,0.2)' : 'rgba(255,255,255,0.05)';
+    ctx.beginPath(); ctx.arc(150, y-20, 60, 0, Math.PI*2); ctx.fill();
+    
+    // L'avatar
+    var baseEmoji = p.avatar ? AV_BASES[p.avatar.base] : '👤';
+    ctx.font = '60px Arial'; ctx.textAlign = 'center';
+    ctx.fillText(baseEmoji, 150, y);
+    
+    // Le nom
+    ctx.fillStyle = idx===0 ? '#B8FF45' : '#FFFFFF';
+    ctx.font = 'bold 55px Outfit, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(p.name, 250, y);
+    
+    // Le score
+    ctx.textAlign = 'right';
+    ctx.font = 'bold 55px Outfit, sans-serif';
+    ctx.fillText(p.score + ' pts', 980, y);
+    
+    // Ligne de séparation
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(250, y+60); ctx.lineTo(980, y+60); ctx.stroke();
+  });
+  
+  // Pied de page (URL)
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 45px Inter, sans-serif';
+  ctx.fillText('Rejoins la partie !', 540, 1650);
+  ctx.fillStyle = '#B8FF45';
+  ctx.font = 'bold 35px Inter, sans-serif';
+  ctx.fillText('bazar-party-mobile.vercel.app', 540, 1720);
+  
+  // Génération et Partage
+  canvas.toBlob(function(blob){
+    var file = new File([blob], 'bazar-party-score.png', {type: 'image/png'});
+    if(navigator.canShare && navigator.canShare({files: [file]})){
+      navigator.share({
+        files: [file],
+        title: 'Mon score BAZAR Party',
+        text: 'J\'ai gagné à BAZAR Party ! Tu veux essayer ?'
+      }).catch(function(){});
+    } else {
+      var link = document.createElement('a');
+      link.download = 'bazar-party-score.png';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      toast('Image téléchargée !');
+    }
+  }, 'image/png');
+}
 function olShareNative(){var url=olLink(OL.code);
   if(navigator.share){navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){})}else olCopy()}
 function olAct(a,d){var c=OL.cfg||{},i;
   switch(a){
-    case 'ohome':OH.err='';go('ohome');break;case 'fauxavis':OH.game='f';OH.err='';go('ohome');break;
+    case 'ohome':OH.err='';go('ohome');break;case 'share_score':generateShareImage(d.g);break;case 'fauxavis':OH.game='f';OH.err='';go('ohome');break;
 case 'opick_faux':OL.pick=+d.i;render();break;
 case 'ovote_faux':if(OL.pick!=null){OL.my.vote=OL.s.vk;sendAct('vote',{i:OL.pick});olRender();}break;
 case 'onext_faux':sendAct('cont');break;case 'confess':OH.game='c';OH.err='';go('ohome');break;
