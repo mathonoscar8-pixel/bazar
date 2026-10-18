@@ -18,6 +18,363 @@
 .sheet{box-shadow:0 -10px 40px rgba(0,0,0,0.4);border-top:2px solid var(--line);}
 /* On harmonise les inputs (champs de texte) */
 .field{border-radius:14px;font-size:16px;}
+/* ===== Mode Paysage spécial pour Dessins ===== */
+@media (orientation:landscape) and (max-height:600px) {
+  /* On transforme l'écran de jeu en 2 colonnes */
+  .wrap:has(#dcv) {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+    max-width: 96vw;
+    align-items: start;
+  }
+  /* La zone de dessin prend toute la place à gauche */
+  .wrap:has(#dcv) .dcv {
+    max-width: 100%;
+    margin: 0;
+    grid-row: 1 / span 4;
+  }
+  /* Les outils passent à droite */
+  .wrap:has(#dcv) .dtools {
+    flex-direction: column;
+    grid-column: 2;
+    grid-row: 2;
+    background: var(--surface);
+    padding: 10px;
+    border-radius: var(--r);
+  }
+  .wrap:has(#dcv) .dcols {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .wrap:has(#dcv) .dszs {
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  /* Le chrono et le texte en haut restent bien visibles */
+  .wrap:has(#dcv) .now { grid-column: 1; }
+  .wrap:has(#dcv) .timer { grid-column: 1; }
+}
+/* ===== PACK DESIGN : EFFET WAOUH ===== */
+
+/* 1. Cartes en verre dépoli (Glassmorphism) avec lueur */
+.card {
+  background: rgba(27, 33, 64, 0.65) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(184, 255, 69, 0.03);
+}
+
+/* 2. Le bouton principal (vert) qui brille au repos */
+.btn-primary {
+  background: linear-gradient(135deg, var(--lime), #D5F89B) !important;
+  box-shadow: 0 0 20px rgba(184, 255, 69, 0.4), 0 8px 20px rgba(0,0,0,0.3) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+.btn-primary:hover {
+  box-shadow: 0 0 30px rgba(184, 255, 69, 0.6), 0 8px 25px rgba(0,0,0,0.4) !important;
+  transform: translateY(-2px);
+}
+
+/* 3. Le bouton violet (Salon en ligne) qui brille */
+.btn-violet {
+  background: linear-gradient(135deg, var(--violet), #AB9BFF) !important;
+  box-shadow: 0 0 20px rgba(121, 87, 255, 0.4), 0 8px 20px rgba(0,0,0,0.3) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+/* 4. Les boutons de jeux sur l'accueil */
+.game {
+  background: rgba(27, 33, 64, 0.8) !important;
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
+  border: 1px solid transparent;
+}
+.game:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* 5. Le logo BAZAR avec un dégradé de fou */
+.wm1 {
+  background: linear-gradient(to right, #FFFFFF, #AAB0CC);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.wm2 {
+  background: linear-gradient(to right, var(--lime), #D5F89B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 15px rgba(184,255,69,0.3);
+}
+
+/* 6. Les avatars (petits et grands) avec une bordure lumineuse */
+.av {
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.1), 0 4px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+}
+.av:hover { transform: scale(1.1); }
+
+/* 7. Les inputs (champs de texte) plus doux */
+.field {
+  background: rgba(233, 235, 247, 0.95) !important;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+  transition: box-shadow 0.2s;
+}
+.field:focus {
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.05), 0 0 0 3px rgba(184, 255, 69, 0.3);
+}
+
+/* 8. Le fond du site (dégradé plus profond) */
+body {
+  background: radial-gradient(circle at 50% 0%, #1a2140 0%, #0B0F1E 70%) !important;
+  background-attachment: fixed !important;
+}
+/* ===== PACK DYNAMIQUE & PREMIUM ===== */
+
+/* 1. Effet de vague/lueur en arrière-plan */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle at 50% -20%, rgba(121, 87, 255, 0.15), transparent 60%);
+  z-index: -1;
+  animation: pulseBg 8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes pulseBg {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.2); opacity: 1; }
+}
+
+/* 2. Effet de pression sur TOUS les boutons (plus dynamique) */
+button:active, .btn:active, .game:active {
+  transform: scale(0.96) !important;
+  transition: transform 0.05s !important;
+}
+
+/* 3. Le timer qui stresse (clignote en rouge et grossit) */
+@keyframes stress {
+  0% { transform: scale(1); color: var(--danger); }
+  50% { transform: scale(1.1); color: #FF5555; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
+  100% { transform: scale(1); color: var(--danger); }
+}
+.tl.low {
+  animation: stress 0.5s infinite !important;
+  font-weight: 900 !important;
+}
+
+/* 4. Animation des scores (quand on gagne des points) */
+@keyframes scorePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); color: var(--lime); text-shadow: 0 0 15px var(--lime); }
+  100% { transform: scale(1); }
+}
+.pts, .num {
+  transition: all 0.3s ease;
+}
+.pts:not(:empty) {
+  animation: scorePop 0.4s ease-out;
+}
+
+/* 5. Les cartes de jeux qui flottent légèrement au survol */
+.game {
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s !important;
+}
+.game:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.5) !important;
+  z-index: 10;
+  position: relative;
+}
+
+/* 6. Les boutons de choix (votes) qui ont un effet lumineux quand ils sont sélectionnés */
+.pick[aria-pressed="true"] {
+  box-shadow: 0 0 20px rgba(121, 87, 255, 0.4), inset 0 0 10px rgba(121, 87, 255, 0.2) !important;
+  border-color: var(--violet-soft) !important;
+  transform: scale(1.02);
+}
+
+/* 7. Apparition fluide des éléments (fade-in avec glissement) */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.wrap > * {
+  animation: slideUp 0.4s ease-out both;
+}
+/* On décale un peu chaque élément pour un effet cascade */
+.wrap > *:nth-child(2) { animation-delay: 0.05s; }
+.wrap > *:nth-child(3) { animation-delay: 0.1s; }
+.wrap > *:nth-child(4) { animation-delay: 0.15s; }
+.wrap > *:nth-child(5) { animation-delay: 0.2s; }
+/* ===== PACK IMMERSION TOTALE ===== */
+
+/* 1. Le Flip 3D pour les cartes (Undercover & Mot Interdit) */
+.hold .back {
+  transform: rotateY(180deg);
+}
+.hold.show .back {
+  transform: rotateY(360deg);
+  transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.hold {
+  perspective: 1000px;
+}
+
+/* 2. L'animation des points qui s'envolent */
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(1.5); }
+}
+.float-score {
+  position: fixed;
+  font: 900 28px var(--display);
+  color: var(--lime);
+  text-shadow: 0 0 10px var(--lime);
+  pointer-events: none;
+  z-index: 9999;
+  animation: floatUp 1.5s ease-out forwards;
+}
+
+/* 3. La couronne du gagnant */
+@keyframes crownDrop {
+  0% { transform: translateY(-50px) scale(0); opacity: 0; }
+  60% { transform: translateY(10px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.winner-crown {
+  display: inline-block;
+  animation: crownDrop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  margin-right: 8px;
+  font-size: 32px;
+}
+
+/* 4. Effet machine à écrire (curseur) */
+@keyframes blink { 50% { opacity: 0; } }
+.type-cursor { animation: blink 1s step-start infinite; }
+/* ===== FOND ANIMÉ PREMIUM (Mesh Gradient + Particules) ===== */
+
+/* 1. Le Mesh Gradient (Les taches de couleurs floues) */
+#bg-mesh {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: -2;
+  overflow: hidden;
+  background: var(--bg);
+  pointer-events: none;
+}
+#bg-mesh::before, #bg-mesh::after {
+  content: "";
+  position: absolute;
+  width: 60vw; height: 60vw;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: floatMesh 20s infinite alternate ease-in-out;
+}
+#bg-mesh::before {
+  background: var(--violet);
+  top: -10%; left: -10%;
+}
+#bg-mesh::after {
+  background: var(--lime);
+  bottom: -20%; right: -10%;
+  animation-delay: -10s;
+  animation-duration: 25s;
+}
+@keyframes floatMesh {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(10vw, 10vh) scale(1.2); }
+  100% { transform: translate(-5vw, 15vh) scale(0.9); }
+}
+
+/* 2. Les Particules flottantes (Les étoiles) */
+#bg-particles {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: floatUpParticle linear infinite;
+}
+@keyframes floatUpParticle {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+/* En mode clair, on baisse l'opacité du fond pour ne pas agresser les yeux */
+[data-theme="light"] #bg-mesh::before,
+[data-theme="light"] #bg-mesh::after { opacity: 0.15; }
+[data-theme="light"] .particle { background: var(--violet); }
+/* ===== CONSTELLATION & ÉTOILES ===== */
+#bg-particles {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.star-particle {
+  position: absolute;
+  background: var(--fg);
+  border-radius: 50%;
+  opacity: 0.8;
+  box-shadow: 0 0 6px var(--fg);
+  transition: transform 0.1s;
+}
+.star-4 {
+  position: absolute;
+  color: var(--lime);
+  opacity: 0.9;
+  filter: drop-shadow(0 0 8px var(--lime));
+}
+[data-theme="light"] .star-particle { background: var(--violet); box-shadow: 0 0 6px var(--violet); }
+[data-theme="light"] .star-4 { color: var(--violet); filter: drop-shadow(0 0 8px var(--violet)); }
+/* ===== RETOUCHE IDENTITÉ VISUELLE ===== */
+
+/* Cartes plus arrondies et modernes */
+.card, .game, .btn {
+  border-radius: 24px !important;
+}
+
+/* Titres plus gros et plus impactants */
+h1 {
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+}
+h2 {
+  font-weight: 700 !important;
+}
+
+/* Le bouton vert principal avec une lueur plus forte */
+.btn-primary {
+  background: linear-gradient(135deg, var(--lime) 0%, #D5F89B 100%) !important;
+  box-shadow: 0 8px 25px rgba(184, 255, 69, 0.4) !important;
+  color: var(--lime-ink) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em;
+}
+
+/* Les boutons secondaires (comme "Voir tous les jeux") en violet doux */
+.btn-secondary {
+  border-color: var(--violet-soft) !important;
+  color: var(--violet-soft) !important;
+  font-weight: 700 !important;
+}
 </style>
 <title>BAZAR Party</title>
 <link rel="manifest" href="manifest.json">
@@ -29,7 +386,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap">
 <style>
 /* Concept : une colonne mobile sur bleu nuit, une seule action principale par écran, le violet réservé aux cartes et au secret, le vert citron réservé à l'action. */
 :root{
@@ -39,7 +396,7 @@
   --violet:#8466FF; --violet-soft:#B3A5FF;
   --danger:#FF7A7A;
   --field:#EDF0FC; --field-ink:#0B0F1E; --field-hint:#5A6293;
-  --display:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --display:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
   --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   --r:18px; --r-sm:12px;
   color-scheme:dark;
@@ -692,7 +1049,8 @@ function tabouTeam(t){S.tabou.curTeam=t;S.tabou.cards=[];S.tabou.score=0;S.tabou
 function startTabouTimer(){clearInterval(S.tabou.tid);S.tabou.tid=setInterval(function(){
   S.tabou.time--;var l=document.getElementById('tabouTime');
   if(l){l.textContent=S.tabou.time+' s';l.classList.toggle('low',S.tabou.time<=5)}
-  if(S.tabou.time<=0){clearInterval(S.tabou.tid);endTabouRound()}
+  if(S.tabou.time<=5 && S.tabou.time>0) buzz(50);
+if(S.tabou.time<=0){clearInterval(S.tabou.tid);endTabouRound()}
 },1000)}
 function endTabouRound(){clearInterval(S.tabou.tid);S.screen='tabou_result';S._fresh=true;render();vib([100,50,100])}
 function nextTabouCard(ok){if(ok)S.tabou.score++;S.tabou.cur=(S.tabou.cur+1)%TABOU.length;S.tabou.cards.push(S.tabou.cur);S._fresh=true;render()}
@@ -765,8 +1123,10 @@ function vHome(){return '<div class="wrap">'+
  '</section>'+
 
  '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="avatar" style="font-size:16px;background:var(--surface);padding:10px 20px;border-radius:99px;border:1px solid var(--line)">🎨 Mon Avatar</button></div>'+
- '<div style="display:flex;flex-direction:column;gap:12px"><button class="btn btn-primary" data-act="ohome" style="background:var(--violet);color:#fff">Créer un salon en ligne '+I.spark+'</button><button class="btn btn-secondary" data-act="games">Voir tous les jeux sur ce téléphone</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
- '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
+ '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="avatar" style="font-size:16px;background:var(--surface);padding:10px 20px;border-radius:99px;border:1px solid var(--line)">🎨 Mon Avatar</button></div>'+
+'<div style="display:flex;flex-direction:column;gap:12px"><button class="btn btn-primary" data-act="ohome">Créer un salon en ligne '+I.spark+'</button><button class="btn btn-secondary" data-act="games">Voir tous les jeux sur ce téléphone</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
+  '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
+ (function(){try{if(localStorage.getItem('bazar-tuto-done'))return '';return '<div class="card" style="margin-top:20px;border:2px solid var(--violet);background:rgba(121,87,255,0.1)"><h3>👋 Bienvenue sur BAZAR Party !</h3><p class="muted small" style="margin-bottom:10px">Deux façons de jouer :</p><ul style="font-size:14px;color:var(--muted);margin-left:18px;margin-bottom:15px"><li><b>Sur ce téléphone</b> : Passez l\'appareil de main en main (Undercover, Mot Interdit).</li><li><b>En ligne</b> : Cliquez sur "Créer un salon" et donnez le code à vos amis (Dessins, Petit Bac...).</li></ul><button class="btn btn-secondary" data-act="close_tuto" style="min-height:44px;font-size:15px">J\'ai compris !</button></div>'}catch(e){return ''}})()+
  '</div>'}
 
 /* ---------- Studio d'Avatar ---------- */
@@ -940,7 +1300,7 @@ function vMw(){
 function vEnd(){
   var g=S.game,w=g.winner;
   var T={civil:['Les Civils gagnent !','Tous les infiltrés ont été démasqués.'],inf:['Les infiltrés gagnent !','Ils sont aussi nombreux que les Civils.'],mw:['Mr White gagne !','Il a deviné le mot des Civils.']}[w];
-  var roles=S.players.map(function(p,ix){var r=g.roles[p.id];return '<div class="rl" style="--i:'+ix+'">'+av(p,true)+'<span class="nm">'+esc(p.name)+'</span><span class="tag '+r+'">'+ROLE[r]+'</span><span class="pts">'+(g.gains[p.id]?'+'+g.gains[p.id]:'0')+'</span></div>'}).join('');
+  var roles=S.players.map(function(p,ix){var winnerId = S.players.slice().sort(function(a,b){return b.score-a.score})[0].id;var r=g.roles[p.id];return '<div class="rl" style="--i:'+ix+'">'+(p.id===winnerId?'<span class="winner-crown">👑</span>':'')+av(p,true)+'<span class="nm">'+esc(p.name)+'</span><span class="tag '+r+'">'+ROLE[r]+'</span><span class="pts">'+(g.gains[p.id]?'+'+g.gains[p.id]:'0')+'</span></div>'}).join('');
   var board=S.players.slice().sort(function(a,b){return b.score-a.score}).map(function(p,i){return '<div class="rl" style="--i:'+(i+3)+'"><span class="muted" style="width:20px;font:700 15px var(--display)">'+(i+1)+'</span>'+av(p,true)+'<span class="nm">'+esc(p.name)+'</span><span class="pts" style="color:var(--fg)">'+p.score+' pt'+(p.score>1?'s':'')+'</span></div>'}).join('');
   return '<div class="bar"><span class="meta">Partie terminée</span><span style="width:44px"></span></div><div class="wrap">'+
   '<div class="win"><span class="eyebrow">Fin de partie</span><h1>'+T[0]+'</h1><p class="lead">'+T[1]+'</p></div>'+
@@ -1194,6 +1554,7 @@ app.innerHTML=h+vSheet();
   if(S.screen==='msetup')refreshM();
   window.scrollTo(0,y);
   if(typeof dPost==='function')dPost();
+setTimeout(function(){var el=document.querySelector('.now .big');if(el&&S.screen==='online'&&OL.game==='dd'&&OL.s&&OL.s.q){var t=el.innerHTML;typeWriter(el, t.replace(/<[^>]+>/g,''), 30);}}, 100);
   if(typeof musicPost==='function')musicPost();
 }
 function bindHold(){
@@ -1268,7 +1629,7 @@ function act(a,d){
     case 'elim':g.elim=g.vote.sel;g.tally=null;g.flipped=false;go('result');break;
     case 'vsee':g.vote.stage='pick';g.vote.sel=null;S._fresh=true;render();window.scrollTo(0,0);break;
     case 'vok':var v=g.vote;v.picks[v.voters[v.idx]]=v.sel;v.idx++;v.sel=null;v.stage='pass';if(v.idx>=v.voters.length){g.flipped=false;tally()}else{S._fresh=true;render();window.scrollTo(0,0)}break;
-    case 'flip':g.flipped=true;var f=document.getElementById('flip'),c=document.getElementById('cont');if(f)f.classList.add('on');if(c)c.hidden=false;vib(30);
+    case 'flip':g.flipped=true;var f=document.getElementById('flip'),c=document.getElementById('cont');if(f)f.classList.add('on');if(c)c.hidden=false;vib(30);var fRect=f.getBoundingClientRect();floatPoints(fRect.left+fRect.width/2, fRect.top, '+'+PTS[r]);
       setTimeout(function(){var r=g.roles[g.elim],shown=S.settings.reveal||r==='mw';if(shown&&r!=='civil')celebrate(f,true);else if(shown)sad(f);else tapSparkle(f)},450);break;
     case 'cont':afterElim();break;
     case 'newround':newRound();break;
@@ -1299,7 +1660,7 @@ function act(a,d){
     case 'tabou_time':S.tabou.timeLimit=+d.t;S._fresh=true;render();break;
     case 'tabou_reset':S.tabou.teamA=0;S.tabou.teamB=0;S._fresh=true;render();break;
     case 'tabou_start':S.tabou.curTeam=S.tabou.round%2;S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);S.tabou.score=0;S.tabou.time=S.tabou.timeLimit;S.screen='tabou_game';S._fresh=true;render();startTabouTimer();break;
-    case 'tabou_ok':sfxPop();S.tabou.score++;S.tabou.cards.shift();if(S.tabou.cards.length===0)S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);S._fresh=true;render();break;
+    case 'tabou_ok':sfxPop();floatPoints(innerWidth/2, innerHeight-100, '+1');S.tabou.score++;S.tabou.cards.shift();if(S.tabou.cards.length===0)S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);S._fresh=true;render();break;
     case 'tabou_pass':sfxError();S.tabou.cards.shift();if(S.tabou.cards.length===0)S.tabou.cards=shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]);S._fresh=true;render();break;
     case 'tabou_quit':clearInterval(S.tabou.tid);S.screen='home';S._fresh=true;render();break;
     case 'tabou_savescore':saveTabouScore();break;
@@ -1467,6 +1828,20 @@ async function olOpen(code,opts){
     if(OL.host){var h=await Hd(code).get();if(h.exists){OL.G=jp(h.data().g,null);if(OL.G)OL.lastN=OL.G.lastN||{};hlSched()}}
     olSubscribe()
   }catch(e){olGone(errText(e))}}
+function checkHost(){
+  if(!OL.on||!OL.room||OL.host)return;
+  var hostId=OL.room.host;
+  if(hostId!==PID&&!OL.players[hostId]){
+    // L'hôte n'est plus là, on prend le relais !
+    OL.host=true;
+    Rr(OL.code).update({host:PID}).catch(function(){});
+    var h=Hd(OL.code).get().then(function(snap){
+      if(snap.exists){OL.G=jp(snap.data().g,null);if(OL.G)OL.lastN=OL.G.lastN||{};hlSched();}
+      olRender();
+    });
+    toast('Tu es le nouvel hôte de la partie !');
+  }
+}
 function olSubscribe(){var c=OL.code;
   function onErr(){OL.err='Connexion perdue. Recharge la page pour reprendre.';olRender()}
   OL.unsubs.push(Rr(c).onSnapshot(function(snap){
@@ -1550,6 +1925,7 @@ function olIssueU(){var n=OL.plist.length,c=OL.cfg;
   return ''}
 function olIssueM(){var n=OL.plist.length,c=OL.cfg,nm=c.names||['',''],t=[[],[]],sp=[0,0],k;
   OL.plist.forEach(function(p){var q=p.team===1?1:0;t[q].push(p);if(p.spy)sp[q]++});
+  checkHost();
   if(!nm[0].trim()||!nm[1].trim())return 'Chaque équipe a besoin d\'un nom.';
   if(norm(nm[0])===norm(nm[1]))return 'Les deux équipes ont le même nom.';
   if(n<4)return 'Il faut au moins 4 joueurs.';
@@ -1843,7 +2219,7 @@ function olShareNative(){var url=olLink(OL.code);
   if(navigator.share){navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){})}else olCopy()}
 function olAct(a,d){var c=OL.cfg||{},i;
   switch(a){
-    case 'ohome':OH.err='';go('ohome');break;case 'avatar':go('avatar_studio');break;
+    case 'ohome':OH.err='';go('ohome');break;case 'close_tuto':try{localStorage.setItem('bazar-tuto-done','1')}catch(e){};S._fresh=true;render();break;case 'avatar':go('avatar_studio');break;
 case 'av_base':S.tempAvatar.base=+d.i;S._fresh=true;render();break;
 case 'av_hat':S.tempAvatar.hat=+d.i;S._fresh=true;render();break;
 case 'av_color':S.tempAvatar.color=+d.i;S._fresh=true;render();break;
@@ -2517,6 +2893,30 @@ function sfxTone(f1,f2,dur,type,vol){
   o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+dur+0.05)}
 function sfxClick(){sfxTone(400,700,0.08,'triangle',0.08)}
 function sfxPop(){sfxTone(600,1200,0.12,'sine',0.1)}
+/* Effet Machine à écrire */
+function typeWriter(el, text, speed, callback){
+  if(!el)return;
+  el.innerHTML=''; var i=0;
+  var timer=setInterval(function(){
+    if(i<text.length){el.innerHTML+=text.charAt(i);i++;}
+    else{clearInterval(timer);el.innerHTML=text+'<span class="type-cursor">|</span>';if(callback)callback();}
+  }, speed);
+}
+
+/* Pluie de points */
+function floatPoints(x, y, text){
+  if(RM)return;
+  var el=document.createElement('div');
+  el.className='float-score';
+  el.textContent=text;
+  el.style.left=x+'px';
+  el.style.top=y+'px';
+  document.body.appendChild(el);
+  setTimeout(function(){el.remove()},1500);
+}
+
+/* Vibration */
+function buzz(ms){ if(navigator.vibrate) navigator.vibrate(ms); }
 function sfxFanfare(win){
   if(!SFX.on)return;sfxInit();var c=SFX.ctx;if(!c)return;
   var notes = win ? [523.25, 659.25, 783.99, 1046.50] : [392.00, 349.23, 311.13, 261.63];
@@ -2714,6 +3114,77 @@ function hdTally2(g){
   else{win=g.p1;mx=tally[g.p1]}
   g.tally=tally;g.winner=win;g.maxVotes=Math.max(mx,1);g.ph='result'
 }
+/* ---------- Générateur Constellation & Étoiles ---------- */
+(function initConstellation(){
+  var mesh=document.createElement('div'); mesh.id='bg-mesh'; document.body.appendChild(mesh);
+  var cvs=document.createElement('canvas'); cvs.id='bg-constellation'; 
+  cvs.style.position='fixed'; cvs.style.top='0'; cvs.style.left='0'; cvs.style.width='100vw'; cvs.style.height='100vh'; cvs.style.zIndex='-1'; cvs.style.pointerEvents='none';
+  document.body.appendChild(cvs);
+  var ctx=cvs.getContext('2d');
+  var stars=[], W=0, H=0, DPR=Math.min(2,window.devicePixelRatio||1);
+
+  function resize(){
+    W=cvs.clientWidth; H=cvs.clientHeight;
+    cvs.width=W*DPR; cvs.height=H*DPR;
+    ctx.scale(DPR,DPR);
+    var count = W<600 ? 30 : 60; // Moins d'étoiles sur mobile
+    stars=[];
+    for(var i=0;i<count;i++){
+      stars.push({
+        x: Math.random()*W, y: Math.random()*H,
+        vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3,
+        r: Math.random()*1.5+0.5,
+        isStar: Math.random()>0.85 // 15% de vraies étoiles 4 branches
+      });
+    }
+  }
+
+  function drawStar(cx, cy, spikes, outerRadius, innerRadius, color){
+    var rot=Math.PI/2*3, x=cx, y=cy, step=Math.PI/spikes;
+    ctx.beginPath(); ctx.moveTo(cx, cy-outerRadius);
+    for(var i=0;i<spikes;i++){
+      x=cx+Math.cos(rot)*outerRadius; y=cy+Math.sin(rot)*outerRadius; ctx.lineTo(x,y); rot+=step;
+      x=cx+Math.cos(rot)*innerRadius; y=cy+Math.sin(rot)*innerRadius; ctx.lineTo(x,y); rot+=step;
+    }
+    ctx.lineTo(cx, cy-outerRadius); ctx.closePath();
+    ctx.fillStyle=color; ctx.fill();
+  }
+
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    var isLight=document.documentElement.getAttribute('data-theme')==='light';
+    var colLine = isLight ? 'rgba(121,87,255,' : 'rgba(184,255,69,';
+    var colStar = isLight ? '#8466FF' : '#B8FF45';
+    var colPoint = isLight ? 'rgba(121,87,255,0.6)' : 'rgba(255,255,255,0.6)';
+
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i];
+      s.x+=s.vx; s.y+=s.vy;
+      if(s.x<0)s.x=W; if(s.x>W)s.x=0; if(s.y<0)s.y=H; if(s.y>H)s.y=0;
+      
+      // Dessin des lignes (Constellation)
+      for(var j=i+1;j<stars.length;j++){
+        var s2=stars[j], dx=s.x-s2.x, dy=s.y-s2.y, dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<120){
+          ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s2.x,s2.y);
+          ctx.strokeStyle=colLine+(1-dist/120)*0.3+')'; ctx.lineWidth=0.5; ctx.stroke();
+        }
+      }
+      
+      // Dessin de l'étoile ou du point
+      if(s.isStar){
+        drawStar(s.x, s.y, 4, s.r*5, s.r*1.5, colStar);
+      } else {
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+        ctx.fillStyle=colPoint; ctx.fill();
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  
+  window.addEventListener('resize', resize);
+  resize(); loop();
+})();
 S._fresh=true;olBoot();render();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
 })();
