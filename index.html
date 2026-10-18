@@ -1138,7 +1138,6 @@ function vHome(){return '<div class="wrap">'+
  '<span class="star" style="width:14px;height:14px;top:40px;right:3%;color:var(--violet-soft);animation-delay:-1.3s,-.7s">'+STAR+'</span>'+
  '<span class="star" style="width:17px;height:17px;bottom:0;right:26%;animation-delay:-2.4s,-1.8s">'+STAR+'</span></header>'+
  '<section class="hero"><h1>La soirée commence ici.</h1><p class="lead">Des jeux, des potes, du bluff et un peu de chaos.</p></section>'+
-
  '<section style="display:flex;flex-direction:column;gap:12px" aria-label="Nos jeux">'+
  '<span class="eyebrow" style="margin-top:10px">🕵️ BLUFF & MENSONGES</span>'+
  '<button class="game" data-act="sheet" data-s="mode-u"><span class="tile v">'+I.eye+'</span><span class="gt"><b>Undercover</b><span class="muted small">3 à 12 joueurs · sur un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
@@ -1149,17 +1148,17 @@ function vHome(){return '<div class="wrap">'+
  '<span class="eyebrow" style="margin-top:10px">🎉 APÉRO & DISCUSSIONS</span>'+
  '<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne</span></span><span class="badge on">En ligne</span></button>'+
  '<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
-'<button class="game" data-act="confess"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span><span class="badge on">En ligne</span></button>'+
-'<button class="game" data-act="fauxavis"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span><span class="badge on">En ligne</span></button>'+
+ '<button class="game" data-act="confess"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span><span class="badge on">En ligne</span></button>'+
+ '<button class="game" data-act="fauxavis"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span><span class="badge on">En ligne</span></button>'+
  '<span class="eyebrow" style="margin-top:10px">🧩 À PART</span>'+
  '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · sur un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
  '</section>'+
-
+ '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="share_score" data-g="all" style="font-size:16px;background:var(--violet);color:#fff;padding:10px 20px;border-radius:99px;border:1px solid var(--line)">📸 Partager le classement</button></div>'+
  '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="avatar" style="font-size:16px;background:var(--surface);padding:10px 20px;border-radius:99px;border:1px solid var(--line)">🎨 Mon Avatar</button></div>'+
- '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="avatar" style="font-size:16px;background:var(--surface);padding:10px 20px;border-radius:99px;border:1px solid var(--line)">🎨 Mon Avatar</button></div>'+
-'<div style="display:flex;flex-direction:column;gap:12px"><button class="btn btn-primary" data-act="ohome">Créer un salon en ligne '+I.spark+'</button><button class="btn btn-secondary" data-act="games">Voir tous les jeux sur ce téléphone</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
-  '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
- (function(){try{if(localStorage.getItem('bazar-tuto-done'))return '';return '<div class="card" style="margin-top:20px;border:2px solid var(--violet);background:rgba(121,87,255,0.1)"><h3>👋 Bienvenue sur BAZAR Party !</h3><p class="muted small" style="margin-bottom:10px">Deux façons de jouer :</p><ul style="font-size:14px;color:var(--muted);margin-left:18px;margin-bottom:15px"><li><b>Sur ce téléphone</b> : Passez l\'appareil de main en main (Undercover, Mot Interdit).</li><li><b>En ligne</b> : Cliquez sur "Créer un salon" et donnez le code à vos amis (Dessins, Petit Bac...).</li></ul><button class="btn btn-secondary" data-act="close_tuto" style="min-height:44px;font-size:15px">J\'ai compris !</button></div>'}catch(e){return ''}})()+
+ '<div style="text-align:center;margin-top:15px;margin-bottom:10px"><button class="link" data-act="tournament" style="font-size:16px;background:linear-gradient(135deg,var(--violet),var(--lime));color:#fff;padding:12px 24px;border-radius:99px;border:1px solid var(--line);font-weight:800;box-shadow:0 4px 15px rgba(184,255,69,0.3)">🏆 Mode Tournoi</button></div>'+
+ '<div style="display:flex;flex-direction:column;gap:12px"><button class="btn btn-primary" data-act="ohome">Créer un salon en ligne '+I.spark+'</button><button class="btn btn-secondary" data-act="games">Voir tous les jeux sur ce téléphone</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
+ '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
+ (function(){try{if(localStorage.getItem('bazar-tuto-done'))return '';return '<div class="card" style="margin-top:20px;border:2px solid var(--violet);background:rgba(121,87,255,0.1)"><h3>👋 Bienvenue sur BAZAR Party !</h3><p class="muted small" style="margin-bottom:10px">Deux façons de jouer :</p><ul style="font-size:14px;color:var(--muted);margin-left:18px;margin-bottom:15px"><li><b>Sur ce téléphone</b> : Passez l\'appareil de main en main.</li><li><b>En ligne</b> : Cliquez sur "Créer un salon" et donnez le code à vos amis.</li></ul><button class="btn btn-secondary" data-act="close_tuto" style="min-height:44px;font-size:15px">J\'ai compris !</button></div>'}catch(e){return ''}})()+
  '</div>'}
 
 /* ---------- Studio d'Avatar ---------- */
@@ -1450,6 +1449,36 @@ function vTabouGame(){
   '<button class="btn btn-primary" data-act="tabou_ok" style="background:var(--lime)">Mot trouvé (+1)</button>'+
   '<button class="btn btn-secondary" data-act="tabou_pass" style="border-color:var(--danger);color:var(--danger)">Mot interdit / Passer</button>'+
   '</div>'}
+function vTournament(){
+  var allGames = [
+    {id:'l', name:'Petit Bac', icon:'🔤', col:'var(--lime)'},
+    {id:'d', name:'Dessins', icon:'🎨', col:'#F5A524'},
+    {id:'s', name:'Qui est le plus susceptible', icon:'❓', col:'#8466FF'},
+    {id:'dd', name:'Le Débat Impossible', icon:'🗣️', col:'#F5A524'},
+    {id:'c', name:'Qui a écrit ça ?', icon:'🤫', col:'#E5484D'},
+    {id:'f', name:'Le Faux Avis', icon:'🤥', col:'#F7D154'},
+    {id:'u', name:'Undercover', icon:'👁️', col:'#7957FF'},
+    {id:'m', name:'Codenames', icon:'🧠', col:'#FFFFFF'}
+  ];
+  if(!S.tourneySel) S.tourneySel = allGames.map(function(g){return g.id});
+  var list = allGames.map(function(g){
+    var isSelected = S.tourneySel.indexOf(g.id) >= 0;
+    return '<div class="prow" style="justify-content:space-between;cursor:pointer" data-act="tog_tourney" data-g="'+g.id+'"><div style="display:flex;align-items:center;gap:12px;font-weight:600;font-size:16px"><span style="background:'+g.col+';color:#10152A;width:36px;height:36px;display:grid;place-items:center;border-radius:10px;font-size:20px">'+g.icon+'</span>'+g.name+'</div><div style="width:24px;height:24px;border-radius:50%;border:2px solid '+(isSelected?'var(--lime)':'var(--line)')+';background:'+(isSelected?'var(--lime)':'transparent')+';display:grid;place-items:center;color:#10152A;font-weight:900">'+(isSelected?'✓':'')+'</div></div>';
+  }).join('');
+  return topbar('Mode Tournoi','home')+'<div class="wrap"><section class="hero"><h1 style="font-size:32px">Prépare ton Tournoi</h1><p class="lead">Sélectionne les jeux que tu veux inclure.</p></section><section class="card"><h2>Les jeux au programme</h2><div class="plist">'+list+'</div></section><button class="btn btn-primary" data-act="otournament" style="background:var(--violet);color:#fff">Créer le salon avec ces jeux</button></div>'
+}
+function vOLobbyT(){
+  var h=OL.host,iss=OL.plist.length<3?'Il faut au moins 3 joueurs.':'';
+  var gamesList = OL.cfg.games ? OL.cfg.games.map(function(g){
+    var names = {l:'Petit Bac', d:'Dessins', s:'Susceptible', dd:'Débat', c:'Qui a écrit ça', f:'Faux Avis', u:'Undercover', m:'Codenames'};
+    return names[g] || g;
+  }).join(' ➔ ') : 'Aucun';
+  
+  return obar('Tournoi BAZAR')+'<div class="wrap">'+olShare()+olPlayers()+
+  '<section class="card"><h2>Les jeux du tournoi</h2><p class="muted" style="font-weight:600;color:var(--lime)">'+gamesList+'</p>'+
+  '<p class="muted small" style="margin-top:10px">Les points de chaque jeu s\'additionneront pour un grand classement final !</p></section>'+
+  '</div>'+olDock(iss)
+}
 function vGames(){return topbar('Choisir un jeu','home')+'<div class="wrap"><section style="display:flex;flex-direction:column;gap:12px" aria-label="Jeux">'+
   '<button class="game" data-act="sheet" data-s="mode-u"><span class="tile v">'+I.eye+'</span><span class="gt"><b>Undercover</b><span class="muted small">Bluff et déduction · 3 à 12 joueurs</span></span><span class="badge on">Jouable</span></button>'+
   '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · 4 joueurs et plus</span></span><span class="badge on">Jouable</span></button>'+
@@ -1573,7 +1602,7 @@ var y=window.scrollY,h;
     case 'home':h=vHome();break;case 'avatar_studio':h=vAvatarStudio();break;case 'rules':h=vRules();break;case 'setup':h=vSetup();break;
     case 'reveal':h=vReveal();break;case 'clues':h=vClues();break;case 'vote':h=vVote();break;
     case 'result':h=vResult();break;case 'mwguess':h=vMw();break;case 'end':h=vEnd();break;case 'peek':h=vPeek();break;
-    case 'games':h=vGames();break;case 'msetup':h=vMSetup();break;case 'mgame':h=vMGame();break;case 'mkey':h=vMKey();break;case 'mend':h=vMEnd();break;case 'mrulespage':h=vMRules();break;
+    case 'games':h=vGames();break;case 'tournament':h=vTournament();break;case 'msetup':h=vMSetup();break;case 'mgame':h=vMGame();break;case 'mkey':h=vMKey();break;case 'mend':h=vMEnd();break;case 'mrulespage':h=vMRules();break;
     case 'ohome':h=vOHome();break;case 'online':h=vOnline();break;
         case 'tabou_setup':h=vTabouSetup();break;case 'tabou_game':h=vTabouGame();break;
     case 'tabou_result':h=vTabouResult();break;
@@ -1822,7 +1851,18 @@ async function olCreate(){
     for(var i=0;i<30&&!code;i++){var c=String(1000+Math.floor(Math.random()*9000));var sn=await Rr(c).get();
       if(!sn.exists||Date.now()-(sn.data().ts||0)>6*36e5)code=c}
     if(!code)throw 'Impossible de créer un salon pour le moment. Réessaie.';
-    await olWipe(code);if(OH.game==='dd'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='f'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='c'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='s'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
+    await olWipe(code);if(OH.game==='dd'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='f'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
+if(OH.game==='t'){
+  var cfg={games:S.tourneySel.slice()};
+  if(!cfg.games.length)cfg.games=['l'];
+  await Rr(code).set({code:code,host:PID,game:'t',status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});
+  await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});
+  olStore({name:nm,code:code});
+  OH.busy=false;
+  await olOpen(code);
+  return;
+}
+if(OH.game==='c'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='s'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
     var cfg=OH.game==='m'?{size:S.my.size,names:[S.my.names[0],S.my.names[1]]}:(OH.game==='l'?{np:6,rounds:2,secs:90,cats:LCATS.slice()}:OH.game==='d'?{rounds:2,per:1,tdraw:60,tfake:40,tvote:25,cats:DCATS.slice(),custom:'',clear:false,dbl:true,hearts:true,hint:true,who:true,display:true}:{uc:1,mw:0,cats:CATS.slice(),reveal:true});
     await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});
     await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});
@@ -1892,6 +1932,19 @@ function olSubscribe(){var c=OL.code;
     var m={},l=[];q.docs.forEach(function(dc){var v=dc.data();v.id=dc.id;m[dc.id]=v;l.push(v)});
     l.sort(function(a,b){return (a.ts||0)-(b.ts||0)||(a.id<b.id?-1:1)});
     OL.players=m;OL.plist=l;
+    // Vérification des réactions
+    var myP = m[PID];
+    if(!myP || !myP.react) { /* rien */ }
+    else {
+      m[PID].react = null; // On efface pour ne pas le relancer
+    }
+    l.forEach(function(p){
+      if(p.react && p.react.t > (OL.lastReact || 0)){
+        OL.lastReact = p.react.t;
+        broadcastReaction(p.react.e);
+        if(p.id!==PID) Pd(c,p.id).update({react:null}).catch(function(){});
+      }
+    });
     if(OL.joined&&!m[PID]){olGone('Tu as été retiré du salon.');return}
     if(m[PID])OL.joined=true;
     if(OL.host){olFixCfg();hostProcess()}
@@ -2104,6 +2157,14 @@ function hmWin(g,t,why){g.winner=t;g.why=why;g.ph='end';OL.wins[t]=(OL.wins[t]||
 function pn(id){var p=OL.players[id];return p?p.name:'Joueur'}
 function pav(id,sm){return av(OL.players[id]||{name:'?',ci:0},sm)}
 function TN(){return (OL.on&&S.screen==='online'&&OL.cfg&&OL.cfg.names)?OL.cfg.names:S.my.names}
+/* ---------- Boutons de Réaction ---------- */
+function reactionBar(){
+  if(!OL.on||OL.status!=='play')return '';
+  var emojis=['😂','😱','🤡','🍅','👏','🔥'];
+  return '<div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);display:flex;gap:8px;background:rgba(27,33,64,0.8);padding:8px;border-radius:99px;backdrop-filter:blur(10px);z-index:50;box-shadow:0 4px 15px rgba(0,0,0,0.3)">'+
+    emojis.map(function(e){return '<button style="background:none;border:none;font-size:24px;cursor:pointer;padding:5px" onclick="sendReaction(\''+e+'\')">'+e+'</button>'}).join('')+
+  '</div>';
+}
 function obar(meta){return '<div class="bar"><button class="icon-btn" data-act="sheet" data-s="oquit" aria-label="Retour">‹</button><span class="codetag">PARTIE #'+esc(OL.code)+'</span>'+(meta?'<span class="meta">'+meta+'</span>':'')+'<button class="icon-btn" data-act="menu" aria-label="Menu">'+I.dots+'</button></div>'}
 function hold(mini){return '<div class="hold'+(mini?' mini':'')+'" id="hold" tabindex="0" role="button" aria-label="Maintiens pour voir ton mot"><div class="front">'+I.eye+'<b>Maintiens pour voir ton mot</b>'+(mini?'':'<span>Relâche pour le cacher</span>')+'</div><div class="back" id="holdback"></div></div>'}
 function holdWord(s){var w=OL.sec&&OL.sec.k===s.gid?OL.sec.w:undefined;
@@ -2166,7 +2227,9 @@ function vOnline(){
   if(!OL.on||!OL.room)return vOLoad('Connexion au salon…');
   var cok=OL.cfg&&(OL.game==='s'?true:(OL.game==='m'?OL.cfg.names&&OL.cfg.size:(OL.game==='l'?OL.cfg.np:(OL.game==='d'?OL.cfg.tdraw:OL.cfg.uc!=null))));
   if(!cok)return vOLoad('Chargement du salon…');
-  if(OL.display&&OL.game==='d')return vODisplay();if(OL.game==='dd'){if(OL.status==='lobby'||!OL.s)return vOLobbyD();if(OL.s.ph==='play'||OL.s.ph==='vote')return vODebatGame();return vODebatGame();}if(OL.game==='f'){if(OL.status==='lobby'||!OL.s)return vOLobbyF();if(OL.s.ph==='write')return vOFauxWrite();if(OL.s.ph==='vote')return vOFauxVote();return vOFauxResult();}if(OL.game==='c'){if(OL.status==='lobby'||!OL.s)return vOLobbyC();if(OL.s.ph==='write')return vOConfessWrite();if(OL.s.ph==='vote')return vOConfessVote();return vOConfessResult();}if(OL.game==='s'){if(OL.status==='lobby'||!OL.s)return vOLobbyS();if(OL.s.ph==='play')return vOSusceptVote();return vOSusceptResult();}
+  if(OL.display&&OL.game==='d')return vODisplay();if(OL.game==='dd'){if(OL.status==='lobby'||!OL.s)return vOLobbyD();if(OL.s.ph==='play'||OL.s.ph==='vote')return vODebatGame();return vODebatGame();}if(OL.game==='f'){if(OL.status==='lobby'||!OL.s)return vOLobbyF();if(OL.s.ph==='write')return vOFauxWrite();if(OL.s.ph==='vote')return vOFauxVote();return vOFauxResult();}
+if(OL.game==='t'){if(OL.status==='lobby'||!OL.s)return vOLobbyT(); return vOLobbyT();}
+if(OL.game==='c'){if(OL.status==='lobby'||!OL.s)return vOLobbyC();if(OL.s.ph==='write')return vOConfessWrite();if(OL.s.ph==='vote')return vOConfessVote();return vOConfessResult();}if(OL.game==='s'){if(OL.status==='lobby'||!OL.s)return vOLobbyS();if(OL.s.ph==='play')return vOSusceptVote();return vOSusceptResult();}
   if(OL.status==='lobby'||!OL.s)return (OL.status==='play'&&!OL.s)?vOLoad('Chargement de la partie…'):(OL.game==='m'?vOLobbyM():(OL.game==='l'?vOLobbyL():(OL.game==='d'?vOLobbyD():vOLobbyU())));
   return OL.game==='m'?vOGameM():(OL.game==='l'?vOGameL():(OL.game==='d'?vOGameD():vOGameU()))}
 
@@ -2283,38 +2346,43 @@ function generateShareImage(gameType){
   ctx.font='40px Inter, sans-serif';
   ctx.fillText(title, 540, 320);
   
-  // Liste des joueurs (on prend les 6 premiers max)
-  var sorted = S.players.slice().sort(function(a,b){return b.score-a.score});
+  // Récupération des joueurs (en ligne ou en solo)
+  var playersList = [];
+  if(S.screen==='online' && OL.players){
+    for(var id in OL.players){
+      var p = OL.players[id];
+      playersList.push({name:p.name, score:OL.scores[id]||0, avatar:p.avatar});
+    }
+  } else {
+    playersList = S.players.map(function(p){return {name:p.name, score:p.score, avatar:p.avatar}});
+  }
+  
+  var sorted = playersList.sort(function(a,b){return b.score-a.score});
   var displayPlayers = sorted.slice(0,6);
   
   displayPlayers.forEach(function(p, idx){
     var y = 480 + (idx * 180);
-    // Cercle de fond pour l'avatar
+    
     ctx.fillStyle = idx===0 ? 'rgba(184,255,69,0.2)' : 'rgba(255,255,255,0.05)';
     ctx.beginPath(); ctx.arc(150, y-20, 60, 0, Math.PI*2); ctx.fill();
     
-    // L'avatar
-    var baseEmoji = p.avatar ? AV_BASES[p.avatar.base] : '👤';
+    var baseEmoji = (p.avatar && AV_BASES[p.avatar.base]) ? AV_BASES[p.avatar.base] : '👤';
     ctx.font = '60px Arial'; ctx.textAlign = 'center';
     ctx.fillText(baseEmoji, 150, y);
     
-    // Le nom
     ctx.fillStyle = idx===0 ? '#B8FF45' : '#FFFFFF';
     ctx.font = 'bold 55px Outfit, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(p.name, 250, y);
     
-    // Le score
     ctx.textAlign = 'right';
     ctx.font = 'bold 55px Outfit, sans-serif';
     ctx.fillText(p.score + ' pts', 980, y);
     
-    // Ligne de séparation
     ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(250, y+60); ctx.lineTo(980, y+60); ctx.stroke();
   });
   
-  // Pied de page (URL)
   ctx.fillStyle = '#FFFFFF';
   ctx.textAlign = 'center';
   ctx.font = 'bold 45px Inter, sans-serif';
@@ -2323,15 +2391,10 @@ function generateShareImage(gameType){
   ctx.font = 'bold 35px Inter, sans-serif';
   ctx.fillText('bazar-party-mobile.vercel.app', 540, 1720);
   
-  // Génération et Partage
   canvas.toBlob(function(blob){
     var file = new File([blob], 'bazar-party-score.png', {type: 'image/png'});
     if(navigator.canShare && navigator.canShare({files: [file]})){
-      navigator.share({
-        files: [file],
-        title: 'Mon score BAZAR Party',
-        text: 'J\'ai gagné à BAZAR Party ! Tu veux essayer ?'
-      }).catch(function(){});
+      navigator.share({files: [file], title: 'Mon score BAZAR Party', text: 'J\'ai gagné à BAZAR Party !'}).catch(function(){});
     } else {
       var link = document.createElement('a');
       link.download = 'bazar-party-score.png';
@@ -2345,7 +2408,11 @@ function olShareNative(){var url=olLink(OL.code);
   if(navigator.share){navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){})}else olCopy()}
 function olAct(a,d){var c=OL.cfg||{},i;
   switch(a){
-    case 'ohome':OH.err='';go('ohome');break;case 'share_score':generateShareImage(d.g);break;case 'fauxavis':OH.game='f';OH.err='';go('ohome');break;
+    case 'ohome':OH.err='';go('ohome');break;
+case 'tournament':go('tournament');break;
+case 'tog_tourney':{var idx=S.tourneySel.indexOf(d.g);if(idx>=0){if(S.tourneySel.length>1)S.tourneySel.splice(idx,1);}else{S.tourneySel.push(d.g);}render();break;}
+case 'otournament':OH.game='t';OH.err='';go('ohome');break;
+case 'share_score':generateShareImage(d.g);break;case 'fauxavis':OH.game='f';OH.err='';go('ohome');break;
 case 'opick_faux':OL.pick=+d.i;render();break;
 case 'ovote_faux':if(OL.pick!=null){OL.my.vote=OL.s.vk;sendAct('vote',{i:OL.pick});olRender();}break;
 case 'onext_faux':sendAct('cont');break;case 'confess':OH.game='c';OH.err='';go('ohome');break;
