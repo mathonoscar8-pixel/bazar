@@ -850,6 +850,37 @@ var TABOU=[
 ];
 
 function maxTabou(n){return n<=3?1:(n<=8?2:3)}
+/* ---------- Données : Qui a écrit ça ? ---------- */
+/* ---------- Données : Le Faux Avis ---------- */
+var FAUXAVIS=[
+"Quel est le vrai nom du cri du paresseux ?",
+"Combien de cœurs possède une pieuvre ?",
+"Quelle est la capitale de l'Australie ?",
+"Quel animal est capable de survivre le plus longtemps sans boire ?",
+"Quel est le pays qui consomme le plus de fromage par habitant ?",
+"Quel est le nom du plus grand désert du monde ?",
+"Combien d'os possède un bébé à la naissance ?",
+"Quel fruit est le plus lourd du monde ?",
+"Quelle est la durée de vie moyenne d'un escargot ?",
+"Quel est le seul métal qui est liquide à température ambiante ?",
+"Quel est le nom de la peur des longues files d'attente ?",
+"Combien de temps met la lumière du soleil pour atteindre la Terre ?",
+"Quel est le pays d'origine de la pizza ?",
+"Quel est l'organe le plus lourd du corps humain ?",
+"Quel est le nom du bébé du kangourou ?"
+];
+var CONFESS=[
+"Ta pire excuse pour annuler un rendez-vous",
+"Le pire secret que tu caches à tes parents",
+"La chose la plus embarrassante qui te soit arrivée en public",
+"Ton pire talent caché",
+"La dernière chose que tu as cherchée sur internet",
+"Une chose que tout le monde déteste mais que tu adores",
+"Ta pire habitude quand tu es tout seul",
+"Le mensonge le plus gros que tu aies raconté",
+"Une pensée bizarre que tu as eue récemment",
+"Le pire cadeau que tu aies offert"
+];
 var DEBATS=[
 "Le pain au chocolat est meilleur que la chocolatine",
 "Les pâtes sans fromage sont un crime",
@@ -1118,6 +1149,8 @@ function vHome(){return '<div class="wrap">'+
  '<span class="eyebrow" style="margin-top:10px">🎉 APÉRO & DISCUSSIONS</span>'+
  '<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne</span></span><span class="badge on">En ligne</span></button>'+
  '<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
+'<button class="game" data-act="confess"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span><span class="badge on">En ligne</span></button>'+
+'<button class="game" data-act="fauxavis"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span><span class="badge on">En ligne</span></button>'+
  '<span class="eyebrow" style="margin-top:10px">🧩 À PART</span>'+
  '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · sur un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
  '</section>'+
@@ -1424,6 +1457,8 @@ function vGames(){return topbar('Choisir un jeu','home')+'<div class="wrap"><sec
 '<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits · un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
 '<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne, 3 à 12 joueurs</span></span><span class="badge on">En ligne</span></button>'+
 '<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
+'<button class="game" data-act="confess"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span><span class="badge on">En ligne</span></button>'+
+'<button class="game" data-act="fauxavis"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span><span class="badge on">En ligne</span></button>'+
  '</section><button class="btn btn-secondary" data-act="ohome">Jouer en ligne · chacun son téléphone</button><p class="note">À la même table sur un seul téléphone, ou à distance avec un code et un QR code.</p></div>'}
 
 function vTabouSetup(){
@@ -1786,7 +1821,7 @@ async function olCreate(){
     for(var i=0;i<30&&!code;i++){var c=String(1000+Math.floor(Math.random()*9000));var sn=await Rr(c).get();
       if(!sn.exists||Date.now()-(sn.data().ts||0)>6*36e5)code=c}
     if(!code)throw 'Impossible de créer un salon pour le moment. Réessaie.';
-    await olWipe(code);if(OH.game==='dd'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='s'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
+    await olWipe(code);if(OH.game==='dd'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='f'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='c'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='s'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
     var cfg=OH.game==='m'?{size:S.my.size,names:[S.my.names[0],S.my.names[1]]}:(OH.game==='l'?{np:6,rounds:2,secs:90,cats:LCATS.slice()}:OH.game==='d'?{rounds:2,per:1,tdraw:60,tfake:40,tvote:25,cats:DCATS.slice(),custom:'',clear:false,dbl:true,hearts:true,hint:true,who:true,display:true}:{uc:1,mw:0,cats:CATS.slice(),reveal:true});
     await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});
     await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});
@@ -1948,7 +1983,7 @@ async function sendAct(t,extra){
   if(OL.host){hostAct(PID,a);return}
   try{await Pd(OL.code,PID).update({act:JSON.stringify(a)})}
   catch(e){OL.err='Action non envoyée : vérifie ta connexion.';olRender()}}
-function hostAct(uid,a){var g=OL.G;if(g.g==='u')r=huAct(uid,a,g);else if(g.g==='m')r=hmAct(uid,a,g);else if(g.g==='d')r=hdAct(uid,a,g);else if(g.g==='s')r=hsAct(uid,a,g);else if(g.g==='dd')r=hdAct2(uid,a,g);else r=hlAct(uid,a,g);if(g.g==='l'||g.g==='d')hlSched();if(r!==false)commit()}
+function hostAct(uid,a){var g=OL.G;if(g.g==='u')r=huAct(uid,a,g);else if(g.g==='c')r=hcAct(uid,a,g);else if(g.g==='f')r=hfAct(uid,a,g);else if(g.g==='m')r=hmAct(uid,a,g);else if(g.g==='d')r=hdAct(uid,a,g);else if(g.g==='s')r=hsAct(uid,a,g);else if(g.g==='c')r=hcAct(uid,a,g);else if(g.g==='dd')r=hdAct2(uid,a,g);else r=hlAct(uid,a,g);if(g.g==='l'||g.g==='d')hlSched();if(r!==false)commit()}
 function hostProcess(){if(!OL.host||!OL.G)return;
   OL.plist.forEach(function(p){if(p.id===PID)return;var a=jp(p.act,null);if(!a||!a.n)return;
     if(a.n>(OL.lastN[p.id]||0)){OL.lastN[p.id]=a.n;hostAct(p.id,a)}})}
@@ -1958,7 +1993,7 @@ async function olStart(){
   OL.starting=true;OL.err='';olRender();
   try{
     OL.plist.forEach(function(p){var a=jp(p.act,null);OL.lastN[p.id]=a&&a.n?a.n:0});
-    var g=OL.game==='dd'?mkGameD2():OL.game==='s'?mkGameS():OL.game==='m'?mkGameM():(OL.game==='l'?mkGameL():(OL.game==='d'?mkGameD():mkGameU())),secs=g.g==='l'?[]:g.secs;if(g.g!=='l')delete g.secs;
+    var g=OL.game==='f'?mkGameF():OL.game==='c'?mkGameC():OL.game==='dd'?mkGameD2():OL.game==='s'?mkGameS():OL.game==='m'?mkGameM():(OL.game==='l'?mkGameL():(OL.game==='d'?mkGameD():mkGameU())),secs=g.g==='l'?[]:g.secs;if(g.g!=='l')delete g.secs;
     for(var i=0;i<secs.length;i++)await Sd(OL.code,secs[i][0]).set(secs[i][1]);
     g.lastN=OL.lastN;OL.G=g;
     await Rr(OL.code).update({status:'play',s:JSON.stringify(pubG(g)),cfg:JSON.stringify(OL.cfg),scores:JSON.stringify(OL.scores),wins:JSON.stringify(OL.wins),v:Date.now()});
@@ -2130,7 +2165,7 @@ function vOnline(){
   if(!OL.on||!OL.room)return vOLoad('Connexion au salon…');
   var cok=OL.cfg&&(OL.game==='s'?true:(OL.game==='m'?OL.cfg.names&&OL.cfg.size:(OL.game==='l'?OL.cfg.np:(OL.game==='d'?OL.cfg.tdraw:OL.cfg.uc!=null))));
   if(!cok)return vOLoad('Chargement du salon…');
-  if(OL.display&&OL.game==='d')return vODisplay();if(OL.game==='dd'){if(OL.status==='lobby'||!OL.s)return vOLobbyD();if(OL.s.ph==='play'||OL.s.ph==='vote')return vODebatGame();return vODebatGame();}if(OL.game==='s'){if(OL.status==='lobby'||!OL.s)return vOLobbyS();if(OL.s.ph==='play')return vOSusceptVote();return vOSusceptResult();}
+  if(OL.display&&OL.game==='d')return vODisplay();if(OL.game==='dd'){if(OL.status==='lobby'||!OL.s)return vOLobbyD();if(OL.s.ph==='play'||OL.s.ph==='vote')return vODebatGame();return vODebatGame();}if(OL.game==='f'){if(OL.status==='lobby'||!OL.s)return vOLobbyF();if(OL.s.ph==='write')return vOFauxWrite();if(OL.s.ph==='vote')return vOFauxVote();return vOFauxResult();}if(OL.game==='c'){if(OL.status==='lobby'||!OL.s)return vOLobbyC();if(OL.s.ph==='write')return vOConfessWrite();if(OL.s.ph==='vote')return vOConfessVote();return vOConfessResult();}if(OL.game==='s'){if(OL.status==='lobby'||!OL.s)return vOLobbyS();if(OL.s.ph==='play')return vOSusceptVote();return vOSusceptResult();}
   if(OL.status==='lobby'||!OL.s)return (OL.status==='play'&&!OL.s)?vOLoad('Chargement de la partie…'):(OL.game==='m'?vOLobbyM():(OL.game==='l'?vOLobbyL():(OL.game==='d'?vOLobbyD():vOLobbyU())));
   return OL.game==='m'?vOGameM():(OL.game==='l'?vOGameL():(OL.game==='d'?vOGameD():vOGameU()))}
 
@@ -2219,7 +2254,13 @@ function olShareNative(){var url=olLink(OL.code);
   if(navigator.share){navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){})}else olCopy()}
 function olAct(a,d){var c=OL.cfg||{},i;
   switch(a){
-    case 'ohome':OH.err='';go('ohome');break;case 'close_tuto':try{localStorage.setItem('bazar-tuto-done','1')}catch(e){};S._fresh=true;render();break;case 'avatar':go('avatar_studio');break;
+    case 'ohome':OH.err='';go('ohome');break;case 'fauxavis':OH.game='f';OH.err='';go('ohome');break;
+case 'opick_faux':OL.pick=+d.i;render();break;
+case 'ovote_faux':if(OL.pick!=null){OL.my.vote=OL.s.vk;sendAct('vote',{i:OL.pick});olRender();}break;
+case 'onext_faux':sendAct('cont');break;case 'confess':OH.game='c';OH.err='';go('ohome');break;
+case 'opick_confess':OL.pick=+d.i;render();break;
+case 'ovote_confess':if(OL.pick!=null){OL.my.vote=OL.s.vk;sendAct('vote',{i:OL.pick});olRender();}break;
+case 'onext_confess':sendAct('cont');break;case 'close_tuto':try{localStorage.setItem('bazar-tuto-done','1')}catch(e){};S._fresh=true;render();break;case 'avatar':go('avatar_studio');break;
 case 'av_base':S.tempAvatar.base=+d.i;S._fresh=true;render();break;
 case 'av_hat':S.tempAvatar.hat=+d.i;S._fresh=true;render();break;
 case 'av_color':S.tempAvatar.color=+d.i;S._fresh=true;render();break;
@@ -3185,6 +3226,178 @@ function hdTally2(g){
   window.addEventListener('resize', resize);
   resize(); loop();
 })();
+/* ================= LOGIQUE ET VUES : QUI A ÉCRIT ÇA ? ================= */
+function vOLobbyC(){
+  var h=OL.host,iss=OL.plist.length<3?'Il faut au moins 3 joueurs.':'';
+  return obar('Qui a écrit ça ?')+'<div class="wrap">'+olShare()+olPlayers()+
+  '<section class="card"><h2>Comment jouer ?</h2><p class="muted small">Une question s\'affiche. Tout le monde écrit une réponse anonyme. Ensuite, on vote tous pour la réponse la plus drôle !</p></section>'+
+  '</div>'+olDock(iss)
+}
+function vOConfessWrite(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  
+  return obar('À toi d\'écrire')+'<div class="wrap"><div class="now"><span class="eyebrow">La question est</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
+  '<form id="confessform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="cfinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta réponse anonyme..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma réponse</button></form></div>';
+}
+function vOConfessVote(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Vote envoyé')+'<div class="wrap"><div class="who"><h2>Vote enregistré !</h2><p class="muted">En attente des autres… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  
+  var opts=s.opts.map(function(o,i){
+    return '<button class="pick" data-act="opick_confess" data-i="'+i+'" aria-pressed="'+(OL.pick===i)+'">'+esc(o.t)+'</button>'
+  }).join('');
+  
+  return obar('Vote')+'<div class="wrap"><div class="now"><span class="eyebrow">Quelle est la réponse la plus drôle ?</span><div class="big" style="font-size:20px;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
+  '<div class="grid" style="grid-template-columns:1fr">'+opts+'</div></div>'+
+  '<div class="dock"><button class="btn btn-primary" data-act="ovote_confess"'+(OL.pick!=null?'':' disabled')+'>'+(OL.pick!=null?'Voter pour cette réponse':'Choisis une réponse')+'</button></div>';
+}
+function vOConfessResult(){
+  var s=OL.s, win=s.winner;
+  return obar('Résultat')+'<div class="wrap"><div class="win"><span class="eyebrow">La réponse la plus drôle est</span><h1 style="color:var(--lime);font-size:28px">« '+esc(win)+' »</h1><p class="lead">Écrite par '+esc(pn(s.winnerId))+' !</p></div>'+
+  '<section class="card"><div class="tally">'+
+  s.opts.map(function(o){var count=s.tally[o.t]||0,mx=s.maxVotes||1;if(!count)return '';
+    return '<div class="trow"><span class="nm">'+esc(o.t)+'</span><span class="ct">'+count+' vote'+(count>1?'s':'')+'</span><span class="tb"><i style="width:'+(count/mx*100)+'%"></i></span></div>'
+  }).join('')+
+  '</div></section></div>'+
+  '<div class="dock">'+(OL.host?'<button class="btn btn-primary" data-act="onext_confess">Question suivante</button><button class="btn btn-ghost" data-act="oagain">Quitter le salon</button>':'<p class="note">En attente de l\'hôte…</p>')+'</div>';
+}
+
+function mkGameC(){
+  var g={g:'c',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:CONFESS[Math.floor(Math.random()*CONFESS.length)],vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},winner:null,winnerId:null,maxVotes:0};
+  return g;
+}
+function pubC(g){
+  var s={g:'c',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;if(s.voted.indexOf(PID)>=0&&g.votedAnswers)s.opts.forEach(function(o,i){if(g.votedAnswers[o.id]===PID)o.mine=true;});}
+  if(g.ph==='result'){s.tally=g.tally;s.winner=g.winner;s.winnerId=g.winnerId;s.maxVotes=g.maxVotes;s.opts=g.opts;}
+  return s;
+}
+function hcAct(uid,a,g){
+  var host=uid===PID;
+  switch(a.t){
+    case 'write':{if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcToVote(g)}break}
+    case 'vote':{if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;g.votes=g.votes||{};g.votes[uid]=g.opts[a.i].t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcTally(g)}break}
+    case 'close_write':if(!host||g.ph!=='write')return;hcToVote(g);break;
+    case 'close_vote':if(!host||g.ph!=='vote')return;hcTally(g);break;
+    case 'cont':{if(!host||g.ph!=='result')return;
+      var oldQ=g.q,pool=CONFESS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
+      g.q=newQ;g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
+    default:return
+  }
+}
+function hcToVote(g){
+  g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';
+  var arr=[];for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}
+  g.opts=shuffle(arr);g.votedAnswers=g.answers;
+}
+function hcTally(g){
+  var tally={},mx=0,winText=null,winId=null;
+  for(var k in g.votes){var t=g.votes[k];tally[t]=(tally[t]||0)+1;if(tally[t]>mx){mx=tally[t];winText=t;}}
+  for(var id in g.answers){if(g.answers[id]===winText)winId=id;}
+  g.tally=tally;g.winner=winText;g.winnerId=winId;g.maxVotes=mx;g.ph='result';
+}
+/* ================= LOGIQUE ET VUES : LE FAUX AVIS ================= */
+function vOLobbyF(){
+  var h=OL.host,iss=OL.plist.length<3?'Il faut au moins 3 joueurs.':'';
+  return obar('Le Faux Avis')+'<div class="wrap">'+olShare()+olPlayers()+
+  '<section class="card"><h2>Comment jouer ?</h2><p class="muted small">Une question de culture générale s\'affiche. Personne ne connaît la réponse, alors tout le monde invente une fausse réponse crédible. Ensuite, on mélange les fausses réponses avec la vraie, et on vote pour la bonne !</p></section>'+
+  '</div>'+olDock(iss)
+}
+function vOFauxWrite(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Fausse réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  
+  return obar('À toi d\'inventer')+'<div class="wrap"><div class="now"><span class="eyebrow">Question</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div><p class="muted">Invente une fausse réponse crédible.</p></div>'+
+  '<form id="fauxform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="fxinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta fausse réponse..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma fausse réponse</button></form></div>';
+}
+function vOFauxVote(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Vote envoyé')+'<div class="wrap"><div class="who"><h2>Vote enregistré !</h2><p class="muted">En attente des autres… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  
+  var opts=s.opts.map(function(o,i){
+    var mine = o.mine ? '<span class="small muted"> (la tienne)</span>' : '';
+    return '<button class="pick" data-act="opick_faux" data-i="'+i+'" aria-pressed="'+(OL.pick===i)+'"'+(o.mine?' disabled style="opacity:0.5"':'')+'>'+esc(o.t)+mine+'</button>'
+  }).join('');
+  
+  return obar('Vote')+'<div class="wrap"><div class="now"><span class="eyebrow">Quelle est la VRAIE réponse ?</span><div class="big" style="font-size:20px;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
+  '<div class="grid" style="grid-template-columns:1fr">'+opts+'</div></div>'+
+  '<div class="dock"><button class="btn btn-primary" data-act="ovote_faux"'+(OL.pick!=null?'':' disabled')+'>'+(OL.pick!=null?'Voter pour cette réponse':'Choisis une réponse')+'</button></div>';
+}
+function vOFauxResult(){
+  var s=OL.s;
+  var list=s.opts.map(function(o){
+    var isReal = (o.t===s.real);
+    var pts = s.gains[o.id] ? ' <span class="tag ok">+'+s.gains[o.id]+' pts</span>' : '';
+    return '<div class="dop rv'+(isReal?' real':'')+'"><span class="tx">'+esc(o.t)+(isReal?' <span class="eyebrow" style="color:var(--lime)">★ Vraie réponse</span>':'')+'<br><span class="muted small">par '+esc(pn(o.id))+'</span>'+pts+'</span></div>'
+  }).join('');
+  return obar('Résultat')+'<div class="wrap"><div class="win"><span class="eyebrow">La vraie réponse était</span><h1 style="color:var(--lime);font-size:26px">'+esc(s.real)+'</h1></div>'+
+  '<section class="card"><h3>Les réponses</h3><div class="order">'+list+'</div></section></div>'+
+  '<div class="dock">'+(OL.host?'<button class="btn btn-primary" data-act="onext_faux">Question suivante</button><button class="btn btn-ghost" data-act="oagain">Quitter le salon</button>':'<p class="note">En attente de l\'hôte…</p>')+'</div>';
+}
+
+function mkGameF(){
+  // On simule une base de données de vraies réponses (pour l'exemple, on met des réponses fixes)
+  var vraiesReponses = {
+    "Quel est le vrai nom du cri du paresseux ?": "Le paresseux ne crie pas, il soupire",
+    "Combien de cœurs possède une pieuvre ?": "3",
+    "Quelle est la capitale de l'Australie ?": "Canberra",
+    "Quel animal est capable de survivre le plus longtemps sans boire ?": "Le chameau",
+    "Quel est le pays qui consomme le plus de fromage par habitant ?": "Le Danemark",
+    "Quel est le nom du plus grand désert du monde ?": "L'Antarctique",
+    "Combien d'os possède un bébé à la naissance ?": "300",
+    "Quel fruit est le plus lourd du monde ?": "Le jacquier",
+    "Quelle est la durée de vie moyenne d'un escargot ?": "3 ans",
+    "Quel est le seul métal qui est liquide à température ambiante ?": "Le mercure",
+    "Quel est le nom de la peur des longues files d'attente ?": "L'ouragie",
+    "Combien de temps met la lumière du soleil pour atteindre la Terre ?": "8 minutes",
+    "Quel est le pays d'origine de la pizza ?": "L'Italie",
+    "Quel est l'organe le plus lourd du corps humain ?": "Le foie",
+    "Quel est le nom du bébé du kangourou ?": "Le joey"
+  };
+  
+  var q = FAUXAVIS[Math.floor(Math.random()*FAUXAVIS.length)];
+  var real = vraiesReponses[q] || "Réponse inconnue";
+  
+  var g={g:'f',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,real:real,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
+  return g;
+}
+function pubF(g){
+  var s={g:'f',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;if(s.voted.indexOf(PID)>=0&&g.answers)s.opts.forEach(function(o,i){if(o.id===PID)o.mine=true;});}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+function hfAct(uid,a,g){
+  var host=uid===PID;
+  switch(a.t){
+    case 'write':{if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hfToVote(g)}break}
+    case 'vote':{if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;var opt=g.opts[a.i];if(opt.id===uid)return;g.votes=g.votes||{};g.votes[uid]=opt;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hfTally(g)}break}
+    case 'close_write':if(!host||g.ph!=='write')return;hfToVote(g);break;
+    case 'close_vote':if(!host||g.ph!=='vote')return;hfTally(g);break;
+    case 'cont':{if(!host||g.ph!=='result')return;
+      var oldQ=g.q,pool=FAUXAVIS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
+      g.q=newQ;g.real=vraiesReponses[newQ]||"Réponse inconnue";g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
+    default:return
+  }
+}
+function hfToVote(g){
+  g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';
+  var arr=[{id:'real',t:g.real}];
+  for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}
+  g.opts=shuffle(arr);
+}
+function hfTally(g){
+  var gains={};g.players.forEach(function(id){gains[id]=0});
+  var mx=0,win=null;
+  for(var uid in g.votes){
+    var opt=g.votes[uid];
+    if(opt.id==='real'){gains[uid]+=2;} 
+    else {gains[opt.id]+=1;}
+  }
+  g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});
+  g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
+}
 S._fresh=true;olBoot();render();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
 })();
