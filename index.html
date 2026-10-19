@@ -2976,7 +2976,7 @@ case 'spin_wheel':{
 }
 case 'tournament':go('tournament');break;case 'show_rule':var txt=SHORT_RULES[d.g]||"Règles bientôt disponibles.";S.sheet='rule_info';S.ruleText=txt;render();break;
 case 'tog_tourney':{var idx=S.tourneySel.indexOf(d.g);if(idx>=0){if(S.tourneySel.length>1)S.tourneySel.splice(idx,1);}else{S.tourneySel.push(d.g);}render();break;}
-case 'otournament':OH.game='t';OH.err='';go('ohome');break;
+case 'otournament':OH.game='t';OH.err='';if(!OH.name.trim()){toast('Choisis d\'abord un prénom !');go('ohome');}else{olCreate();}break;
 case 'start_tourney':{
   if(!OL.host || !OL.cfg.games || !OL.cfg.games.length) return;
   var firstGame = OL.cfg.games[0];
