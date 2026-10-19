@@ -2291,33 +2291,34 @@ function errText(e){if(typeof e==='string')return e;if(e&&e.message==='réseau')
 /* ----- Créer / rejoindre / reprendre ----- */
 function getMyAvatar(){try{return JSON.parse(localStorage.getItem('bazar-my-avatar')||'null')}catch(e){return null}}
 async function olCreate(){
+  if(OH.busy) return; // Sécurité pour éviter le double-clic
+  
   var nm=OH.name.trim().slice(0,16);
-if(OH.busy)return; OH.busy=true; render();
   if(!nm){OH.err='Choisis un prénom.';return homeRender()}
-  OH.busy=true;OH.err='';homeRender();
+  
+  OH.busy=true;OH.err='';render(); // On active le spinner
+  
   try{
     await olInit();var b=olBlock();if(b)throw b;
     var code=null;
     for(var i=0;i<30&&!code;i++){var c=String(1000+Math.floor(Math.random()*9000));var sn=await Rr(c).get();
       if(!sn.exists||Date.now()-(sn.data().ts||0)>6*36e5)code=c}
     if(!code)throw 'Impossible de créer un salon pour le moment. Réessaie.';
-    await olWipe(code);if(OH.game==='dd'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='f'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
-if(OH.game==='t'){
-  var cfg={games:S.tourneySel.slice()};
-  if(!cfg.games.length)cfg.games=['l'];
-  await Rr(code).set({code:code,host:PID,game:'t',status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});
-  await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});
-  olStore({name:nm,code:code});
-  OH.busy=false;
-  await olOpen(code);
-  return;
-}
-if(OH.game==='c'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}if(OH.game==='s'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
+    await olWipe(code);
     var cfg=OH.game==='m'?{size:S.my.size,names:[S.my.names[0],S.my.names[1]]}:(OH.game==='l'?{np:6,rounds:2,secs:90,cats:LCATS.slice()}:OH.game==='d'?{rounds:2,per:1,tdraw:60,tfake:40,tvote:25,cats:DCATS.slice(),custom:'',clear:false,dbl:true,hearts:true,hint:true,who:true,display:true}:{uc:1,mw:0,cats:CATS.slice(),reveal:true});
+    
+    if(OH.game==='t'){var cfg={games:S.tourneySel.slice()};if(!cfg.games.length)cfg.games=['l'];await Rr(code).set({code:code,host:PID,game:'t',status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
+    if(OH.game==='c'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
+    if(OH.game==='f'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
+    if(OH.game==='s'){var cfg={size:S.my.size, names:[S.my.names[0],S.my.names[1]]};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
+    
     await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});
     await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});
     olStore({name:nm,code:code});OH.busy=false;await olOpen(code);
-  }catch(e){OH.busy=false;OH.err=errText(e);homeRender()}}
+  }catch(e){
+    OH.busy=false;OH.err=errText(e);render();
+  }
+}
 async function olJoin(){
   var nm=OH.name.trim().slice(0,16),code=OH.code.trim();
   if(!nm){OH.err='Choisis un prénom.';return homeRender()}
@@ -2637,12 +2638,12 @@ function vOHome(){
     var iconTxt = ({u:'#fff',m:'#10152A',l:'#10152A',d:'#10152A',s:'#fff',dd:'#10152A',c:'#fff',f:'#10152A'})[id];
     
     return '<div style="position:relative;margin-bottom:8px">'+
-      '<button class="game" data-act="ogame" data-g="'+id+'" style="background:'+bg+';border:'+border+';transform:'+(isSel?'scale(1.02)':'none')+';box-shadow:'+(isSel?'0 0 20px rgba(184,255,69,0.3)':'none')+'">'+
+      '<button class="game" data-act="ogame" data-g="'+id+'" style="background:'+bg+';border:'+border+';transform:'+(isSel?'scale(1.02)':'none')+';box-shadow:'+(isSel?'0 0 20px rgba(184,255,69,0.3)':'none')+'" '+(OH.busy?'disabled':'')+'>'+
         '<span class="tile v" style="background:'+iconCol+';color:'+iconTxt+'"><b style="font-size:20px">'+name.charAt(0)+'</b></span>'+
         '<span class="gt"><b>'+name+'</b><span class="muted small">'+desc+'</span></span>'+
         (isSel?'<span style="position:absolute;right:15px;top:15px;color:var(--lime);font-size:24px;font-weight:900;line-height:1">✓</span>':'')+
       '</button>'+
-      '<button class="link" data-act="show_rule" data-g="'+id+'" style="position:absolute;right:15px;bottom:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line)">Règles</button>'+
+      '<button class="link" data-act="show_rule" data-g="'+id+'" style="position:absolute;right:15px;bottom:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line)" '+(OH.busy?'disabled':'')+'>Règles</button>'+
     '</div>';
   }
 
