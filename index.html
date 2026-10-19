@@ -2321,9 +2321,12 @@ async function olCreate(){
 }
 async function olJoin(){
   var nm=OH.name.trim().slice(0,16),code=OH.code.trim();
-  if(!nm){OH.err='Choisis un prénom.';return homeRender()}
-  if(!/^\d{4}$/.test(code)){OH.err='Le code a 4 chiffres.';return homeRender()}
-  OH.busy=true;OH.err='';homeRender();
+  if(!nm){OH.err='Choisis un prénom.';return render()}
+  if(!/^\d{4}$/.test(code)){OH.err='Le code a 4 chiffres.';return render()}
+  
+  if(OH.busy) return;
+  OH.busy=true;OH.err='';render();
+  
   try{
     await olInit();var b=olBlock();if(b)throw b;
     var sn=await Rr(code).get();if(!sn.exists)throw 'Partie introuvable. Vérifie le code.';
@@ -2337,12 +2340,10 @@ async function olJoin(){
       await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:cnt[1]<cnt[0]?1:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});
     }
     olStore({name:nm,code:code});OH.busy=false;await olOpen(code);
-  }catch(e){OH.busy=false;OH.err=errText(e);homeRender()}}
-async function olResume(code){
-  try{var sn=await Rr(code).get();
-    if(!sn.exists||sn.data().status==='closed'){olStore({code:''});return}
-    var pd=await Pd(code,PID).get();if(!pd.exists){olStore({code:''});return}
-    await olOpen(code)}catch(e){}}
+  }catch(e){
+    OH.busy=false;OH.err=errText(e);render();
+  }
+}
 function olTeardown(){clearTimeout(OL.tm);if(OL&&OL.unsubs)OL.unsubs.forEach(function(u){try{u()}catch(e){}});if(OL)OL.unsubs=[]}
 async function olOpen(code,opts){
   olTeardown();
@@ -2673,7 +2674,7 @@ function vOHome(){
   '<section class="card" style="margin-top:20px;border:2px solid var(--violet)"><h2>Déjà un code ?</h2>'+
   '<p class="muted small" style="margin-bottom:10px">Entre le code à 4 chiffres ou scanne le QR code de ton ami.</p>'+
   '<input class="field" id="ocd" data-input="ocode" value="'+esc(OH.code)+'" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0000" aria-label="Code de la partie" autocomplete="off" style="height:70px;font-size:36px;letter-spacing:.3em;text-align:center;font-weight:800;margin-bottom:12px">'+
-  '<button class="btn btn-secondary" data-act="ojoin"'+(b||OLST==='init'?' disabled':'')+'>Rejoindre le salon</button>'+
+  '<button class="btn btn-secondary" data-act="ojoin"'+(b||OLST==='init'||OH.busy?' disabled':'')+'>'+(OH.busy?'<span class="spinner"></span> Connexion…':'Rejoindre le salon')+'</button>'+
   '<div style="text-align:center;margin-top:12px"><button class="link" data-act="oscanqr" style="font-size:15px;color:var(--lime)">📷 Scanner un QR Code</button></div>'+
   '</section>'+
   
@@ -2725,13 +2726,30 @@ function vOLobbyM(){var c=OL.cfg,h=OL.host,me=OL.players[PID]||{team:0},nm=c.nam
 function vOnline(){
   if(!OL.on||!OL.room)return vOLoad('Connexion au salon…');
   
-  // On vérifie juste si on a une config valide, sans bloquer les jeux sans réglages
   var cok = OL.cfg != null; 
   if(!cok)return vOLoad('Chargement du salon…');
   
   if(OL.status==='lobby'||!OL.s){
     if(OL.status==='play'&&!OL.s) return vOLoad('Chargement de la partie…');
     
+    // Si c'est un tournoi, on affiche l'écran d'attente spécial
+    if(OL.game==='t') {
+      var gamesList = OL.cfg.games ? OL.cfg.games.map(function(g){
+        var names = {l:'Petit Bac', d:'Dessins', s:'Susceptible', dd:'Débat', c:'Qui a écrit ça', f:'Faux Avis', u:'Undercover', m:'Codenames'};
+        return names[g] || g;
+      }).join(' ➔ ') : 'Aucun';
+      
+      var startBtn = OL.host 
+        ? '<button class="btn btn-primary" data-act="start_tourney"'+(OL.plist.length<3?' disabled':'')+'>Lancer le Tournoi !</button>'
+        : '<p class="note">En attente de l\'hôte…</p>';
+
+      return obar('Tournoi BAZAR')+'<div class="wrap">'+olShare()+olPlayers()+
+      '<section class="card"><h2>Les jeux du tournoi</h2><p class="muted" style="font-weight:600;color:var(--lime);line-height:1.5">'+gamesList+'</p>'+
+      '<p class="muted small" style="margin-top:10px">Les points de chaque jeu s\'additionneront pour un grand classement final !</p></section>'+
+      '</div><div class="dock"><p class="issue" role="status">'+(OL.host && OL.plist.length<3?'Il faut au moins 3 joueurs.':'')+'</p>'+startBtn+'</div>';
+    }
+    
+    // Pour les autres jeux, on garde l'affichage normal
     var lobbyHtml = (OL.game==='m'?vOLobbyM():(OL.game==='l'?vOLobbyL():(OL.game==='d'?vOLobbyD():(OL.game==='c'?vOLobbyC():(OL.game==='f'?vOLobbyF():(OL.game==='s'?vOLobbyS():vOLobbyU()))))));
     var tip = BAZ_TIPS[OL.game] || "En attente des joueurs...";
     
