@@ -2292,6 +2292,7 @@ function errText(e){if(typeof e==='string')return e;if(e&&e.message==='réseau')
 function getMyAvatar(){try{return JSON.parse(localStorage.getItem('bazar-my-avatar')||'null')}catch(e){return null}}
 async function olCreate(){
   var nm=OH.name.trim().slice(0,16);
+if(OH.busy)return; OH.busy=true; render();
   if(!nm){OH.err='Choisis un prénom.';return homeRender()}
   OH.busy=true;OH.err='';homeRender();
   try{
