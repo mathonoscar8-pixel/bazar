@@ -1079,6 +1079,16 @@ var SHORT_RULES = {
   f: "<b>Faux Avis :</b> Une question de culture générale. Personne ne connaît la réponse, alors tout le monde invente une fausse réponse crédible. Le groupe doit trouver la vraie.",
   tabou: "<b>Mot Interdit :</b> Faites deviner un mot à votre équipe sans prononcer les 3 mots interdits. Un seul téléphone passe de main en main."
 };
+var BAZ_TIPS = {
+  u: "Prépare tes meilleurs mensonges, les Undercover vont s'infiltrer...",
+  m: "Un seul mot d'indice. Le diable est dans les détails !",
+  l: "Aiguise ton vocabulaire, la lettre va tomber !",
+  d: "Sortez vos crayons... et votre imagination pour bluffer les autres !",
+  s: "Qui va se faire griller ? À vous de voter...",
+  dd: "Défends l'indéfendable. Le plus convaincant l'emporte !",
+  c: "L'anonymat est votre meilleur ami. Balancez-vous !",
+  f: "Qui dit vrai, qui dit faux ? Inventez la meilleure réponse !"
+};
 var CATS=[];PAIRS.forEach(function(p){if(CATS.indexOf(p[2])<0)CATS.push(p[2])});
 var PAL=[['#B8FF45','#10152A'],['#7957FF','#FFFFFF'],['#F4F4F8','#10152A'],['#AB9BFF','#10152A'],['#8DBF2E','#10152A'],['#5A3FD6','#FFFFFF'],['#D5F89B','#10152A'],['#C9CEEA','#10152A']];
 var ROLE={civil:'Civil',uc:'Undercover',mw:'Mr White'};
@@ -1689,7 +1699,7 @@ function vOLobbyT(){
 }
 function bazBubble(text){
   return '<div class="baz-container">'+
-    '<div class="baz-avatar">👾</div>'+
+    '<div class="baz-avatar"><img src="baz.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover"></div>'+
     '<div class="baz-speech">'+
       '<div class="baz-name">BAZ</div>'+
       '<div class="baz-text">'+text+'</div>'+
@@ -2662,11 +2672,23 @@ function vOnline(){
   if(!OL.on||!OL.room)return vOLoad('Connexion au salon…');
   var cok=OL.cfg&&(OL.game==='s'?true:(OL.game==='m'?OL.cfg.names&&OL.cfg.size:(OL.game==='l'?OL.cfg.np:(OL.game==='d'?OL.cfg.tdraw:OL.cfg.uc!=null))));
   if(!cok)return vOLoad('Chargement du salon…');
-  if(OL.display&&OL.game==='d')return vODisplay();if(OL.game==='dd'){if(OL.status==='lobby'||!OL.s)return vOLobbyD();if(OL.s.ph==='play'||OL.s.ph==='vote')return vODebatGame();return vODebatGame();}if(OL.game==='f'){if(OL.status==='lobby'||!OL.s)return vOLobbyF();if(OL.s.ph==='write')return vOFauxWrite();if(OL.s.ph==='vote')return vOFauxVote();return vOFauxResult();}
-if(OL.game==='t'){if(OL.status==='lobby'||!OL.s)return vOLobbyT(); return vOLobbyT();}
-if(OL.game==='c'){if(OL.status==='lobby'||!OL.s)return vOLobbyC();if(OL.s.ph==='write')return vOConfessWrite();if(OL.s.ph==='vote')return vOConfessVote();return vOConfessResult();}if(OL.game==='s'){if(OL.status==='lobby'||!OL.s)return vOLobbyS();if(OL.s.ph==='play')return vOSusceptVote();return vOSusceptResult();}
-  if(OL.status==='lobby'||!OL.s)return (OL.status==='play'&&!OL.s)?vOLoad('Chargement de la partie…'):(OL.game==='m'?vOLobbyM():(OL.game==='l'?vOLobbyL():(OL.game==='d'?vOLobbyD():vOLobbyU())));
-  return OL.game==='m'?vOGameM():(OL.game==='l'?vOGameL():(OL.game==='d'?vOGameD():vOGameU()))}
+  
+  if(OL.status==='lobby'||!OL.s){
+    if(OL.status==='play'&&!OL.s) return vOLoad('Chargement de la partie…');
+    
+    // C'est ici qu'on injecte BAZ automatiquement dans tous les lobbies
+    var lobbyHtml = (OL.game==='m'?vOLobbyM():(OL.game==='l'?vOLobbyL():(OL.game==='d'?vOLobbyD():(OL.game==='c'?vOLobbyC():(OL.game==='f'?vOLobbyF():(OL.game==='s'?vOLobbyS():vOLobbyU()))))));
+    var tip = BAZ_TIPS[OL.game] || "En attente des joueurs...";
+    
+    // On insère la bulle de BAZ juste après le QR Code
+    return lobbyHtml.replace('<section class="card"><h2>Équipes</h2>', bazBubble(tip)+'<section class="card"><h2>Équipes</h2>')
+                    .replace('<section class="card"><h2>Comment jouer ?</h2>', bazBubble(tip)+'<section class="card"><h2>Comment jouer ?</h2>')
+                    .replace('<section class="card"><h2>Réglages</h2>', bazBubble(tip)+'<section class="card"><h2>Réglages</h2>')
+                    .replace('<section class="card"><h2>Les jeux du tournoi</h2>', bazBubble(tip)+'<section class="card"><h2>Les jeux du tournoi</h2>');
+  }
+  
+  return OL.game==='m'?vOGameM():(OL.game==='l'?vOGameL():(OL.game==='d'?vOGameD():(OL.game==='c'?vOConfessWrite():(OL.game==='f'?vOFauxWrite():(OL.game==='s'?vOSusceptVote():vOGameU())))));
+}
 
 function vOGameU(){var s=OL.s,me=PID,al=s.alive.indexOf(me)>=0,h=OL.host,bar=obar('Tour '+s.round+' · '+s.alive.length+' en jeu');
   switch(s.ph){
