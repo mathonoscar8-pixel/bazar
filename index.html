@@ -488,6 +488,7 @@ body { padding-bottom: 0 !important; }
 }
 </style>
 <title>BAZAR Party</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -1281,21 +1282,21 @@ function vHome(){return '<div class="wrap">'+
 
  '<section style="display:flex;flex-direction:column;gap:12px" aria-label="Nos jeux">'+
  '<span class="eyebrow" style="margin-top:10px">🕵️ BLUFF & MENSONGES</span>'+
- '<div style="position:relative;pointer-events:none"><button class="game" data-act="sheet" data-s="mode-u" style="pointer-events:auto"><span class="tile v">'+I.eye+'</span><span class="gt"><b>Undercover</b><span class="muted small">3 à 12 joueurs</span></span></button><button class="link" data-act="show_rule" data-g="u" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
- '<div style="position:relative;pointer-events:none"><button class="game" data-act="tabou" style="pointer-events:auto"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits</span></span></button><button class="link" data-act="show_rule" data-g="tabou" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="sheet" data-s="mode-u" style="pointer-events:auto"><span class="tile v">'+I.eye+'</span><span class="gt"><b>Undercover</b><span class="muted small">3 à 12 joueurs</span></span></button><button class="link" data-act="show_rule" data-g="u" style="position:absolute;right:10px;top:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line);pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="tabou" style="pointer-events:auto"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits</span></span></button><button class="link" data-act="show_rule" data-g="tabou" style="position:absolute;right:10px;top:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line);pointer-events:auto">Règles</button></div>'+
  
  '<span class="eyebrow" style="margin-top:10px">🎨 CRÉATIF & RIRES</span>'+
- '<div style="position:relative;pointer-events:none"><button class="game" data-act="ogo" data-g="d" style="pointer-events:auto"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote</span></span></button><button class="link" data-act="show_rule" data-g="d" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
- '<div style="position:relative;pointer-events:none"><button class="game" data-act="ogo" data-g="l" style="pointer-events:auto"><span class="tile v" style="background:var(--lime);color:var(--lime-ink)">'+I.abc+'</span><span class="gt"><b>BAZAR Petit Bac</b><span class="muted small">Petit bac et phrases à trous</span></span></button><button class="link" data-act="show_rule" data-g="l" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="ogo" data-g="d" style="pointer-events:auto"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote</span></span></button><button class="link" data-act="show_rule" data-g="d" style="position:absolute;right:10px;top:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line);pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="ogo" data-g="l" style="pointer-events:auto"><span class="tile v" style="background:var(--lime);color:var(--lime-ink)">'+I.abc+'</span><span class="gt"><b>BAZAR Petit Bac</b><span class="muted small">Petit bac et phrases à trous</span></span></button><button class="link" data-act="show_rule" data-g="l" style="position:absolute;right:10px;top:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line);pointer-events:auto">Règles</button></div>'+
  
  '<span class="eyebrow" style="margin-top:10px">🎉 APÉRO & DISCUSSIONS</span>'+
- '<div style="position:relative;pointer-events:none"><button class="game" data-act="suscept" style="pointer-events:auto"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami</span></span></button><button class="link" data-act="show_rule" data-g="s" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
- '<div style="position:relative;pointer-events:none"><button class="game" data-act="debat" style="pointer-events:auto"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable</span></span></button><button class="link" data-act="show_rule" data-g="dd" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
- '<div style="position:relative;pointer-events:none"><button class="game" data-act="confess" style="pointer-events:auto"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span></button><button class="link" data-act="show_rule" data-g="c" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
- '<div style="position:relative;pointer-events:none"><button class="game" data-act="fauxavis" style="pointer-events:auto"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span></button><button class="link" data-act="show_rule" data-g="f" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="suscept" style="pointer-events:auto"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami</span></span></button><button class="link" data-act="show_rule" data-g="s" style="position:absolute;right:10px;top:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line);pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="debat" style="pointer-events:auto"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable</span></span></button><button class="link" data-act="show_rule" data-g="dd" style="position:absolute;right:10px;top:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line);pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="confess" style="pointer-events:auto"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span></button><button class="link" data-act="show_rule" data-g="c" style="position:absolute;right:10px;top:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line);pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="fauxavis" style="pointer-events:auto"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span></button><button class="link" data-act="show_rule" data-g="f" style="position:absolute;right:10px;top:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line);pointer-events:auto">Règles</button></div>'+
  
  '<span class="eyebrow" style="margin-top:10px">🧩 À PART</span>'+
- '<div style="position:relative;pointer-events:none"><button class="game" data-act="sheet" data-s="mode-m" style="pointer-events:auto"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes</span></span></button><button class="link" data-act="show_rule" data-g="m" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="sheet" data-s="mode-m" style="pointer-events:auto"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes</span></span></button><button class="link" data-act="show_rule" data-g="m" style="position:absolute;right:10px;top:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line);pointer-events:auto">Règles</button></div>'+
  '</section>'+
  '<p class="note" style="margin-top:30px">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
  '</div>'}
@@ -1653,6 +1654,14 @@ function bottomNav(){
     btn('profile', iconUser, 'Profil', 'profile')+
   '</div>';
 }
+function vScanner(){
+  return topbar('Scanner un QR Code','ohome')+'<div class="wrap">'+
+  '<section class="card" style="padding:0;overflow:hidden;background:#000;border-radius:20px">'+
+    '<div id="qr-reader" style="width:100%;min-height:300px"></div>'+
+  '</section>'+
+  '<p class="muted small" style="text-align:center;margin-top:15px">Place le QR code de ton ami dans le cadre.</p>'+
+  '</div>'
+}
 function vShop(){
   var myStats = {tokens: 0, played: 0, wins: 0, time: 0, borders: []};
   try{ var s = localStorage.getItem('bazar-stats'); if(s) myStats = JSON.parse(s); }catch(e){}
@@ -1896,7 +1905,7 @@ var y=window.scrollY,h;
     case 'home':h=vHome();break;case 'avatar_studio':h=vAvatarStudio();break;case 'rules':h=vRules();break;case 'setup':h=vSetup();break;
     case 'reveal':h=vReveal();break;case 'clues':h=vClues();break;case 'vote':h=vVote();break;
     case 'result':h=vResult();break;case 'mwguess':h=vMw();break;case 'end':h=vEnd();break;case 'peek':h=vPeek();break;
-    case 'games':h=vGames();break;case 'tournament':h=vTournament();break;case 'wheel':h=vWheel();break;case 'shop':h=vShop();break;case 'profile':h=vProfile();break;case 'msetup':h=vMSetup();break;case 'mgame':h=vMGame();break;case 'mkey':h=vMKey();break;case 'mend':h=vMEnd();break;case 'mrulespage':h=vMRules();break;
+    case 'games':h=vGames();break;case 'tournament':h=vTournament();break;case 'wheel':h=vWheel();break;case 'shop':h=vShop();break;case 'scanner':h=vScanner();break;case 'profile':h=vProfile();break;case 'msetup':h=vMSetup();break;case 'mgame':h=vMGame();break;case 'mkey':h=vMKey();break;case 'mend':h=vMEnd();break;case 'mrulespage':h=vMRules();break;
     case 'ohome':h=vOHome();break;case 'online':h=vOnline();break;
         case 'tabou_setup':h=vTabouSetup();break;case 'tabou_game':h=vTabouGame();break;
     case 'tabou_result':h=vTabouResult();break;
@@ -1916,6 +1925,29 @@ app.innerHTML += bottomNav();
   if(typeof dPost==='function')dPost();
 setTimeout(function(){var el=document.querySelector('.now .big');if(el&&S.screen==='online'&&OL.game==='dd'&&OL.s&&OL.s.q){var t=el.innerHTML;typeWriter(el, t.replace(/<[^>]+>/g,''), 30);}}, 100);
   if(typeof musicPost==='function')musicPost();
+if(S.screen==='scanner'){
+  setTimeout(function(){
+    if(window.Html5QrcodeScanner) {
+      var scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 }, false);
+      scanner.render(function(decodedText) {
+        var match = decodedText.match(/#code=(\d{4})/);
+        if(match && match[1]) {
+          scanner.clear().then(function(){
+            OH.code = match[1];
+            OH.game = 'u';
+            go('ohome');
+            setTimeout(function(){ 
+              var el=document.getElementById('ocd'); if(el){ el.value=match[1]; el.focus(); }
+              var btn=document.querySelector('[data-act="ojoin"]'); if(btn) btn.click();
+            }, 200);
+          });
+        } else {
+          toast('Ce n\'est pas un QR code BAZAR Party.');
+        }
+      });
+    }
+  }, 300);
+}
 }
 function bindHold(){
   var h=document.getElementById('hold');if(!h)return;
@@ -2480,9 +2512,9 @@ function vOHome(){
       '<button class="game" data-act="ogame" data-g="'+id+'" style="background:'+bg+';border:'+border+';transform:'+(isSel?'scale(1.02)':'none')+';box-shadow:'+(isSel?'0 0 20px rgba(184,255,69,0.3)':'none')+'">'+
         '<span class="tile v" style="background:'+iconCol+';color:'+iconTxt+'"><b style="font-size:20px">'+name.charAt(0)+'</b></span>'+
         '<span class="gt"><b>'+name+'</b><span class="muted small">'+desc+'</span></span>'+
-        (isSel?'<span style="position:absolute;right:15px;top:15px;color:var(--lime);font-size:24px;font-weight:900">✓</span>':'')+
+        (isSel?'<span style="position:absolute;right:15px;top:15px;color:var(--lime);font-size:24px;font-weight:900;line-height:1">✓</span>':'')+
       '</button>'+
-      '<button class="link" data-act="show_rule" data-g="'+id+'" style="position:absolute;right:60px;bottom:12px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px">Règles</button>'+
+      '<button class="link" data-act="show_rule" data-g="'+id+'" style="position:absolute;right:15px;bottom:10px;font-size:11px;z-index:10;background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--line)">Règles</button>'+
     '</div>';
   }
 
@@ -2744,7 +2776,7 @@ function olShareNative(){var url=olLink(OL.code);
 function olAct(a,d){var c=OL.cfg||{},i;
   switch(a){
     case 'ohome':OH.err='';go('ohome');break;case 'ojoin_home':OH.game='u';OH.err='';go('ohome');setTimeout(function(){var el=document.getElementById('ocd');if(el){el.focus();el.scrollIntoView({behavior:'smooth',block:'center'});}},150);break;
-case 'oscanqr':toast('Le scanner de QR code arrive bientôt !');break;
+case 'oscanqr':go('scanner');break;
 case 'profile':go('profile');break;case 'wheel':go('wheel');break;case 'shop':go('shop');break;
 case 'buy_item':{
   var st = {tokens: 0, borders: []};
