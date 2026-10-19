@@ -4,6 +4,31 @@
 /* ===== HARMONISATION VISUELLE ===== */
 /* On force toutes les cartes à avoir les mêmes marges et ombres */
 .card{box-shadow:0 8px 30px rgba(0,0,0,0.15);border-radius:20px;padding:20px;}
+/* Effet Premium sur les cartes de jeux */
+.game {
+  background: rgba(27, 33, 64, 0.4) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  position: relative;
+  overflow: hidden;
+}
+.game::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+}
+.game:hover::before {
+  left: 150%;
+}
+.game:hover {
+  background: rgba(37, 44, 82, 0.6) !important;
+  border-color: rgba(184, 255, 69, 0.3) !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3), 0 0 15px rgba(184,255,69,0.1) !important;
+}
 /* On force tous les boutons à avoir la même hauteur et le même arrondi */
 .btn{min-height:58px;border-radius:16px;font-size:17px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}
 /* Les petits boutons (chips) ont une taille fixe */
@@ -637,8 +662,8 @@ p{margin:0}
 details{background:var(--surface);border-radius:var(--r-sm);padding:14px 16px}
 summary{font:600 16px var(--display);cursor:pointer}
 details p{margin-top:8px;color:var(--muted)}
-.scrim{position:fixed;inset:0;background:rgba(8,10,22,.72);display:flex;align-items:flex-end;justify-content:center;z-index:20}
-.sheet{width:100%;max-width:520px;background:var(--surface);border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:88%;overflow:auto}
+.scrim{position:fixed;inset:0;background:rgba(8,10,22,.8);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.sheet{width:100%;max-width:480px;background:var(--surface);border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:16px;max-height:85%;overflow:auto;box-shadow:0 20px 40px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.05)}
 @keyframes slideUpSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .sheet{animation:slideUpSheet .3s cubic-bezier(0.16, 1, 0.3, 1) both}
 .sheet ul{margin:0;padding-left:20px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
@@ -992,6 +1017,18 @@ var DEBATS=[
 "Les voitures volantes seront plus rapides que les avions",
 "Le meilleur dessert c'est la salade de fruits"
 ];
+/* ---------- Règles courtes des jeux ---------- */
+var SHORT_RULES = {
+  u: "<b>Undercover :</b> Tout le monde a un mot, sauf les imposteurs (Undercover et Mr White). Donnez un indice chacun votre tour, puis votez pour éliminer un suspect !",
+  m: "<b>Codenames :</b> Deux équipes s'affrontent. Le chef espion donne un indice (un mot + un chiffre) pour faire deviner les cartes de son équipe, sans tomber sur l'assassin.",
+  l: "<b>Petit Bac :</b> Une lettre est tirée. Remplissez les phrases à trous avec des mots commençant par cette lettre. Le premier qui a tout rempli arrête la manche !",
+  d: "<b>Dessins :</b> Un joueur reçoit une phrase secrète et doit la dessiner. Les autres inventent un faux titre. On vote ensuite pour la vraie phrase !",
+  s: "<b>Susceptible :</b> Une question s'affiche. Tout le monde vote en secret pour le joueur qui correspond le mieux à la question. Le plus voté gagne des points !",
+  dd: "<b>Débat :</b> Deux joueurs s'affrontent sur un sujet absurde. L'un défend le POUR, l'autre le CONTRE. Le reste du groupe vote pour le plus convaincant.",
+  c: "<b>Qui a écrit ça ? :</b> Une question est posée. Tout le monde écrit une réponse anonyme. On affiche toutes les réponses et le groupe vote pour la plus drôle !",
+  f: "<b>Faux Avis :</b> Une question de culture générale. Personne ne connaît la réponse, alors tout le monde invente une fausse réponse crédible. Le groupe doit trouver la vraie.",
+  tabou: "<b>Mot Interdit :</b> Faites deviner un mot à votre équipe sans prononcer les 3 mots interdits. Un seul téléphone passe de main en main."
+};
 var CATS=[];PAIRS.forEach(function(p){if(CATS.indexOf(p[2])<0)CATS.push(p[2])});
 var PAL=[['#B8FF45','#10152A'],['#7957FF','#FFFFFF'],['#F4F4F8','#10152A'],['#AB9BFF','#10152A'],['#8DBF2E','#10152A'],['#5A3FD6','#FFFFFF'],['#D5F89B','#10152A'],['#C9CEEA','#10152A']];
 var ROLE={civil:'Civil',uc:'Undercover',mw:'Mr White'};
@@ -1232,25 +1269,35 @@ function vHome(){return '<div class="wrap">'+
  '<span class="star" style="width:24px;height:24px;top:0;right:12%">'+STAR+'</span>'+
  '<span class="star" style="width:14px;height:14px;top:40px;right:3%;color:var(--violet-soft);animation-delay:-1.3s,-.7s">'+STAR+'</span>'+
  '<span class="star" style="width:17px;height:17px;bottom:0;right:26%;animation-delay:-2.4s,-1.8s">'+STAR+'</span></header>'+
- '<section class="hero"><h1>La soirée commence ici.</h1><p class="lead">Des jeux, des potes, du bluff et un peu de chaos.</p></section>'+
+ 
+ '<section class="hero" style="text-align:center;margin-top:20px;margin-bottom:20px">'+
+   '<h1 style="font-size:38px;margin-bottom:12px">La soirée commence ici.</h1>'+
+   '<p class="lead" style="margin-bottom:25px">Des jeux, des potes, du bluff et un peu de chaos.</p>'+
+   '<div style="display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto">'+
+   '<button class="btn btn-primary" data-act="ohome" style="font-size:20px;height:60px;box-shadow:0 8px 25px rgba(184,255,69,0.4)">Créer un salon '+I.spark+'</button>'+
+   '<button class="btn btn-secondary" data-act="ojoin_home" style="font-size:18px;height:54px">Rejoindre un salon</button>'+
+   '</div>'+
+ '</section>'+
+
  '<section style="display:flex;flex-direction:column;gap:12px" aria-label="Nos jeux">'+
  '<span class="eyebrow" style="margin-top:10px">🕵️ BLUFF & MENSONGES</span>'+
- '<button class="game" data-act="sheet" data-s="mode-u"><span class="tile v">'+I.eye+'</span><span class="gt"><b>Undercover</b><span class="muted small">3 à 12 joueurs · sur un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
- '<button class="game" data-act="tabou"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits</span></span><span class="badge on">Jouable</span></button>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="sheet" data-s="mode-u" style="pointer-events:auto"><span class="tile v">'+I.eye+'</span><span class="gt"><b>Undercover</b><span class="muted small">3 à 12 joueurs</span></span></button><button class="link" data-act="show_rule" data-g="u" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="tabou" style="pointer-events:auto"><span class="tile v" style="background:#FF7EB6;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Mot Interdit</b><span class="muted small">Fais deviner sans les mots interdits</span></span></button><button class="link" data-act="show_rule" data-g="tabou" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ 
  '<span class="eyebrow" style="margin-top:10px">🎨 CRÉATIF & RIRES</span>'+
- '<button class="game" data-act="ogo" data-g="d"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote · en ligne</span></span><span class="badge on">En ligne</span></button>'+
- '<button class="game" data-act="ogo" data-g="l"><span class="tile v" style="background:var(--lime);color:var(--lime-ink)">'+I.abc+'</span><span class="gt"><b>BAZAR Petit Bac</b><span class="muted small">Petit bac et phrases à trous · en ligne</span></span><span class="badge on">En ligne</span></button>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="ogo" data-g="d" style="pointer-events:auto"><span class="tile v" style="background:#F5A524;color:#10152A">'+I.pen+'</span><span class="gt"><b>BAZAR Dessins</b><span class="muted small">Dessine, bluffe, vote</span></span></button><button class="link" data-act="show_rule" data-g="d" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="ogo" data-g="l" style="pointer-events:auto"><span class="tile v" style="background:var(--lime);color:var(--lime-ink)">'+I.abc+'</span><span class="gt"><b>BAZAR Petit Bac</b><span class="muted small">Petit bac et phrases à trous</span></span></button><button class="link" data-act="show_rule" data-g="l" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ 
  '<span class="eyebrow" style="margin-top:10px">🎉 APÉRO & DISCUSSIONS</span>'+
- '<button class="game" data-act="suscept"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami · en ligne</span></span><span class="badge on">En ligne</span></button>'+
- '<button class="game" data-act="debat"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable · en ligne</span></span><span class="badge on">En ligne</span></button>'+
- '<button class="game" data-act="confess"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span><span class="badge on">En ligne</span></button>'+
- '<button class="game" data-act="fauxavis"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span><span class="badge on">En ligne</span></button>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="suscept" style="pointer-events:auto"><span class="tile v" style="background:#8466FF;color:#fff;font-size:24px;font-weight:800">?</span><span class="gt"><b>Qui est le plus susceptible...</b><span class="muted small">Votez pour le meilleur ami</span></span></button><button class="link" data-act="show_rule" data-g="s" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="debat" style="pointer-events:auto"><span class="tile v" style="background:#F5A524;color:#10152A;font-size:24px;font-weight:800">!</span><span class="gt"><b>Le Débat Impossible</b><span class="muted small">Défends l\'indéfendable</span></span></button><button class="link" data-act="show_rule" data-g="dd" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="confess" style="pointer-events:auto"><span class="tile v" style="background:#E5484D;color:#fff;font-size:24px;font-weight:800">🤫</span><span class="gt"><b>Qui a écrit ça ?</b><span class="muted small">Le jeu des confessions anonymes</span></span></button><button class="link" data-act="show_rule" data-g="c" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="fauxavis" style="pointer-events:auto"><span class="tile v" style="background:#F7D154;color:#10152A;font-size:24px;font-weight:800">🤥</span><span class="gt"><b>Le Faux Avis</b><span class="muted small">Invente la fausse réponse</span></span></button><button class="link" data-act="show_rule" data-g="f" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
+ 
  '<span class="eyebrow" style="margin-top:10px">🧩 À PART</span>'+
- '<button class="game" data-act="sheet" data-s="mode-m"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes · sur un seul téléphone</span></span><span class="badge on">Jouable</span></button>'+
+ '<div style="position:relative;pointer-events:none"><button class="game" data-act="sheet" data-s="mode-m" style="pointer-events:auto"><span class="tile w">'+I.brain+'</span><span class="gt"><b>BAZAR Codenames</b><span class="muted small">Indices par équipes</span></span></button><button class="link" data-act="show_rule" data-g="m" style="position:absolute;right:15px;bottom:10px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px;pointer-events:auto">Règles</button></div>'+
  '</section>'+
- '<div style="display:flex;flex-direction:column;gap:12px"><button class="btn btn-primary" data-act="ohome">Créer un salon en ligne '+I.spark+'</button><button class="btn btn-secondary" data-act="games">Voir tous les jeux sur ce téléphone</button><button class="btn btn-ghost" data-act="rules">Comment jouer</button></div>'+
- '<p class="note">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
- (function(){try{if(localStorage.getItem('bazar-tuto-done'))return '';return '<div class="card" style="margin-top:20px;border:2px solid var(--violet);background:rgba(121,87,255,0.1)"><h3>👋 Bienvenue sur BAZAR Party !</h3><p class="muted small" style="margin-bottom:10px">Deux façons de jouer :</p><ul style="font-size:14px;color:var(--muted);margin-left:18px;margin-bottom:15px"><li><b>Sur ce téléphone</b> : Passez l\'appareil de main en main.</li><li><b>En ligne</b> : Cliquez sur "Créer un salon" et donnez le code à vos amis.</li></ul><button class="btn btn-secondary" data-act="close_tuto" style="min-height:44px;font-size:15px">J\'ai compris !</button></div>'}catch(e){return ''}})()+
+ '<p class="note" style="margin-top:30px">Sur un seul téléphone, ou chacun sur le sien avec un code de partie.</p>'+
  '</div>'}
 
 /* ---------- Studio d'Avatar ---------- */
@@ -1432,7 +1479,12 @@ function vEnd(){
   '<div class="words"><div><span class="muted small">Mot des Civils</span><b>'+esc(g.civ)+'</b></div><div><span class="muted small">Mot des Undercover</span><b>'+esc(g.uc)+'</b></div></div>'+
   '<section class="card"><h3>Les rôles</h3><div class="plist">'+roles+'</div></section>'+
   '<section class="card"><h3>Classement du salon</h3><div class="plist">'+board+'</div></section></div>'+
-'<div class="dock"><button class="btn btn-primary" data-act="again">Rejouer</button><button class="btn btn-secondary" data-act="create">Modifier la partie</button><button class="btn btn-ghost" data-act="home">Accueil</button></div>'}
+'<div class="dock">'+
+'<button class="btn btn-primary" data-act="again">Rejouer avec les mêmes joueurs</button>'+
+'<div class="row" style="justify-content:center;gap:20px;margin-top:10px">'+
+'<button class="link" data-act="create">Modifier</button>'+
+'<button class="link" data-act="home">Accueil</button>'+
+'</div></div>'}
 
 function vPeek(){
   var g=S.game,pk=S.peek;
@@ -1443,7 +1495,10 @@ function vPeek(){
 
 function vSheet(){
   if(!S.sheet)return '';
-  if(S.sheet==='importnames'){
+ if(S.sheet==='rule_info'){
+  return '<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true"><h2>Comment jouer</h2><p class="lead" style="font-size:16px;line-height:1.6;margin-top:15px">'+S.ruleText+'</p><button class="btn btn-primary" data-act="closesheet" style="margin-top:20px">Compris !</button></div></div>';
+} 
+if(S.sheet==='importnames'){
     return '<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true"><h2>Importer une liste</h2><p class="muted small">Colle tes prénoms, un par ligne ou séparés par des virgules. Entre 3 et 12 prénoms.</p><textarea class="field ta" id="impnames" rows="5" placeholder="Emma&#10;Lucas&#10;Inès&#10;Adam" autocomplete="off" autocapitalize="words" style="width:100%;height:auto;min-height:140px;padding:12px 14px;line-height:1.4"></textarea><button class="btn btn-primary" data-act="doimport">Utiliser cette liste</button><button class="btn btn-ghost" data-act="closesheet">Annuler</button></div></div>';
   }
   if(S.screen==='online'&&['rules','mrules','lrules','drules'].indexOf(S.sheet)<0)return olSheet();
@@ -1586,10 +1641,10 @@ function bottomNav(){
     return '<button data-act="'+act+'" class="'+isActive+'">'+icon+'<span>'+label+'</span></button>';
   }
   
-  var iconHome = '<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>';
-  var iconTrophy = '<svg viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>';
-  var iconWheel = '<svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg>'; // Un design de cadeau
-  var iconUser = '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+  var iconHome = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+  var iconTrophy = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>';
+  var iconWheel = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
+  var iconUser = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 
   return '<div class="bottom-nav">'+
     btn('home', iconHome, 'Accueil', 'home')+
@@ -2411,21 +2466,61 @@ function holdWord(s){var w=OL.sec&&OL.sec.k===s.gid?OL.sec.w:undefined;
   S._hold=w===undefined?'<div class="word" style="font-size:26px">Chargement…</div>':(w?'<span class="eyebrow" style="color:var(--violet)">Ton mot</span><div class="word">'+esc(w)+'</div>':'<div class="word" style="font-size:32px">Tu n\'as pas de mot</div><p style="color:#323A68">Écoute les indices et bluffe.</p>')}
 function vOLoad(msg){return '<div class="wrap"><div class="who"><span class="eyebrow">BAZAR Party</span><p class="muted">'+esc(msg)+'</p>'+(OL.err?'<p class="issue" role="status">'+esc(OL.err)+'</p>':'')+'</div></div>'}
 
-function vOHome(){var b=OLST==='init'?'':olBlock();
-  var seg=['u','m','l','d'].map(function(g){return '<button data-act="ogame" data-g="'+g+'" aria-pressed="'+(OH.game===g)+'">'+({u:'Undercover',m:'Codenames',l:'Petit Bac',d:'Dessins'})[g]+'</button>'}).join('');
-  var dis=OH.busy||OLST==='init'||!!b?' disabled':'';
+function vOHome(){
+  var b=OLST==='init'?'':olBlock();
+  
+  function gameBtn(id, name, desc){
+    var isSel = (OH.game === id);
+    var border = isSel ? '3px solid var(--lime)' : '2px solid transparent';
+    var bg = isSel ? 'rgba(184,255,69,0.1)' : 'var(--surface)';
+    var iconCol = ({u:'var(--violet)',m:'var(--fg)',l:'var(--lime)',d:'#F5A524',s:'#8466FF',dd:'#F5A524',c:'#E5484D',f:'#F7D154'})[id];
+    var iconTxt = ({u:'#fff',m:'#10152A',l:'#10152A',d:'#10152A',s:'#fff',dd:'#10152A',c:'#fff',f:'#10152A'})[id];
+    
+    return '<div style="position:relative;margin-bottom:8px">'+
+      '<button class="game" data-act="ogame" data-g="'+id+'" style="background:'+bg+';border:'+border+';transform:'+(isSel?'scale(1.02)':'none')+';box-shadow:'+(isSel?'0 0 20px rgba(184,255,69,0.3)':'none')+'">'+
+        '<span class="tile v" style="background:'+iconCol+';color:'+iconTxt+'"><b style="font-size:20px">'+name.charAt(0)+'</b></span>'+
+        '<span class="gt"><b>'+name+'</b><span class="muted small">'+desc+'</span></span>'+
+        (isSel?'<span style="position:absolute;right:15px;top:15px;color:var(--lime);font-size:24px;font-weight:900">✓</span>':'')+
+      '</button>'+
+      '<button class="link" data-act="show_rule" data-g="'+id+'" style="position:absolute;right:60px;bottom:12px;font-size:12px;z-index:10;background:var(--bg);padding:4px 10px;border-radius:10px">Règles</button>'+
+    '</div>';
+  }
+
   return topbar('Jouer en ligne','home')+'<div class="wrap">'+
   '<section class="hero"><h1 style="font-size:32px">Chacun son téléphone.</h1><p class="lead">Crée un salon, partage le code à 4 chiffres ou le QR code, et jouez ensemble.</p></section>'+
   (OLST==='init'?'<div class="notice" role="status">Connexion…</div>':(b?'<div class="notice" role="status">'+esc(b)+'</div>':''))+
+  
   '<section class="card"><h2>Ton prénom</h2><input class="field" id="onm" data-input="oname" value="'+esc(OH.name)+'" maxlength="16" placeholder="Prénom" aria-label="Ton prénom" autocomplete="off" enterkeyhint="done"></section>'+
-  '<section class="card"><h2>Créer un salon</h2><div class="seg" style="grid-auto-flow:row;grid-template-columns:1fr 1fr">'+seg+'</div><button class="btn btn-primary" data-act="ocreate"'+dis+'>'+(OH.busy?'Un instant…':'Créer le salon')+'</button></section>'+
-  '<section class="card"><h2>Rejoindre un salon</h2><input class="field" id="ocd" data-input="ocode" value="'+esc(OH.code)+'" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Code à 4 chiffres" aria-label="Code de la partie" autocomplete="off" style="height:56px;font-size:24px;letter-spacing:.2em;text-align:center"><button class="btn btn-secondary" data-act="ojoin"'+dis+'>Rejoindre</button><button class="link" data-act="ojoind"'+dis+' style="align-self:center">Rejoindre comme écran commun (Dessins)</button></section>'+
-  '<p class="issue" id="oherr" role="status">'+esc(OH.err)+'</p></div>'}
+  
+  '<section class="card"><h2>1. Choisis un jeu</h2>'+
+  gameBtn('u', 'Undercover', 'Bluff et déduction')+
+  gameBtn('m', 'Codenames', 'Indices par équipes')+
+  gameBtn('l', 'Petit Bac', 'Petit bac et phrases à trous')+
+  gameBtn('d', 'Dessins', 'Dessine, bluffe, vote')+
+  gameBtn('s', 'Susceptible', 'Votez pour le meilleur ami')+
+  gameBtn('dd', 'Le Débat', 'Défends l\'indéfendable')+
+  gameBtn('c', 'Qui a écrit ça ?', 'Confessions anonymes')+
+  gameBtn('f', 'Le Faux Avis', 'Invente la fausse réponse')+
+  '</section>'+
+  
+  '<section class="card"><h2>2. Crée le salon</h2>'+
+  '<button class="btn btn-primary" data-act="ocreate" style="margin-top:10px"'+((b||OLST==='init')?' disabled':'')+'>Créer le salon avec '+({u:'Undercover',m:'Codenames',l:'Petit Bac',d:'Dessins',s:'Susceptible',dd:'Débat',c:'Confessions',f:'Faux Avis'})[OH.game||'u']+' '+I.spark+'</button>'+
+  '</section>'+
+  
+  '<section class="card" style="margin-top:20px;border:2px solid var(--violet)"><h2>Déjà un code ?</h2>'+
+  '<p class="muted small" style="margin-bottom:10px">Entre le code à 4 chiffres ou scanne le QR code de ton ami.</p>'+
+  '<input class="field" id="ocd" data-input="ocode" value="'+esc(OH.code)+'" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0000" aria-label="Code de la partie" autocomplete="off" style="height:70px;font-size:36px;letter-spacing:.3em;text-align:center;font-weight:800;margin-bottom:12px">'+
+  '<button class="btn btn-secondary" data-act="ojoin"'+(b||OLST==='init'?' disabled':'')+'>Rejoindre le salon</button>'+
+  '<div style="text-align:center;margin-top:12px"><button class="link" data-act="oscanqr" style="font-size:15px;color:var(--lime)">📷 Scanner un QR Code</button></div>'+
+  '</section>'+
+  
+  '<p class="issue" id="oherr" role="status">'+esc(OH.err)+'</p></div>'
+}
 
 function olShare(){var url=olLink(OL.code);
   return '<section class="card"><div class="codebig" aria-label="Code de la partie '+esc(OL.code)+'">'+esc(OL.code)+'</div><div class="qrbox">'+qrSvg(url,196)+'</div>'+
   '<p class="small muted" style="text-align:center">Scanne le QR code, ou ouvre le lien et entre le code à 4 chiffres.</p>'+
-  '<div class="row" style="gap:10px"><button class="btn btn-secondary btn-half" data-act="ocopy">Copier le lien</button><button class="btn btn-secondary btn-half" data-act="oshare">Partager</button></div>'+
+  '<div class="row" style="gap:10px"><button class="btn btn-primary" data-act="oshare" style="margin-top:10px">Partager le lien</button></div>'+
   '<input class="field" id="olink" readonly value="'+esc(url)+'" aria-label="Lien de la partie" style="flex:none;width:100%;height:44px;font-size:13px"></section>'}
 function olPlayers(){var h=OL.host,m=OL.game==='m';
   return '<section class="card"><h2>Joueurs<span class="count">'+OL.plist.length+' / '+(OL.game==='d'?10:12)+'</span></h2><div class="plist">'+OL.plist.map(function(p,i){
@@ -2648,7 +2743,9 @@ function olShareNative(){var url=olLink(OL.code);
   if(navigator.share){navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){})}else olCopy()}
 function olAct(a,d){var c=OL.cfg||{},i;
   switch(a){
-    case 'ohome':OH.err='';go('ohome');break;case 'profile':go('profile');break;case 'wheel':go('wheel');break;case 'shop':go('shop');break;
+    case 'ohome':OH.err='';go('ohome');break;case 'ojoin_home':OH.game='u';OH.err='';go('ohome');setTimeout(function(){var el=document.getElementById('ocd');if(el){el.focus();el.scrollIntoView({behavior:'smooth',block:'center'});}},150);break;
+case 'oscanqr':toast('Le scanner de QR code arrive bientôt !');break;
+case 'profile':go('profile');break;case 'wheel':go('wheel');break;case 'shop':go('shop');break;
 case 'buy_item':{
   var st = {tokens: 0, borders: []};
   try{ var s = localStorage.getItem('bazar-stats'); if(s) st = JSON.parse(s); }catch(e){}
@@ -2698,14 +2795,13 @@ case 'spin_wheel':{
   }
   break;
 }
-case 'tournament':go('tournament');break;
+case 'tournament':go('tournament');break;case 'show_rule':var txt=SHORT_RULES[d.g]||"Règles bientôt disponibles.";S.sheet='rule_info';S.ruleText=txt;render();break;
 case 'tog_tourney':{var idx=S.tourneySel.indexOf(d.g);if(idx>=0){if(S.tourneySel.length>1)S.tourneySel.splice(idx,1);}else{S.tourneySel.push(d.g);}render();break;}
 case 'otournament':OH.game='t';OH.err='';go('ohome');break;
 case 'start_tourney':{
   if(!OL.host || !OL.cfg.games || !OL.cfg.games.length) return;
   var firstGame = OL.cfg.games[0];
-  OL.game = firstGame; // On change le jeu du salon pour le premier jeu
-  // On prépare la configuration pour ce jeu spécifique
+  OL.game = firstGame;
   var cfg = {};
   if(firstGame==='l') cfg = {np:6, rounds:2, secs:90, cats:LCATS.slice()};
   else if(firstGame==='d') cfg = {rounds:2, per:1, tdraw:60, tfake:40, tvote:25, cats:DCATS.slice(), custom:'', clear:false, dbl:true, hearts:true, hint:true, who:true, display:true};
@@ -2714,7 +2810,7 @@ case 'start_tourney':{
   
   OL.cfg = cfg;
   Rr(OL.code).update({game:firstGame, cfg:JSON.stringify(cfg)}).then(function(){
-    olStart(); // La fonction qui lance la partie
+    olStart();
   });
   break;
 }
