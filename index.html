@@ -2567,7 +2567,11 @@ function obar(meta){return '<div class="bar"><button class="icon-btn" data-act="
 function hold(mini){return '<div class="hold'+(mini?' mini':'')+'" id="hold" tabindex="0" role="button" aria-label="Maintiens pour voir ton mot"><div class="front">'+I.eye+'<b>Maintiens pour voir ton mot</b>'+(mini?'':'<span>Relâche pour le cacher</span>')+'</div><div class="back" id="holdback"></div></div>'}
 function holdWord(s){var w=OL.sec&&OL.sec.k===s.gid?OL.sec.w:undefined;
   S._hold=w===undefined?'<div class="word" style="font-size:26px">Chargement…</div>':(w?'<span class="eyebrow" style="color:var(--violet)">Ton mot</span><div class="word">'+esc(w)+'</div>':'<div class="word" style="font-size:32px">Tu n\'as pas de mot</div><p style="color:#323A68">Écoute les indices et bluffe.</p>')}
-function vOLoad(msg){return '<div class="wrap"><div class="who"><span class="eyebrow">BAZAR Party</span><p class="muted">'+esc(msg)+'</p>'+(OL.err?'<p class="issue" role="status">'+esc(OL.err)+'</p>':'')+'</div></div>'}
+function vOLoad(msg){
+  return '<div class="wrap"><div class="who"><span class="eyebrow">BAZAR Party</span><p class="muted">'+esc(msg)+'</p>'+(OL.err?'<p class="issue" role="status">'+esc(OL.err)+'</p>':'')+
+  '<button class="btn btn-ghost" data-act="oleave" style="margin-top:20px">Quitter le salon</button>'+
+  '</div></div>'
+}
 
 function vOHome(){
   var b=OLST==='init'?'':olBlock();
@@ -2589,7 +2593,7 @@ function vOHome(){
     '</div>';
   }
 
-  return topbar('Jouer en ligne','home')+'<div class="wrap">'+
+  return topbar('Créer un salon','home')+'<div class="wrap">'+
   '<section class="hero"><h1 style="font-size:32px">Chacun son téléphone.</h1><p class="lead">Crée un salon, partage le code à 4 chiffres ou le QR code, et jouez ensemble.</p></section>'+
   (OLST==='init'?'<div class="notice" role="status">Connexion…</div>':(b?'<div class="notice" role="status">'+esc(b)+'</div>':''))+
   
@@ -2664,17 +2668,17 @@ function vOLobbyM(){var c=OL.cfg,h=OL.host,me=OL.players[PID]||{team:0},nm=c.nam
 
 function vOnline(){
   if(!OL.on||!OL.room)return vOLoad('Connexion au salon…');
-  var cok=OL.cfg&&(OL.game==='s'?true:(OL.game==='m'?OL.cfg.names&&OL.cfg.size:(OL.game==='l'?OL.cfg.np:(OL.game==='d'?OL.cfg.tdraw:OL.cfg.uc!=null))));
+  
+  // On vérifie juste si on a une config valide, sans bloquer les jeux sans réglages
+  var cok = OL.cfg != null; 
   if(!cok)return vOLoad('Chargement du salon…');
   
   if(OL.status==='lobby'||!OL.s){
     if(OL.status==='play'&&!OL.s) return vOLoad('Chargement de la partie…');
     
-    // C'est ici qu'on injecte BAZ automatiquement dans tous les lobbies
     var lobbyHtml = (OL.game==='m'?vOLobbyM():(OL.game==='l'?vOLobbyL():(OL.game==='d'?vOLobbyD():(OL.game==='c'?vOLobbyC():(OL.game==='f'?vOLobbyF():(OL.game==='s'?vOLobbyS():vOLobbyU()))))));
     var tip = BAZ_TIPS[OL.game] || "En attente des joueurs...";
     
-    // On insère la bulle de BAZ juste après le QR Code
     return lobbyHtml.replace('<section class="card"><h2>Équipes</h2>', bazBubble(tip)+'<section class="card"><h2>Équipes</h2>')
                     .replace('<section class="card"><h2>Comment jouer ?</h2>', bazBubble(tip)+'<section class="card"><h2>Comment jouer ?</h2>')
                     .replace('<section class="card"><h2>Réglages</h2>', bazBubble(tip)+'<section class="card"><h2>Réglages</h2>')
