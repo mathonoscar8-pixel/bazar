@@ -44,6 +44,25 @@
   0% { opacity: 0.7; text-shadow: 0 0 0 rgba(184,255,69,0); }
   100% { opacity: 1; text-shadow: 0 0 10px rgba(184,255,69,0.5); }
 }
+/* Spinner de chargement */
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(16, 21, 42, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--lime-ink);
+  animation: spin 1s ease-in-out infinite;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.btn:disabled .spinner {
+  border-top-color: var(--muted);
+  border-color: rgba(255,255,255,0.1);
+  border-top-color: var(--muted);
+}
 /* ===== HARMONISATION VISUELLE ===== */
 /* On force toutes les cartes à avoir les mêmes marges et ombres */
 .card{box-shadow:0 8px 30px rgba(0,0,0,0.15);border-radius:20px;padding:20px;}
@@ -1312,11 +1331,43 @@ function finish(w,who){var g=S.game;g.winner=w;g.mwWin=who||null;g.gains={};
 
 /* ---------- Navigation ---------- */
 var app=document.getElementById('app');
-function go(s){clearT();S.screen=s;S.sheet=null;S._fresh=true;render();window.scrollTo(0,0);if(s==='clues')clueTimer()}
+var NAV_HISTORY = [];
+function go(s){
+  if(S.screen && S.screen !== s) {
+    // On ne met dans l'historique que si on change de page
+    var isMainTab = (s==='home' || s==='ohome' || s==='profile' || s==='shop' || s==='wheel' || s==='tournament');
+    
+    if(isMainTab) {
+      // Si on va sur un onglet principal, on vide l'historique
+      NAV_HISTORY = [s];
+    } else {
+      // Si la page précédente n'est pas la même, on l'ajoute
+      if(NAV_HISTORY[NAV_HISTORY.length - 1] !== S.screen) {
+        NAV_HISTORY.push(S.screen);
+      }
+    }
+  }
+  clearT();S.screen=s;S.sheet=null;S._fresh=true;render();window.scrollTo(0,0);if(s==='clues')clueTimer();
+}
+
+function goBack(){
+  if(NAV_HISTORY.length > 1){
+    // On enlève la page actuelle de l'historique
+    NAV_HISTORY.pop(); 
+    // On récupère la page précédente
+    var prev = NAV_HISTORY[NAV_HISTORY.length - 1]; 
+    S.screen = prev; S.sheet=null; S._fresh=true; render(); window.scrollTo(0,0);
+  } else {
+    // Si l'historique est vide ou n'a qu'un élément, on va à l'accueil
+    NAV_HISTORY = ['home'];
+    S.screen = 'home'; S._fresh=true; render(); window.scrollTo(0,0);
+  }
+}
 
 /* ---------- Vues ---------- */
-function topbar(title,backAct){return '<div class="bar"><button class="icon-btn" data-act="'+backAct+'" aria-label="Retour">'+I.back+'</button><div class="t">'+esc(title)+'</div><span style="width:44px"></span></div>'}
-function gbar(){var g=S.game;return '<div class="bar"><span class="meta">Tour '+g.round+' · '+g.alive.length+' en jeu</span><button class="icon-btn" data-act="menu" aria-label="Menu de la partie">'+I.dots+'</button></div>'}
+function topbar(title,backAct){
+  return '<div class="bar"><button class="icon-btn" data-act="goback" aria-label="Retour">'+I.back+'</button><div class="t">'+esc(title)+'</div><span style="width:44px"></span></div>'
+}
 
 function vHome(){return '<div class="wrap">'+
  '<header class="brand" style="padding-top:8px">'+logo(60)+'<div class="wm"><span class="wm1">BAZAR</span><span class="wm2">PARTY</span></div>'+
@@ -2353,9 +2404,10 @@ async function olLeave(){
   var c=OL.code,host=OL.host;olTeardown();OL.on=false;olStore({code:''});S.sheet=null;
   try{
     if(host){await Rr(c).update({status:'closed',v:Date.now()});await olWipe(c);setTimeout(function(){try{Rr(c).delete()}catch(e){}},4000)}
-    else{await Pd(c,PID).delete();await Sd(c,PID).delete()}
+    else{await Pd(c,PID).delete();await Sd(c,PID).delete();}
   }catch(e){}
-  go('home')}
+  go('home');
+}
 
 /* ----- Réception de l'état ----- */
 function olOnState(s){var p=OL.s,first=!OL.init;OL.init=true;OL.s=s;
@@ -2593,11 +2645,13 @@ function vOHome(){
     '</div>';
   }
 
+  var btnText = OH.busy ? '<span class="spinner"></span> Création…' : 'Créer le salon avec '+({u:'Undercover',m:'Codenames',l:'Petit Bac',d:'Dessins',s:'Susceptible',dd:'Débat',c:'Confessions',f:'Faux Avis'})[OH.game||'u']+' '+I.spark;
+
   return topbar('Créer un salon','home')+'<div class="wrap">'+
   '<section class="hero"><h1 style="font-size:32px">Chacun son téléphone.</h1><p class="lead">Crée un salon, partage le code à 4 chiffres ou le QR code, et jouez ensemble.</p></section>'+
   (OLST==='init'?'<div class="notice" role="status">Connexion…</div>':(b?'<div class="notice" role="status">'+esc(b)+'</div>':''))+
   
-  '<section class="card"><h2>Ton prénom</h2><input class="field" id="onm" data-input="oname" value="'+esc(OH.name)+'" maxlength="16" placeholder="Prénom" aria-label="Ton prénom" autocomplete="off" enterkeyhint="done"></section>'+
+  '<section class="card"><h2>Ton prénom</h2><input class="field" id="onm" data-input="oname" value="'+esc(OH.name)+'" maxlength="16" placeholder="Prénom" aria-label="Ton prénom" autocomplete="off" enterkeyhint="done" '+(OH.busy?'disabled':'')+'></section>'+
   
   '<section class="card"><h2>1. Choisis un jeu</h2>'+
   gameBtn('u', 'Undercover', 'Bluff et déduction')+
@@ -2611,7 +2665,7 @@ function vOHome(){
   '</section>'+
   
   '<section class="card"><h2>2. Crée le salon</h2>'+
-  '<button class="btn btn-primary" data-act="ocreate" style="margin-top:10px"'+((b||OLST==='init')?' disabled':'')+'>Créer le salon avec '+({u:'Undercover',m:'Codenames',l:'Petit Bac',d:'Dessins',s:'Susceptible',dd:'Débat',c:'Confessions',f:'Faux Avis'})[OH.game||'u']+' '+I.spark+'</button>'+
+  '<button class="btn btn-primary" data-act="ocreate" style="margin-top:10px;position:relative"'+((b||OLST==='init'||OH.busy)?' disabled':'')+'>'+btnText+'</button>'+
   '</section>'+
   
   '<section class="card" style="margin-top:20px;border:2px solid var(--violet)"><h2>Déjà un code ?</h2>'+
@@ -2863,7 +2917,7 @@ function olShareNative(){var url=olLink(OL.code);
   if(navigator.share){navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){})}else olCopy()}
 function olAct(a,d){var c=OL.cfg||{},i;
   switch(a){
-    case 'ohome':OH.err='';go('ohome');break;case 'ojoin_home':OH.game='u';OH.err='';go('ohome');setTimeout(function(){var el=document.getElementById('ocd');if(el){el.focus();el.scrollIntoView({behavior:'smooth',block:'center'});}},150);break;
+    case 'ohome':OH.err='';go('ohome');break;case 'goback':goBack();break;case 'ojoin_home':OH.game='u';OH.err='';go('ohome');setTimeout(function(){var el=document.getElementById('ocd');if(el){el.focus();el.scrollIntoView({behavior:'smooth',block:'center'});}},150);break;
 case 'oscanqr':go('scanner');break;
 case 'profile':go('profile');break;case 'wheel':go('wheel');break;case 'shop':go('shop');break;
 case 'buy_item':{
@@ -3093,7 +3147,7 @@ function hlRound(g){var c=OL.cfg;g.round++;
 function hlSched(){if(OL.G&&OL.G.g==='d')return hdSched();clearTimeout(OL.tm);var g=OL.G;if(!OL.host||!g||g.g!=='l'||g.ph!=='play')return;
   OL.tm=setTimeout(function(){var g2=OL.G;if(!g2||g2.ph!=='play')return;
     if(Date.now()>=g2.endsAt+1500){hlEnd(g2);commit()}else hlSched()},Math.max(300,g.endsAt+1500-Date.now()))}
-function hlEnd(g,first){if(g.ph!=='play')return;clearTimeout(OL.tm);g.first=first||null;var items={},k;
+function hlEnd(g,first){clearTimeout(OL.tm);clearT();if(g.ph!=='play')return;clearTimeout(OL.tm);g.first=first||null;var items={},k;
   g.ids.forEach(function(uid){var a=g.ans[uid]||[],seen={};
     items[uid]=g.prompts.map(function(t,i){var w=String(a[i]||'').trim().slice(0,40),st='ok';
       if(!w)st='empty';else if(!lok(w,g.letter))st='bad';else{var kk=key(w);if(seen[kk])st='dupself';else seen[kk]=1}
