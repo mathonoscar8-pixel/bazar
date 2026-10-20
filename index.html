@@ -1530,6 +1530,7 @@ function tapSparkle(el){if(!el||RM)return;var c=centerOf(el);burst(c[0],c[1],8,{
 
 /* ---------- Minuteur ---------- */
 var T=null,TL=0,TT=0;
+function clearT(){if(T){clearInterval(T);T=null}}
 function paintT(){
   var l=document.getElementById('tleft'),b=document.getElementById('tbar');
   if(l){
