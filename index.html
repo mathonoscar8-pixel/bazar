@@ -1408,33 +1408,42 @@ var I={
  spark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>'
 };
 function logo(sz){
-  return `<svg viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true" style="filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));">
-    <!-- Le fond de l'icône -->
-    <rect width="100" height="100" rx="26" fill="var(--lime)"/>
-    
-    <!-- Le reflet premium en haut -->
-    <path d="M 0 26 Q 0 0 26 0 L 74 0 Q 40 15 0 50 Z" fill="rgba(255,255,255,0.2)"/>
-    
-    <!-- Le B principal (en plusieurs morceaux pour l'effet éclaté) -->
-    <g fill="var(--lime-ink)">
-      <!-- Partie haute gauche -->
-      <path d="M 28 20 L 45 20 L 42 48 L 28 48 Z" />
-      <!-- Partie haute droite -->
-      <path d="M 48 20 L 62 20 C 75 20 80 30 80 38 C 80 46 75 52 65 52 L 48 52 Z" />
+  var isStreet = document.documentElement.getAttribute('data-theme') === 'streetwear';
+  
+  if(isStreet) {
+    // LOGO STREETWEAR (Éclaté et Comics)
+    return `<svg viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true" style="filter: drop-shadow(6px 6px 0px var(--violet)); transform: rotate(-3deg);">
+      <rect width="100" height="100" rx="12" fill="var(--lime)" stroke="#120B14" stroke-width="4"/>
       
-      <!-- Partie basse gauche (légèrement décalée) -->
-      <path d="M 29 54 L 42 54 L 45 84 L 29 84 Z" />
-      <!-- Partie basse droite (avec un éclat en moins) -->
-      <path d="M 48 54 L 62 54 C 78 54 83 62 83 70 C 83 82 75 86 62 86 L 48 86 Z" />
-    </g>
-    
-    <!-- Les lignes d'éclat (vitrail) qui traversent le B -->
-    <path d="M 45 20 L 42 52 L 48 54 L 45 84 M 28 48 L 42 48 M 48 52 L 65 52" fill="none" stroke="var(--lime)" stroke-width="2.5" />
-    
-    <!-- Le petit éclat qui s'échappe (en haut à droite) -->
-    <path d="M 75 25 L 85 20 L 82 32 Z" fill="var(--lime-ink)" />
-    <!-- Le petit éclat qui s'échappe (en bas à gauche) -->
-    <path d="M 20 60 L 25 70 L 15 75 Z" fill="var(--lime-ink)" />
+      <!-- Le B éclaté -->
+      <g fill="#120B14">
+        <path d="M 26 20 L 45 20 L 42 48 L 26 48 Z" />
+        <path d="M 48 20 L 62 20 C 75 20 80 30 80 38 C 80 46 75 52 65 52 L 48 52 Z" />
+        <path d="M 28 54 L 42 54 L 45 84 L 28 84 Z" />
+        <path d="M 48 54 L 62 54 C 78 54 83 62 83 70 C 83 82 75 86 62 86 L 48 86 Z" />
+      </g>
+      
+      <!-- Lignes de fissure blanches -->
+      <path d="M 45 20 L 42 52 L 48 54 L 45 84 M 26 48 L 42 48 M 48 52 L 65 52" fill="none" stroke="#FFFDF5" stroke-width="3" />
+      
+      <!-- Éclats qui s'échappent -->
+      <polygon points="80,20 90,15 85,30" fill="#120B14" stroke="#FFFDF5" stroke-width="2"/>
+      <polygon points="15,60 20,75 8,70" fill="#120B14" stroke="#FFFDF5" stroke-width="2"/>
+    </svg>`;
+  }
+  
+  // LOGO PREMIUM (Le B classique)
+  return `<svg viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true" style="filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));">
+    <rect width="100" height="100" rx="26" fill="var(--lime)"/>
+    <path d="M 0 26 Q 0 0 26 0 L 74 0 Q 40 15 0 50 Z" fill="rgba(255,255,255,0.25)"/>
+    <text x="50" y="74" font-family="'Outfit', sans-serif" font-weight="900" font-size="72" text-anchor="middle" fill="var(--lime-ink)">B</text>
+    <text x="50" y="74" font-family="'Outfit', sans-serif" font-weight="900" font-size="72" text-anchor="middle" fill="url(#gradB)" opacity="0.3">B</text>
+    <defs>
+      <linearGradient id="gradB" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#FFFFFF" />
+        <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+      </linearGradient>
+    </defs>
   </svg>`;
 }
 
@@ -1655,29 +1664,35 @@ function finish(w,who){
 var app=document.getElementById('app');
 var NAV_HISTORY = [];
 function go(s){
-  // Effet sonore de transition
   if(typeof sfxSwooshPage === 'function') sfxSwooshPage();
 
-  // EFFET GLITCH DE TRANSITION (déjà présent)
-  if(!RM) {
+  var isStreet = document.documentElement.getAttribute('data-theme') === 'streetwear';
+  
+  if(isStreet) {
+    // L'effet "Splat" (Tache d'encre)
+    var splat = document.createElement('div');
+    splat.className = 'ink-splat';
+    document.body.appendChild(splat);
+    if(typeof screenShake === 'function') screenShake(); // On secoue l'écran
+    setTimeout(function(){ splat.remove(); }, 600);
+  } else if(!RM) {
     app.classList.add('page-glitch');
     setTimeout(function(){ app.classList.remove('page-glitch'); }, 300);
   }
+  
   if(S.screen && S.screen !== s) {
-    // On ne met dans l'historique que si on change de page
     var isMainTab = (s==='home' || s==='ohome' || s==='profile' || s==='shop' || s==='wheel' || s==='tournament');
-    
     if(isMainTab) {
-      // Si on va sur un onglet principal, on vide l'historique
       NAV_HISTORY = [s];
     } else {
-      // Si la page précédente n'est pas la même, on l'ajoute
       if(NAV_HISTORY[NAV_HISTORY.length - 1] !== S.screen) {
         NAV_HISTORY.push(S.screen);
       }
     }
   }
-  clearT();S.screen=s;S.sheet=null;S._fresh=true;render();window.scrollTo(0,0);if(s==='clues')clueTimer();
+  clearT();
+  S.screen=s;S.sheet=null;S._fresh=true;render();window.scrollTo(0,0);
+  if(s==='clues')clueTimer();
 }
 
 function goBack(){
@@ -1856,13 +1871,16 @@ function refreshSetup(){
 function vReveal(){
   var g=S.game,p=pl(S.players[g.ri].id),last=g.ri===S.players.length-1;
   if(g.rs==='who'){
-    return gbar()+'<div class="wrap"><div class="who"><span class="eyebrow">Joueur '+(g.ri+1)+' sur '+S.players.length+'</span>'+av(p)+'<p class="muted">Passe le téléphone à</p><div class="big">'+esc(p.name)+'</div><p class="muted">Les autres, regardez ailleurs.</p></div></div><div class="dock"><button class="btn btn-primary" data-act="rsee">C\'est moi</button></div>'
+    return gbar()+'<div class="wrap"><div class="who slam-hard"><span class="eyebrow">Joueur '+(g.ri+1)+' sur '+S.players.length+'</span>'+av(p)+'<p class="muted">Passe le téléphone à</p><div class="big">'+esc(p.name)+'</div><p class="muted">Les autres, regardez ailleurs.</p></div></div><div class="dock"><button class="btn btn-primary" data-act="rsee">C\'est moi</button></div>'
   }
   var w=wordOf(g,p.id);
   S._hold=w?('<span class="eyebrow" style="color:var(--violet)">Ton mot</span><div class="word">'+esc(w)+'</div>'):('<div class="word" style="font-size:32px">Tu n\'as pas de mot</div><p style="color:#323A68">Écoute les indices et bluffe.</p>');
-  // Ajout de la classe 'dealing' pour l'effet de distribution
+  
+  var isStreet = document.documentElement.getAttribute('data-theme') === 'streetwear';
+  var cardClass = isStreet ? 'hold slam-hard' : 'hold dealing'; // On utilise slam-hard
+
   return gbar()+'<div class="wrap"><h2 style="text-align:center">'+esc(p.name)+', lis ton mot</h2>'+
-  '<div class="hold dealing" id="hold" tabindex="0" role="button" aria-label="Maintiens pour voir ton mot"><div class="front">'+I.eye+'<b>Maintiens pour voir ton mot</b><span>Relâche pour le cacher</span></div><div class="back" id="holdback"></div></div>'+
+  '<div class="'+cardClass+'" id="hold" tabindex="0" role="button" aria-label="Maintiens pour voir ton mot"><div class="front">'+I.eye+'<b>Maintiens pour voir ton mot</b><span>Relâche pour le cacher</span></div><div class="back" id="holdback"></div></div>'+
   '<p class="note">Tu ne verras jamais ton rôle écrit : retiens ton mot, c\'est tout.</p></div>'+
   '<div class="dock"><button class="btn btn-primary" data-act="rdone">'+(last?'J\'ai vu mon mot, commencer':'J\'ai vu mon mot')+'</button></div>'
 }
@@ -2156,20 +2174,22 @@ var BAZ_EMOJI = {
 var BAZ_IMG_AVAILABLE = false; /* passe à true quand tu as baz-happy.png etc. */
 function bazAvatarHtml(mood){
   mood = mood || 'default';
+  var isStreet = document.documentElement.getAttribute('data-theme') === 'streetwear';
+  
   if(BAZ_IMG_AVAILABLE){
     return '<img src="baz-'+mood+'.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">';
   }
-  return '<span style="font-size:32px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">'+
-         (BAZ_EMOJI[mood]||BAZ_EMOJI.default)+'</span>';
-}
-function bazBubble(text, mood){
-  return '<div class="baz-container">'+
-    '<div class="baz-avatar">'+bazAvatarHtml(mood)+'</div>'+
-    '<div class="baz-speech">'+
-      '<div class="baz-name">BAZ</div>'+
-      '<div class="baz-text">'+text+'</div>'+
-    '</div>'+
-  '</div>';
+  
+  var emoji = BAZ_EMOJI[mood] || BAZ_EMOJI.default;
+  
+  if(isStreet) {
+    // Mode Sticker : Bordure blanche, fond jaune, incliné
+    return '<div style="width:100%;height:100%;background:var(--lime);border:4px solid var(--fg);border-radius:12px;display:grid;place-items:center;transform:rotate(-8deg);box-shadow:4px 4px 0px var(--violet);">'+
+           '<span style="font-size:32px;line-height:1;filter:drop-shadow(2px 2px 0px rgba(0,0,0,0.5))">'+emoji+'</span></div>';
+  }
+  
+  // Mode normal (Premium / Nébuleuse)
+  return '<span style="font-size:32px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">'+emoji+'</span>';
 }
 /* === FIN PATCH 2 === */
 function bottomNav(){
@@ -3155,7 +3175,8 @@ function vOHome(){
 }
 
 function olShare(){var url=olLink(OL.code);
-  return '<section class="card"><div class="codebig" aria-label="Code de la partie '+esc(OL.code)+'">'+esc(OL.code)+'</div><div class="qrbox">'+qrSvg(url,196)+'</div>'+
+  return '<section class="card"><div class="codebig" data-act="ocopy" style="cursor:pointer;user-select:none;transition:transform 0.1s" onmousedown="this.style.transform=\'scale(0.9)\'" onmouseup="this.style.transform=\'scale(1)\'" aria-label="Cliquer pour copier le code '+esc(OL.code)+'">'+esc(OL.code)+'</div><div class="qrbox">'+qrSvg(url,196)+'</div>'+
+  // ... le reste de la fonction
   '<p class="small muted" style="text-align:center">Scanne le QR code, ou ouvre le lien et entre le code à 4 chiffres.</p>'+
   '<div class="row" style="gap:10px"><button class="btn btn-primary" data-act="oshare" style="margin-top:10px">Partager le lien</button></div>'+
   '<input class="field" id="olink" readonly value="'+esc(url)+'" aria-label="Lien de la partie" style="flex:none;width:100%;height:44px;font-size:13px"></section>'}
@@ -3314,19 +3335,26 @@ function olCopy(){var url=olLink(OL.code),el=document.getElementById('olink');
   function fallback(){if(el){el.focus();el.select();try{document.execCommand('copy')}catch(e){}}}
   try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){toast('Lien copié')},fallback);return}}catch(e){}
   fallback();toast('Lien sélectionné : copie-le')}
-function toast(msg){var t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.setAttribute('role','status');document.body.appendChild(t)}
-  t.textContent=msg;t.className='show';clearTimeout(toast.t);toast.t=setTimeout(function(){t.className=''},1800)}
+function toast(msg){
+  var t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.setAttribute('role','status');document.body.appendChild(t)}
+  t.textContent=msg;
+  t.className='show';
+  t.style.transform = 'translate(-50%, 0) scale(1.05)';
+  setTimeout(function(){ t.style.transform = 'translate(-50%, 0) scale(1)'; }, 150);
+  clearTimeout(toast.t);
+  toast.t=setTimeout(function(){ t.className=''; }, 2200);
+}
+
 function generateShareImage(gameType){
   var canvas=document.createElement('canvas');
   canvas.width=1080; canvas.height=1920;
   var ctx=canvas.getContext('2d');
   
-  // Fond premium
   var grad=ctx.createLinearGradient(0,0,0,1920);
   grad.addColorStop(0,'#0B0F1E'); grad.addColorStop(1,'#161C35');
   ctx.fillStyle=grad; ctx.fillRect(0,0,1080,1920);
   
-  // Effet Constellation
   ctx.fillStyle='rgba(184,255,69,0.4)';
   for(var i=0;i<80;i++){
     var x=Math.random()*1080, y=Math.random()*1920, r=Math.random()*3+1;
@@ -3342,13 +3370,11 @@ function generateShareImage(gameType){
   ctx.font='700 40px Outfit, sans-serif';
   ctx.fillText('PARTY', 540, 230);
   
-  // Titre
   var title = gameType==='u' ? 'Résultat Undercover' : 'Le classement de la soirée';
   ctx.fillStyle='#AAB0CC';
   ctx.font='40px Inter, sans-serif';
   ctx.fillText(title, 540, 320);
   
-  // Récupération des joueurs (en ligne ou en solo)
   var playersList = [];
   if(S.screen==='online' && OL.players){
     for(var id in OL.players){
@@ -3364,7 +3390,6 @@ function generateShareImage(gameType){
   
   displayPlayers.forEach(function(p, idx){
     var y = 480 + (idx * 180);
-    
     ctx.fillStyle = idx===0 ? 'rgba(184,255,69,0.2)' : 'rgba(255,255,255,0.05)';
     ctx.beginPath(); ctx.arc(150, y-20, 60, 0, Math.PI*2); ctx.fill();
     
@@ -3406,9 +3431,18 @@ function generateShareImage(gameType){
     }
   }, 'image/png');
 }
-function olShareNative(){var url=olLink(OL.code);
-  if(navigator.share){navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){})}else olCopy()}
-function olAct(a,d){var c=OL.cfg||{},i;
+
+        function olShareNative(){
+  var url=olLink(OL.code);
+  if(navigator.share){
+    navigator.share({title:'BAZAR Party',text:'Rejoins ma partie BAZAR Party : code '+OL.code,url:url}).catch(function(){});
+  } else {
+    olCopy();
+  }
+}
+
+function olAct(a,d){
+  var c=OL.cfg||{},i;
   switch(a){
     case 'ohome':OH.err='';go('ohome');break;case 'goback':goBack();break;case 'ojoin_home':OH.game='u';OH.err='';go('ohome');setTimeout(function(){var el=document.getElementById('ocd');if(el){el.focus();el.scrollIntoView({behavior:'smooth',block:'center'});}},150);break;
 case 'oscanqr':go('scanner');break;
@@ -3582,13 +3616,28 @@ app.addEventListener('submit', function(e) {
     if(val) { OL.my.vote = OL.s.vk; sendAct('write', {tx: val}); olRender(); }
   }
 });
-function olBoot(){var code=null,sv=olSaved();
+function olBoot(){
+  var code=null, sv=olSaved();
   try{var mm=(location.href+' '+document.referrer).match(/(?:code=|rejoindre\/)(\d{4})\b/);if(mm)code=mm[1]}catch(e){}
   OH.name=sv.name||'';
-  if(code){OH.code=code;S.screen='ohome'}
-  olInit().then(function(ok){OLST=ok?'ok':'no';
-    if(S.screen==='ohome')render();
-    else if(ok&&!code&&sv.code&&S.screen==='home')olResume(sv.code)})}
+  
+  if(code){
+    OH.code=code;
+    S.screen='ohome';
+    // Si le prénom est déjà connu, on rejoint automatiquement après le chargement
+    if(OH.name.trim()) {
+      setTimeout(function(){ 
+        if(!OH.busy) olJoin(); 
+      }, 800);
+    }
+  }
+  
+  olInit().then(function(ok){
+    OLST=ok?'ok':'no';
+    if(S.screen==='ohome') render();
+    else if(ok && !code && sv.code && S.screen==='home') olResume(sv.code);
+  });
+}
 
 function olSheet(){
   var c,h=OL.host;
@@ -4354,7 +4403,7 @@ function themeToggle(){var isLight=(document.documentElement.getAttribute('data-
   render();vib(10)}
 (function(){
   try{
-    var t = localStorage.getItem('bazar-theme');
+    var t = localStorage.getItem('bazar-theme') || 'streetwear';
     if(t === 'light') document.documentElement.setAttribute('data-theme','light');
     else if(t === 'cyberpunk') document.documentElement.setAttribute('data-theme','cyberpunk');
     else if(t === 'sunset') document.documentElement.setAttribute('data-theme','sunset');
@@ -5067,6 +5116,73 @@ function addThemePicker() {
   btn.onclick = cycleTheme;
   document.body.appendChild(btn);
 }
+/* === MASCOTTE BAZ (MODE BD / STREETWEAR) === */
+function bazBubble(text, mood){
+  var isStreet = document.documentElement.getAttribute('data-theme') === 'streetwear';
+  
+  if(isStreet) {
+    var emoji = (typeof BAZ_EMOJI !== 'undefined' && BAZ_EMOJI[mood]) ? BAZ_EMOJI[mood] : '😎';
+    return '<div class="baz-container" style="background:#FFFDF5; border:4px solid var(--lime-ink); border-radius:15px 20px 5px 20px; box-shadow:6px 6px 0px var(--violet); transform:rotate(1deg); position:relative; margin-bottom:25px;">'+
+      '<div class="baz-avatar" style="background:var(--lime); border:3px solid var(--fg); border-radius:12px; transform:rotate(-8deg); box-shadow:3px 3px 0px var(--violet); display:grid; place-items:center;">'+
+        '<span style="font-size:28px">'+emoji+'</span>'+
+      '</div>'+
+      '<div class="baz-speech">'+
+        '<div class="baz-name" style="color:var(--violet); font-family:Impact, sans-serif; font-size:18px; letter-spacing:1px; font-style:italic">BAZ</div>'+
+        '<div class="baz-text" style="color:#120B14; font-weight:800; font-family:\'Trebuchet MS\', sans-serif; font-size:15px">'+text+'</div>'+
+      '</div>'+
+      '<div style="position:absolute; bottom:-16px; left:25px; width:0; height:0; border-left:12px solid transparent; border-right:12px solid transparent; border-top:16px solid var(--lime-ink);"></div>'+
+      '<div style="position:absolute; bottom:-9px; left:29px; width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:10px solid #FFFDF5; z-index:1;"></div>'+
+    '</div>';
+  }
+  
+  // Mode normal (Premium)
+  var emojiNormal = (typeof BAZ_EMOJI !== 'undefined' && BAZ_EMOJI[mood]) ? BAZ_EMOJI[mood] : '👾';
+  return '<div class="baz-container">'+
+    '<div class="baz-avatar"><span style="font-size:32px">'+emojiNormal+'</span></div>'+
+    '<div class="baz-speech">'+
+      '<div class="baz-name">BAZ</div>'+
+      '<div class="baz-text">'+text+'</div>'+
+    '</div>'+
+  '</div>';
+}
+/* === CSS STREETWEAR : MAXIMAL IMPACT === */
+(function(){
+  var css = `
+  /* L'effet de "Slam" avec un rebond et une ombre dure */
+  @keyframes slamHard {
+    0% { transform: scale(3) rotate(10deg); opacity: 0; filter: blur(10px); }
+    40% { transform: scale(0.9) rotate(-5deg); opacity: 1; filter: blur(0); box-shadow: 15px 15px 0px var(--lime); }
+    70% { transform: scale(1.05) rotate(2deg); box-shadow: 0px 0px 0px var(--lime); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; box-shadow: 8px 8px 0px var(--violet); }
+  }
+  .slam-hard {
+    animation: slamHard 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  /* Le bruit/éclat d'encre pour le changement de page */
+  .ink-splat {
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    background: var(--violet);
+    clip-path: circle(0% at 50% 50%);
+    animation: splatAnim 0.6s ease-in-out forwards;
+  }
+  @keyframes splatAnim {
+    0% { clip-path: circle(0% at 50% 50%); opacity: 1; }
+    50% { clip-path: circle(100% at 50% 50%); opacity: 1; }
+    100% { clip-path: circle(100% at 50% 50%); opacity: 0; }
+  }
+
+  /* Les bordures des cartes en mode streetwear sont plus agressives */
+  [data-theme="streetwear"] .card {
+    border: 5px solid var(--fg) !important;
+    border-radius: 2px 25px 5px 20px !important;
+    box-shadow: 12px 12px 0px var(--violet) !important;
+  }
+  `;
+  var style = document.createElement('style');
+  style.innerHTML = css;
+  document.head.appendChild(style);
+})();
 S._fresh=true;olBoot();render();
 // Animation d'intro
 setTimeout(function(){
