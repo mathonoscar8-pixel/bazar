@@ -1091,11 +1091,36 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
   var API='/api/kv',POLL=700;
   function par(p){return p.split('/').slice(0,-1).join('/')}
   async function call(body){
-    var r;try{r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})}
-    catch(e){throw {code:'unavailable',message:'réseau'}}
-    var j=null;try{j=await r.json()}catch(e){}
-    if(!r.ok)throw {code:(j&&j.code)||'unavailable',message:(j&&j.error)||('HTTP '+r.status)};
-    return j}
+  var r;
+  // On crée un "minuteur" de 5 secondes
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function(){ controller.abort(); }, 5000);
+  
+  try {
+    r = await fetch(API,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body),
+      signal: controller.signal // On lie la requête au minuteur
+    });
+    clearTimeout(timeoutId); // Si ça répond vite, on annule le minuteur
+  } catch(e) {
+    clearTimeout(timeoutId);
+    // Si l'erreur est un abandon (timeout), on renvoie un code clair
+    if(e.name === 'AbortError') {
+      throw {code:'timeout', message:'Le serveur met trop de temps à répondre.'};
+    }
+    throw {code:'unavailable', message:'réseau'};
+  }
+  
+  var j=null;
+  try{ j=await r.json(); }catch(e){}
+  
+  if(!r.ok) {
+    throw {code:(j&&j.code)||'unavailable', message:(j&&j.error)||('HTTP '+r.status)};
+  }
+  return j;
+}
   function mkDoc(p,r){return {id:p.split('/').pop(),exists:!!r.exists,data:function(){return r.exists?r.data:undefined}}}
   function mkColl(l){return {docs:(l||[]).map(function(x){return {id:x.id,exists:true,data:function(){return x.data}}})}}
   /* Toutes les écoutes d'un téléphone sont regroupées en une seule requête toutes les 1,5 s. */
@@ -1610,8 +1635,7 @@ function nextTabouCard(ok){if(ok)S.tabou.score++;S.tabou.cur=(S.tabou.cur+1)%TAB
 function saveTabouScore(){if(S.tabou.curTeam===0)S.tabou.teamA+=S.tabou.score;else S.tabou.teamB+=S.tabou.score;S.screen='tabou_score';S._fresh=true;render()}
 function nextTabouRound(){S.tabou.round++;S.screen='tabou_setup';S._fresh=true;render()}
 function startGame(){
-S._bazInvaded = false;
-S._cinemaEnded = false;
+  S._bazInvaded = false; 
   fixSettings();
   S.players.forEach(function(p){p.name=p.name.trim()});
   var st=S.settings;
@@ -1627,7 +1651,8 @@ S._cinemaEnded = false;
   var base=shuffle(ids);
   if(roles[base[0]]==='mw'){var j=-1;for(i=0;i<base.length;i++)if(roles[base[i]]!=='mw'){j=i;break}var t=base[0];base[0]=base[j];base[j]=t}
   S.game={civ:flip?pr[1]:pr[0],uc:flip?pr[0]:pr[1],cat:pr[2],roles:roles,alive:ids.slice(),base:base,round:1,ri:0,rs:'who',speak:0,vote:null,elim:null,flipped:false,tally:null,mw:null,winner:null,gains:null};
-  save();go('reveal');
+  save();
+  go('reveal');
 }
 function nextSpeaker(){S._vibbedTurn = false;var g=S.game,o=order(g);g.speak++;if(g.speak>=o.length){clearT();beginVote(g.alive.slice(),false)}else{render();clueTimer()}}
 function beginVote(cand,revote){var g=S.game;g.vote={cand:cand,voters:order(g),idx:0,stage:'pass',picks:{},sel:null,revote:revote};go('vote')}
@@ -1868,6 +1893,10 @@ function refreshSetup(){
     z.innerHTML=ks.length?ks.map(function(k){return '<button class="chip" data-act="loadlist" data-k="'+esc(k)+'" style="padding-right:34px;position:relative">'+esc(k)+' ('+sl[k].length+')<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);opacity:.6;font-size:14px" data-act="dellist" data-k="'+esc(k)+'">×</span></button>'}).join(''):'<span class="muted small">Aucune liste enregistrée pour l\'instant.</span>'}
 }
 
+function gbar(){
+  var g=S.game;
+  return '<div class="bar"><button class="icon-btn" data-act="menu" aria-label="Menu">'+I.dots+'</button><span class="meta">Tour '+g.round+'</span><span style="width:44px"></span></div>';
+}
 function vReveal(){
   var g=S.game,p=pl(S.players[g.ri].id),last=g.ri===S.players.length-1;
   if(g.rs==='who'){
@@ -2544,7 +2573,8 @@ app.addEventListener('keydown',function(e){
 function act(a,d){
   var st=S.settings,g=S.game,i;
   switch(a){
-    case 'home':S.game=g&&S.screen!=='end'?null:S.game;go('home');break;
+    case 'start':case 'again':S.used=[];startGame();break;
+case 'home':S.game=g&&S.screen!=='end'?null:S.game;go('home');break;
     case 'rules':go('rules');break;
     case 'create':go('setup');break;
     case 'tabou':startTabou();break;
@@ -2738,32 +2768,70 @@ function updateMyStats(isWin, tokensWon, timeSpent){
 }
 function getMyAvatar(){try{return JSON.parse(localStorage.getItem('bazar-my-avatar')||'null')}catch(e){return null}}
 async function olCreate(){
-  if(OH.busy) return; // Sécurité pour éviter le double-clic
+  if(OH.busy) return;
   
   var nm=OH.name.trim().slice(0,16);
   if(!nm){OH.err='Choisis un prénom.';return homeRender()}
   
-  OH.busy=true;OH.err='';render(); // On active le spinner
+  OH.busy=true; OH.err=''; render();
   
   try{
-    await olInit();var b=olBlock();if(b)throw b;
+    await olInit();
+    var b=olBlock(); if(b) throw b;
+    
     var code=null;
-    for(var i=0;i<30&&!code;i++){var c=String(1000+Math.floor(Math.random()*9000));var sn=await Rr(c).get();
-      if(!sn.exists||Date.now()-(sn.data().ts||0)>6*36e5)code=c}
-    if(!code)throw 'Impossible de créer un salon pour le moment. Réessaie.';
+    for(var i=0;i<3&&!code;i++){
+      var c=String(1000+Math.floor(Math.random()*9000));
+      var sn=await Rr(c).get();
+      if(!sn.exists||Date.now()-(sn.data().ts||0)>6*36e5)code=c;
+    }
+    if(!code) throw 'Impossible de trouver un code libre. Réessaie.';
+    
     await olWipe(code);
-    var cfg=OH.game==='m'?{size:S.my.size,names:[S.my.names[0],S.my.names[1]]}:(OH.game==='l'?{np:6,rounds:2,secs:90,cats:LCATS.slice()}:OH.game==='d'?{rounds:2,per:1,tdraw:60,tfake:40,tvote:25,cats:DCATS.slice(),custom:'',clear:false,dbl:true,hearts:true,hint:true,who:true,display:true}:{uc:1,mw:0,cats:CATS.slice(),reveal:true});
     
-    if(OH.game==='t'){var cfg={games:S.tourneySel.slice()};if(!cfg.games.length)cfg.games=['l'];await Rr(code).set({code:code,host:PID,game:'t',status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
-    if(OH.game==='c'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
-    if(OH.game==='f'){var cfg={};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
-    if(OH.game==='s'){var cfg={size:S.my.size, names:[S.my.names[0],S.my.names[1]]};await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});olStore({name:nm,code:code});OH.busy=false;await olOpen(code);return;}
+    // On prépare les réglages par défaut selon le jeu choisi
+    var cfg = {};
+    if(OH.game==='m') cfg={size:S.my.size,names:[S.my.names[0],S.my.names[1]]};
+    else if(OH.game==='l') cfg={np:6,rounds:2,secs:90,cats:LCATS.slice()};
+    else if(OH.game==='d') cfg={rounds:2,per:1,tdraw:60,tfake:40,tvote:25,cats:DCATS.slice(),custom:'',clear:false,dbl:true,hearts:true,hint:true,who:true,display:true};
+    else if(OH.game==='s') cfg={size:S.my.size,names:[S.my.names[0],S.my.names[1]]};
+    else if(OH.game==='dd') cfg={};
+    else if(OH.game==='c') cfg={};
+    else if(OH.game==='f') cfg={};
+    else cfg={uc:1,mw:0,cats:CATS.slice(),reveal:true}; // Undercover par défaut
+
+    // Création du salon dans la base de données
+    await Rr(code).set({
+      code: code, 
+      host: PID, 
+      game: OH.game, 
+      status: 'lobby', 
+      cfg: JSON.stringify(cfg), 
+      s: '', 
+      scores: '{}', 
+      wins: '[0,0]', 
+      ts: Date.now(), 
+      v: Date.now()
+    });
     
-    await Rr(code).set({code:code,host:PID,game:OH.game,status:'lobby',cfg:JSON.stringify(cfg),s:'',scores:'{}',wins:'[0,0]',ts:Date.now(),v:Date.now()});
-    await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});
-    olStore({name:nm,code:code});OH.busy=false;await olOpen(code);
+    // Ajout de l'hôte dans le salon
+    await Pd(code, PID).set({
+      name: nm, 
+      ci: ciFor(PID), 
+      team: 0, 
+      spy: false, 
+      ts: Date.now(), 
+      act: '', 
+      avatar: getMyAvatar()
+    });
+    
+    olStore({name:nm, code:code});
+    OH.busy=false;
+    await olOpen(code);
   }catch(e){
-    OH.busy=false;OH.err=errText(e);render();
+    OH.busy=false;
+    OH.err=errText(e);
+    render();
   }
 }
 async function olJoin(){
@@ -5126,6 +5194,22 @@ function addThemePicker() {
   btn.onclick = cycleTheme;
   document.body.appendChild(btn);
 }
+function av(p,small){
+  var sz=small?'36':'44';
+  var st='width:'+sz+'px;height:'+sz+'px;min-width:'+sz+'px;border-radius:50%;display:grid;place-items:center;font:700 '+(small?'15':'18')+'px var(--display);';
+  if(p.avatar && p.avatar.base!=null){
+    var bg=AV_COLORS[p.avatar.color]||'#333';
+    var base=AV_BASES[p.avatar.base]||'';
+    var hat=AV_HATS[p.avatar.hat]||'';
+    var pos=AV_POS[p.avatar.base]||{t:0,s:1};
+    var scale=small?0.8:1;
+    return '<span class="av'+(small?' sm':'')+'" style="'+st+'background:'+bg+';position:relative;overflow:visible" aria-hidden="true"><span style="font-size:'+(small?'20':'26')+'px;line-height:1;z-index:1">'+base+'</span>'+(hat?'<span style="position:absolute;top:'+((pos.t||0)*scale)+'px;left:50%;transform:translateX(-50%) scale('+pos.s+');font-size:'+(small?'16':'22')+'px;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3))">'+hat+'</span>':'')+'</span>'
+  }
+  var c=PAL[p.ci%PAL.length];
+  var ini=(p.name.trim().charAt(0)||'?').toUpperCase();
+  return '<span class="av'+(small?' sm':'')+'" style="'+st+'background:'+c[0]+';color:'+c[1]+'" aria-hidden="true">'+esc(ini)+'</span>'
+}
+
 /* === MASCOTTE BAZ (MODE BD / STREETWEAR) === */
 function bazBubble(text, mood){
   var isStreet = document.documentElement.getAttribute('data-theme') === 'streetwear';
