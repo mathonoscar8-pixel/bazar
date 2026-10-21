@@ -1081,7 +1081,7 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
   to { opacity: 0; visibility: hidden; }
 }
 
-</style>  <--- Toujours là, juste en dessous de ce que tu viens de coller
+</style>  
 </style>
 
 <script>
@@ -2801,13 +2801,24 @@ async function olOpen(code,opts){
   olTeardown();
   OL={on:true,code:code,host:false,game:null,room:null,cfg:{},players:{},plist:[],sec:null,s:null,status:'',unsubs:[],err:'',sel:null,cn:2,cw:'',cerr:'',my:{},myN:Date.now(),lastN:{},scores:{},wins:[0,0],G:null,init:false,flip:false,pick:null,joined:false,cq:Promise.resolve(),cpend:0,sig:'',used:(function(){try{return JSON.parse(localStorage.getItem('bazar-undercover-online-used-v2')||'[]')}catch(e){return []}})(),la:[],lv:{},lvk:0,lph:'',display:!!(opts&&opts.display),dart:{},danim:{},dfp:{},dr:null,dfake:{w:'',sent:false,msg:'',at:0},dv:{pick:null,heart:null,sent:false},myfake:''};
   S.screen='online';S._fresh=true;S.sheet=null;render();
+  
+  // MINUTEUR DE SÉCURITÉ (Timeout de 8 secondes)
+  var timeoutId = setTimeout(function(){
+    if(OL.on && !OL.room) olGone('Le serveur met trop de temps à répondre. Vérifie ta connexion.');
+  }, 8000);
+
   try{
     var sn=await Rr(code).get();
+    clearTimeout(timeoutId);
     if(!sn.exists)throw 'Partie introuvable.';
     OL.host=sn.data().host===PID;
     if(OL.host){var h=await Hd(code).get();if(h.exists){OL.G=jp(h.data().g,null);if(OL.G)OL.lastN=OL.G.lastN||{};hlSched()}}
-    olSubscribe()
-  }catch(e){olGone(errText(e))}}
+    olSubscribe();
+  }catch(e){
+    clearTimeout(timeoutId);
+    olGone(errText(e));
+  }
+}
 function checkHost(){
   if(!OL.on||!OL.room||OL.host)return;
   var hostId=OL.room.host;
@@ -2856,10 +2867,16 @@ function olSubscribe(){var c=OL.code;
   if(!OL.display)OL.unsubs.push(Sd(c,PID).onSnapshot(function(snap){if(!OL.on)return;OL.sec=snap.exists?snap.data():null;if(typeof dFb==='function')dFb();olRender()},onErr))}
 function olGone(msg){olTeardown();OL.on=false;olStore({code:''});OH.err=msg||'';S.screen='ohome';S._fresh=true;S.sheet=null;render()}
 async function olLeave(){
-  if(OL.busy)return;
-  OL.busy=true; S.sheet=null; render();
+  // ON FORCE LA SORTIE IMMÉDIATE
+  S.screen='home'; S._fresh=true; render();
   
-  var c=OL.code,host=OL.host;
+  var c=OL.code, host=OL.host;
+  olTeardown();
+  OL.on=false; OL.busy=false;
+  olStore({code:''});
+  
+  if(!c) return;
+  
   try{
     if(host){
       await Rr(c).update({status:'closed',v:Date.now()});
@@ -2870,13 +2887,6 @@ async function olLeave(){
       await Sd(c,PID).delete();
     }
   }catch(e){}
-  
-  olTeardown();
-  OL.on=false;
-  olStore({code:''});
-  S.screen='home';
-  S._fresh=true;
-  render();
 }
 
 /* ----- Réception de l'état ----- */
