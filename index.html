@@ -3116,6 +3116,8 @@ function hostProcess(){if(!OL.host||!OL.G)return;
     if(a.n>(OL.lastN[p.id]||0)){OL.lastN[p.id]=a.n;hostAct(p.id,a)}})}
 async function olStart(){
   if(!OL.host||OL.starting)return;
+  
+  // Vérification des conditions de lancement
   var iss = '';
   if(OL.game==='m') iss = olIssueM();
   else if(OL.game==='l') iss = olIssueL();
@@ -3123,12 +3125,18 @@ async function olStart(){
   else if(OL.plist.length < 3) iss = 'Il faut au moins 3 joueurs.';
   else if(OL.game==='u' && !(OL.cfg.cats||[]).length) iss = 'Choisis au moins une catégorie de mots.';
   
-  if(iss){OL.err=iss;return olRender()}
-  OL.starting=true;OL.err='';olRender();
+  if(iss){ OL.err = iss; return olRender(); }
+  
+  OL.starting = true; OL.err = ''; olRender();
   
   try{
-    OL.plist.forEach(function(p){var a=jp(p.act,null);OL.lastN[p.id]=a&&a.n?a.n:0});
+    // On récupère les actions en attente
+    OL.plist.forEach(function(p){ 
+      var a=jp(p.act,null); 
+      OL.lastN[p.id]=a&&a.n?a.n:0; 
+    });
     
+    // ON LANCE LE BON JEU
     var g;
     if(OL.game==='f') g = mkGameF();
     else if(OL.game==='c') g = mkGameC();
@@ -3137,29 +3145,38 @@ async function olStart(){
     else if(OL.game==='m') g = mkGameM();
     else if(OL.game==='l') g = mkGameL();
     else if(OL.game==='d') g = mkGameD();
+    else if(OL.game==='p') g = mkGameP();
     else g = mkGameU();
     
-    // On récupère les secrets (les questions, les mots, etc.)
+    // On sauvegarde les secrets (mots, questions)
     var secs = (g.secs || []); 
-    
-    // On enregistre les secrets dans la base de données
     for(var i=0;i<secs.length;i++) {
       await Sd(OL.code,secs[i][0]).set(secs[i][1]);
     }
     
-    g.lastN=OL.lastN;
-    OL.G=g;
+    g.lastN = OL.lastN;
+    OL.G = g;
     
-    // On lance la partie
-    await Rr(OL.code).update({status:'play',s:JSON.stringify(pubG(g)),cfg:JSON.stringify(OL.cfg),scores:JSON.stringify(OL.scores),wins:JSON.stringify(OL.wins),v:Date.now()});
-    await Hd(OL.code).set({g:JSON.stringify(g)});
+    // On passe le statut en "play" (en jeu)
+    await Rr(OL.code).update({
+      status: 'play', 
+      s: JSON.stringify(pubG(g)), 
+      cfg: JSON.stringify(OL.cfg), 
+      scores: JSON.stringify(OL.scores), 
+      wins: JSON.stringify(OL.wins), 
+      v: Date.now()
+    });
+    
+    await Hd(OL.code).set({g: JSON.stringify(g)});
     hlSched();
-  }catch(e){
-    OL.err='Impossible de lancer la partie. Réessaie.';
+    
+  } catch(e) {
     console.error(e);
-    OL.G=null;
+    OL.err = 'Erreur de lancement. Réessaie.';
+    OL.G = null;
   }
-  OL.starting=false;
+  
+  OL.starting = false;
   olRender();
 }
 async function olLobby(){if(!OL.host)return;OL.G=null;S.sheet=null;
@@ -4982,18 +4999,6 @@ function vOLobbyC(){
   '<section class="card"><h2>Comment jouer ?</h2><p class="muted small">Une question s\'affiche. Tout le monde écrit une réponse anonyme. Ensuite, on vote tous pour la réponse la plus drôle !</p></section>'+
   '</div>'+olDock(iss)
 }
-function vOConfessWrite(){
-  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
-  if(done) return obar('Réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
-  return obar('À toi d\'écrire')+'<div class="wrap"><div class="now"><span class="eyebrow">La question est</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
-  '<form id="confessform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="cfinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta réponse anonyme..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma réponse</button></form></div>';
-}
-function vOFauxWrite(){
-  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
-  if(done) return obar('Fausse réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
-  return obar('À toi d\'inventer')+'<div class="wrap"><div class="now"><span class="eyebrow">Question</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div><p class="muted">Invente une fausse réponse crédible.</p></div>'+
-  '<form id="fauxform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="fxinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta fausse réponse..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma fausse réponse</button></form></div>';
-}
 function vOFauxVote(){
   var s=OL.s, me=PID, done=OL.my.vote===s.vk;
   if(done) return obar('Vote envoyé')+'<div class="wrap"><div class="who"><h2>Vote enregistré !</h2><p class="muted">En attente des autres… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
@@ -5019,32 +5024,6 @@ function vOFauxResult(){
   '<div class="dock">'+(OL.host?'<button class="btn btn-primary" data-act="onext_faux">Question suivante</button><button class="btn btn-ghost" data-act="oagain">Quitter le salon</button>':'<p class="note">En attente de l\'hôte…</p>')+'</div>';
 }
 
-function mkGameF(){
-  // On simule une base de données de vraies réponses (pour l'exemple, on met des réponses fixes)
-  var vraiesReponses = {
-    "Quel est le vrai nom du cri du paresseux ?": "Le paresseux ne crie pas, il soupire",
-    "Combien de cœurs possède une pieuvre ?": "3",
-    "Quelle est la capitale de l'Australie ?": "Canberra",
-    "Quel animal est capable de survivre le plus longtemps sans boire ?": "Le chameau",
-    "Quel est le pays qui consomme le plus de fromage par habitant ?": "Le Danemark",
-    "Quel est le nom du plus grand désert du monde ?": "L'Antarctique",
-    "Combien d'os possède un bébé à la naissance ?": "300",
-    "Quel fruit est le plus lourd du monde ?": "Le jacquier",
-    "Quelle est la durée de vie moyenne d'un escargot ?": "3 ans",
-    "Quel est le seul métal qui est liquide à température ambiante ?": "Le mercure",
-    "Quel est le nom de la peur des longues files d'attente ?": "L'ouragie",
-    "Combien de temps met la lumière du soleil pour atteindre la Terre ?": "8 minutes",
-    "Quel est le pays d'origine de la pizza ?": "L'Italie",
-    "Quel est l'organe le plus lourd du corps humain ?": "Le foie",
-    "Quel est le nom du bébé du kangourou ?": "Le joey"
-  };
-  
-  var q = FAUXAVIS[Math.floor(Math.random()*FAUXAVIS.length)];
-  var real = vraiesReponses[q] || "Réponse inconnue";
-  
-  var g={g:'f',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,real:real,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
-  return g;
-}
 function pubF(g){
   var s={g:'f',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
   if(g.ph==='vote'){s.opts=g.opts;if(s.voted.indexOf(PID)>=0&&g.answers)s.opts.forEach(function(o,i){if(o.id===PID)o.mine=true;});}
@@ -5588,19 +5567,6 @@ function vOLobbyC(){
   '</div>'+olDock(iss)
 }
 
-function vOConfessWrite(){
-  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
-  if(done) return obar('Réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
-  return obar('À toi d\'écrire')+'<div class="wrap"><div class="now"><span class="eyebrow">La question est</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
-  '<form id="confessform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="cfinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta réponse anonyme..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma réponse</button></form></div>';
-}
-
-function mkGameC(){
-  var q = CONFESS[Math.floor(Math.random()*CONFESS.length)];
-  var g={g:'c',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
-  return g;
-}
-
 function pubC(g){
   var s={g:'c',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
   if(g.ph==='vote'){s.opts=g.opts;}
@@ -5638,6 +5604,24 @@ function hcTally(g){
   g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
 }
 /* ================= LOGIQUE ET VUES : QUI A ÉCRIT ÇA ? ================= */
+
+function pubC(g){
+  var s={g:'c',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+
+/* ================= LOGIQUE ET VUES : LE FAUX AVIS ================= */
+
+function pubF(g){
+  var s={g:'f',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;if(s.voted.indexOf(PID)>=0&&g.answers)s.opts.forEach(function(o,i){if(o.id===PID)o.mine=true;});}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+
+/* ================= LOGIQUE : QUI A ÉCRIT ÇA ? ================= */
 function mkGameC(){
   var q = CONFESS[Math.floor(Math.random()*CONFESS.length)];
   var g={g:'c',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
@@ -5657,7 +5641,38 @@ function vOConfessWrite(){
   return obar('À toi d\'écrire')+'<div class="wrap"><div class="now"><span class="eyebrow">La question est</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
   '<form id="confessform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="cfinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta réponse anonyme..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma réponse</button></form></div>';
 }
-/* ================= LOGIQUE ET VUES : LE FAUX AVIS ================= */
+
+function hcAct(uid,a,g){
+  var host=uid===PID;
+  switch(a.t){
+    case 'write':{if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcToVote(g)}break}
+    case 'vote':{if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;var opt=g.opts[a.i];if(opt.id===uid)return;g.votes=g.votes||{};g.votes[uid]=opt;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcTally(g)}break}
+    case 'close_write':if(!host||g.ph!=='write')return;hcToVote(g);break;
+    case 'close_vote':if(!host||g.ph!=='vote')return;hcTally(g);break;
+    case 'cont':{if(!host||g.ph!=='result')return;
+      var oldQ=g.q,pool=CONFESS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
+      g.q=newQ;g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
+    default:return
+  }
+}
+function hcToVote(g){
+  g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';
+  var arr=[];
+  for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}
+  g.opts=shuffle(arr);
+}
+function hcTally(g){
+  var gains={};g.players.forEach(function(id){gains[id]=0});
+  var mx=0,win=null;
+  for(var uid in g.votes){
+    var opt=g.votes[uid];
+    if(opt.id) { gains[opt.id]+=1; }
+  }
+  g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});
+  g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
+}
+
+/* ================= LOGIQUE : LE FAUX AVIS ================= */
 function mkGameF(){
   var vraiesReponses = {
     "Quel est le vrai nom du cri du paresseux ?": "Le paresseux ne crie pas, il soupire",
@@ -5694,6 +5709,54 @@ function vOFauxWrite(){
   if(done) return obar('Fausse réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
   return obar('À toi d\'inventer')+'<div class="wrap"><div class="now"><span class="eyebrow">Question</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div><p class="muted">Invente une fausse réponse crédible.</p></div>'+
   '<form id="fauxform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="fxinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta fausse réponse..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma fausse réponse</button></form></div>';
+}
+
+function hfAct(uid,a,g){
+  var host=uid===PID;
+  switch(a.t){
+    case 'write':{if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hfToVote(g)}break}
+    case 'vote':{if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;var opt=g.opts[a.i];if(opt.id===uid)return;g.votes=g.votes||{};g.votes[uid]=opt;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hfTally(g)}break}
+    case 'close_write':if(!host||g.ph!=='write')return;hfToVote(g);break;
+    case 'close_vote':if(!host||g.ph!=='vote')return;hfTally(g);break;
+    case 'cont':{if(!host||g.ph!=='result')return;
+      var oldQ=g.q,pool=FAUXAVIS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
+      var vraiesReponses = {
+        "Quel est le vrai nom du cri du paresseux ?": "Le paresseux ne crie pas, il soupire",
+        "Combien de cœurs possède une pieuvre ?": "3",
+        "Quelle est la capitale de l'Australie ?": "Canberra",
+        "Quel animal est capable de survivre le plus longtemps sans boire ?": "Le chameau",
+        "Quel est le pays qui consomme le plus de fromage par habitant ?": "Le Danemark",
+        "Quel est le nom du plus grand désert du monde ?": "L'Antarctique",
+        "Combien d'os possède un bébé à la naissance ?": "300",
+        "Quel fruit est le plus lourd du monde ?": "Le jacquier",
+        "Quelle est la durée de vie moyenne d'un escargot ?": "3 ans",
+        "Quel est le seul métal qui est liquide à température ambiante ?": "Le mercure",
+        "Quel est le nom de la peur des longues files d'attente ?": "L'ouragie",
+        "Combien de temps met la lumière du soleil pour atteindre la Terre ?": "8 minutes",
+        "Quel est le pays d'origine de la pizza ?": "L'Italie",
+        "Quel est l'organe le plus lourd du corps humain ?": "Le foie",
+        "Quel est le nom du bébé du kangourou ?": "Le joey"
+      };
+      g.q=newQ;g.real=vraiesReponses[newQ]||"Réponse inconnue";g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
+    default:return
+  }
+}
+function hfToVote(g){
+  g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';
+  var arr=[{id:'real',t:g.real}];
+  for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}
+  g.opts=shuffle(arr);
+}
+function hfTally(g){
+  var gains={};g.players.forEach(function(id){gains[id]=0});
+  var mx=0,win=null;
+  for(var uid in g.votes){
+    var opt=g.votes[uid];
+    if(opt.id==='real'){gains[uid]+=2;} 
+    else {gains[opt.id]+=1;}
+  }
+  g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});
+  g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
 }
 S._fresh=true;olBoot();render();
 
