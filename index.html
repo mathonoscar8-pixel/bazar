@@ -2877,56 +2877,25 @@ async function olOpen(code,opts){
   
   S.screen='online'; S._fresh=true; S.sheet=null; render();
   
-  // 1. On lance l'écoute normale en arrière-plan
+  // On lance la connexion normale (qui gère les mises à jour automatiquement)
   olSubscribe();
 
-  // 2. LE PING DE SECOURS (Force la lecture toutes les 2 secondes)
-  if(OL.fallbackTimer) clearInterval(OL.fallbackTimer);
-  OL.fallbackTimer = setInterval(async function() {
-    if(OL.on && !OL.room) {
-      try {
-        var sn = await Rr(code).get();
-        if(sn.exists) {
-          OL.room = sn.data();
-          OL.game = OL.room.game;
-          OL.status = OL.room.status;
-          OL.cfg = jp(OL.room.cfg, {});
-          OL.scores = jp(OL.room.scores, {});
-          OL.wins = jp(OL.room.wins, [0,0]);
-          olOnState(jp(OL.room.s, null));
-          
-          var pq = await Rp(code).get();
-          var m={}, l=[];
-          pq.docs.forEach(function(dc){ var v=dc.data(); v.id=dc.id; m[dc.id]=v; l.push(v); });
-          l.sort(function(a,b){return (a.ts||0)-(b.ts||0)});
-          OL.players=m; OL.plist=l;
-          
-          olRender();
-        }
-      } catch(e) {}
-    } else if (OL.room) {
-      clearInterval(OL.fallbackTimer);
-    }
-  }, 2000);
-
-  // 3. ON VERIFIE L'HOTE SANS BLOQUER L'ECRAN
-  setTimeout(async function() {
-    try{
-      var sn = await Rr(code).get();
-      if(sn.exists) {
-         OL.host = sn.data().host === PID;
-         if(OL.host) {
-           var h = await Hd(code).get();
-           if(h.exists) {
-             OL.G = jp(h.data().g,null);
-             if(OL.G) OL.lastN = OL.G.lastN || {};
-             hlSched();
-           }
+  // On vérifie si on est l'hôte (sans bloquer l'écran)
+  try{
+    var sn = await Rr(code).get();
+    if(sn.exists) {
+       OL.host = sn.data().host === PID;
+       if(OL.host) {
+         var h = await Hd(code).get();
+         if(h.exists) {
+           OL.G = jp(h.data().g,null);
+           if(OL.G) OL.lastN = OL.G.lastN || {};
+           hlSched();
          }
-         olRender(); 
-      }
-    }catch(e){}
-  }, 100);
+       }
+       olRender(); 
+    }
+  }catch(e){}
 }
 function checkHost(){
   if(!OL.on||!OL.room||OL.host)return;
