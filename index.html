@@ -1433,42 +1433,17 @@ var I={
  spark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>'
 };
 function logo(sz){
-  var isStreet = document.documentElement.getAttribute('data-theme') === 'streetwear';
-  
-  if(isStreet) {
-    // LOGO STREETWEAR (Éclaté et Comics)
-    return `<svg viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true" style="filter: drop-shadow(6px 6px 0px var(--violet)); transform: rotate(-3deg);">
-      <rect width="100" height="100" rx="12" fill="var(--lime)" stroke="#120B14" stroke-width="4"/>
-      
-      <!-- Le B éclaté -->
-      <g fill="#120B14">
-        <path d="M 26 20 L 45 20 L 42 48 L 26 48 Z" />
-        <path d="M 48 20 L 62 20 C 75 20 80 30 80 38 C 80 46 75 52 65 52 L 48 52 Z" />
-        <path d="M 28 54 L 42 54 L 45 84 L 28 84 Z" />
-        <path d="M 48 54 L 62 54 C 78 54 83 62 83 70 C 83 82 75 86 62 86 L 48 86 Z" />
-      </g>
-      
-      <!-- Lignes de fissure blanches -->
-      <path d="M 45 20 L 42 52 L 48 54 L 45 84 M 26 48 L 42 48 M 48 52 L 65 52" fill="none" stroke="#FFFDF5" stroke-width="3" />
-      
-      <!-- Éclats qui s'échappent -->
-      <polygon points="80,20 90,15 85,30" fill="#120B14" stroke="#FFFDF5" stroke-width="2"/>
-      <polygon points="15,60 20,75 8,70" fill="#120B14" stroke="#FFFDF5" stroke-width="2"/>
-    </svg>`;
-  }
-  
-  // LOGO PREMIUM (Le B classique)
-  return `<svg viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true" style="filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));">
-    <rect width="100" height="100" rx="26" fill="var(--lime)"/>
-    <path d="M 0 26 Q 0 0 26 0 L 74 0 Q 40 15 0 50 Z" fill="rgba(255,255,255,0.25)"/>
-    <text x="50" y="74" font-family="'Outfit', sans-serif" font-weight="900" font-size="72" text-anchor="middle" fill="var(--lime-ink)">B</text>
-    <text x="50" y="74" font-family="'Outfit', sans-serif" font-weight="900" font-size="72" text-anchor="middle" fill="url(#gradB)" opacity="0.3">B</text>
-    <defs>
-      <linearGradient id="gradB" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#FFFFFF" />
-        <stop offset="100%" stop-color="#000000" stop-opacity="0" />
-      </linearGradient>
-    </defs>
+  return `<svg viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true" style="filter: drop-shadow(6px 6px 0px var(--violet)); transform: rotate(-3deg);">
+    <rect width="100" height="100" rx="12" fill="var(--lime)" stroke="#120B14" stroke-width="4"/>
+    <g fill="#120B14">
+      <path d="M 26 20 L 45 20 L 42 48 L 26 48 Z" />
+      <path d="M 48 20 L 62 20 C 75 20 80 30 80 38 C 80 46 75 52 65 52 L 48 52 Z" />
+      <path d="M 28 54 L 42 54 L 45 84 L 28 84 Z" />
+      <path d="M 48 54 L 62 54 C 78 54 83 62 83 70 C 83 82 75 86 62 86 L 48 86 Z" />
+    </g>
+    <path d="M 45 20 L 42 52 L 48 54 L 45 84 M 26 48 L 42 48 M 48 52 L 65 52" fill="none" stroke="#FFFDF5" stroke-width="3" />
+    <polygon points="80,20 90,15 85,30" fill="#120B14" stroke="#FFFDF5" stroke-width="2"/>
+    <polygon points="15,60 20,75 8,70" fill="#120B14" stroke="#FFFDF5" stroke-width="2"/>
   </svg>`;
 }
 
@@ -2203,24 +2178,26 @@ var BAZ_EMOJI = {
 var BAZ_IMG_AVAILABLE = false; /* passe à true quand tu as baz-happy.png etc. */
 function bazAvatarHtml(mood){
   mood = mood || 'default';
-  var isStreet = document.documentElement.getAttribute('data-theme') === 'streetwear';
-  
   if(BAZ_IMG_AVAILABLE){
     return '<img src="baz-'+mood+'.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">';
   }
-  
   var emoji = BAZ_EMOJI[mood] || BAZ_EMOJI.default;
-  
-  if(isStreet) {
-    // Mode Sticker : Bordure blanche, fond jaune, incliné
-    return '<div style="width:100%;height:100%;background:var(--lime);border:4px solid var(--fg);border-radius:12px;display:grid;place-items:center;transform:rotate(-8deg);box-shadow:4px 4px 0px var(--violet);">'+
-           '<span style="font-size:32px;line-height:1;filter:drop-shadow(2px 2px 0px rgba(0,0,0,0.5))">'+emoji+'</span></div>';
-  }
-  
-  // Mode normal (Premium / Nébuleuse)
-  return '<span style="font-size:32px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">'+emoji+'</span>';
+  return '<div style="width:100%;height:100%;background:var(--lime);border:4px solid var(--fg);border-radius:12px;display:grid;place-items:center;transform:rotate(-8deg);box-shadow:4px 4px 0px var(--violet);">'+
+         '<span style="font-size:32px;line-height:1;filter:drop-shadow(2px 2px 0px rgba(0,0,0,0.5))">'+emoji+'</span></div>';
 }
-/* === FIN PATCH 2 === */
+
+function bazBubble(text, mood){
+  return '<div class="baz-container" style="background:#FFFDF5; border:4px solid var(--lime-ink); border-radius:15px 20px 5px 20px; box-shadow:6px 6px 0px var(--violet); transform:rotate(1deg);">'+
+    '<div class="baz-avatar">'+bazAvatarHtml(mood)+'</div>'+
+    '<div class="baz-speech">'+
+      '<div class="baz-name" style="color:var(--violet); font-family:Impact, sans-serif; font-size:16px; letter-spacing:1px; font-style:italic">BAZ</div>'+
+      '<div class="baz-text" style="color:#120B14; font-weight:800; font-family:\'Trebuchet MS\', sans-serif">'+text+'</div>'+
+    '</div>'+
+    '<div style="position:absolute; bottom:-20px; left:20px; width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:20px solid var(--lime-ink);"></div>'+
+    '<div style="position:absolute; bottom:-14px; left:23px; width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-top:14px solid #FFFDF5; z-index:1;"></div>'+
+  '</div>';
+}
+
 function bottomNav(){
 if(S.screen==='home'){var items=document.querySelectorAll('.game');items.forEach(function(el,i){el.classList.add('stagger-item');el.style.animationDelay=(i*0.15)+'s';});}
   // On ne l'affiche pas pendant une partie en ligne
@@ -2522,9 +2499,6 @@ default:h=vHome()}
   if(S.screen==='result' || S.screen==='mend') {
     setTimeout(animateNumbers, 100);
   }
-
-  // Ajout du bouton de thème
-  addThemePicker();
 
   if(typeof dPost==='function')dPost();
   setTimeout(function(){var el=document.querySelector('.now .big');if(el&&S.screen==='online'&&OL.game==='dd'&&OL.s&&OL.s.q){var t=el.innerHTML;typeWriter(el, t.replace(/<[^>]+>/g,''), 30);}}, 100);
@@ -2901,25 +2875,61 @@ function checkHost(){
     toast('Tu es le nouvel hôte de la partie !');
   }
 }
-function olSubscribe(){var c=OL.code;
-  function onErr(){OL.err='Connexion perdue. Recharge la page pour reprendre.';olRender()}
+function olSubscribe(){
+  var c=OL.code;
+  
+  function onErr(){
+    OL.err='Connexion perdue. Recharge la page pour reprendre.';
+    olRender();
+  }
+  
+  // 1. Écoute de l'état du salon
   OL.unsubs.push(Rr(c).onSnapshot(function(snap){
     if(!OL.on)return;
     if(!snap.exists){if(!OL.host)olGone('Le salon a été fermé.');return}
-    var d=snap.data();OL.room=d;OL.game=d.game;OL.status=d.status;
-    if(!OL.host||!OL.hinit){OL.cfg=jp(d.cfg,OL.cfg)||{};OL.scores=jp(d.scores,{})||{};OL.wins=jp(d.wins,[0,0])||[0,0];OL.hinit=true}
-    if(d.status==='closed'&&!OL.host){olGone('L\'hôte a fermé le salon.');return}
-    olOnState(jp(d.s,null));olRender()},onErr));
+    var d=snap.data();
+    OL.room=d; OL.game=d.game; OL.status=d.status;
+    if(!OL.host||!OL.hinit){
+      OL.cfg=jp(d.cfg,OL.cfg)||{};
+      OL.scores=jp(d.scores,{})||{};
+      OL.wins=jp(d.wins,[0,0])||[0,0];
+      OL.hinit=true;
+    }
+    if(d.status==='closed'&&!OL.host){
+      olGone('L\'hôte a fermé le salon.');
+      return;
+    }
+    olOnState(jp(d.s,null));
+    olRender();
+  },onErr));
+
+  // 2. Écoute de la liste des joueurs (avec filtre anti-fantômes)
   OL.unsubs.push(Rp(c).onSnapshot(function(q){
     if(!OL.on)return;
-    var m={},l=[];q.docs.forEach(function(dc){var v=dc.data();v.id=dc.id;m[dc.id]=v;l.push(v)});
+    var m={}, l=[];
+    q.docs.forEach(function(dc){
+      var v=dc.data(); v.id=dc.id; m[dc.id]=v; l.push(v);
+    });
+    
+    // 🧹 NETTOYAGE DES FANTÔMES (Action 2)
+    var now = Date.now();
+    l = l.filter(function(p){
+      if (p.id === (OL.room && OL.room.host)) return true; // On garde toujours l'hôte
+      if (p.id === PID) return true; // On se garde toujours soi-même
+      if (now - (p.ts || 0) > 30000) { // Si inactif depuis 30 sec
+        Pd(c, p.id).delete().catch(function(){});
+        return false;
+      }
+      return true;
+    });
+
     l.sort(function(a,b){return (a.ts||0)-(b.ts||0)||(a.id<b.id?-1:1)});
-    OL.players=m;OL.plist=l;
+    OL.players=m; OL.plist=l;
+    
     // Vérification des réactions
     var myP = m[PID];
-    if(!myP || !myP.react) { /* rien */ }
-    else {
-      m[PID].react = null; // On efface pour ne pas le relancer
+    if(myP && myP.react) {
+      m[PID].react = null;
     }
     l.forEach(function(p){
       if(p.react && p.react.t > (OL.lastReact || 0)){
@@ -2928,23 +2938,61 @@ function olSubscribe(){var c=OL.code;
         if(p.id!==PID) Pd(c,p.id).update({react:null}).catch(function(){});
       }
     });
-    if(OL.joined&&!m[PID]){olGone('Tu as été retiré du salon.');return}
+
+    if(OL.joined&&!m[PID]){
+      olGone('Tu as été retiré du salon.');
+      return;
+    }
     if(m[PID])OL.joined=true;
-    if(OL.host){olFixCfg();hostProcess()}
-    olRender()},onErr));
-  if(!OL.display)OL.unsubs.push(Sd(c,PID).onSnapshot(function(snap){if(!OL.on)return;OL.sec=snap.exists?snap.data():null;if(typeof dFb==='function')dFb();olRender()},onErr))}
+    if(OL.host){
+      olFixCfg();
+      hostProcess();
+    }
+    olRender();
+  },onErr));
+
+  // 3. PING DE SÉCURITÉ (Action 1 - Keep Alive)
+  if(OL.keepAlive) clearInterval(OL.keepAlive);
+  OL.keepAlive = setInterval(function() {
+    if (OL.on && PID) {
+      // On met à jour le timestamp pour dire "je suis là"
+      Pd(OL.code, PID).update({ ts: Date.now() }).catch(function(){});
+    }
+  }, 10000);
+
+  // 4. Écoute des secrets (si on n'est pas en mode écran commun)
+  if(!OL.display){
+    OL.unsubs.push(Sd(c,PID).onSnapshot(function(snap){
+      if(!OL.on)return;
+      OL.sec=snap.exists?snap.data():null;
+      if(typeof dFb==='function')dFb();
+      olRender();
+    },onErr));
+  }
+}
 function olGone(msg){olTeardown();OL.on=false;olStore({code:''});OH.err=msg||'';S.screen='ohome';S._fresh=true;S.sheet=null;render()}
 async function olLeave(){
-  // ON FORCE LA SORTIE IMMÉDIATE
-  S.screen='home'; S._fresh=true; render();
+  // 1. On ferme le menu et on force le retour à l'accueil IMMÉDIATEMENT
+  S.sheet = null; 
+  S.screen = 'home'; 
+  S._fresh = true; 
+  OL.busy = false;
   
-  var c=OL.code, host=OL.host;
+  // 2. On sauvegarde les infos du salon avant de déconnecter
+  var c = OL.code;
+  var host = OL.host;
+  
+  // 3. Déconnexion locale
   olTeardown();
-  OL.on=false; OL.busy=false;
+  OL.on = false;
   olStore({code:''});
   
-  if(!c) return;
+  // 4. Affichage de l'accueil
+  render();
+  window.scrollTo(0,0);
   
+  // 5. Nettoyage sur le serveur (en arrière-plan)
+  if(!c) return;
   try{
     if(host){
       await Rr(c).update({status:'closed',v:Date.now()});
@@ -5164,36 +5212,9 @@ function bazInvasion() {
   style.innerHTML = css;
   document.head.appendChild(style);
 })();
-function cycleTheme() {
-  var themes = ['dark', 'cyberpunk', 'sunset', 'forest', 'streetwear'];
-  var current = document.documentElement.getAttribute('data-theme') || 'dark';
-  var idx = themes.indexOf(current);
-  var next = themes[(idx + 1) % themes.length];
-  
-  if (next === 'dark') {
-    document.documentElement.removeAttribute('data-theme');
-  } else {
-    document.documentElement.setAttribute('data-theme', next);
-  }
-  
-  try { localStorage.setItem('bazar-theme', next); } catch(e) {}
-  if (typeof sfxPop === 'function') sfxPop();
-  if (typeof sfxSwooshPage === 'function') sfxSwooshPage();
-  
-  // On force le rendu pour appliquer les nouvelles couleurs
-  if(typeof render === 'function') render();
-}
 
 // Ajouter le bouton flottant à l'écran
-function addThemePicker() {
-  if (document.querySelector('.theme-picker-btn')) return;
-  var btn = document.createElement('button');
-  btn.className = 'theme-picker-btn';
-  btn.innerHTML = '🎨';
-  btn.title = 'Changer d\'ambiance';
-  btn.onclick = cycleTheme;
-  document.body.appendChild(btn);
-}
+
 function av(p,small){
   var sz=small?'36':'44';
   var st='width:'+sz+'px;height:'+sz+'px;min-width:'+sz+'px;border-radius:50%;display:grid;place-items:center;font:700 '+(small?'15':'18')+'px var(--display);';
@@ -5212,37 +5233,20 @@ function av(p,small){
 
 /* === MASCOTTE BAZ (MODE BD / STREETWEAR) === */
 function bazBubble(text, mood){
-  var isStreet = document.documentElement.getAttribute('data-theme') === 'streetwear';
-  
-  if(isStreet) {
-    var emoji = (typeof BAZ_EMOJI !== 'undefined' && BAZ_EMOJI[mood]) ? BAZ_EMOJI[mood] : '😎';
-    return '<div class="baz-container" style="background:#FFFDF5; border:4px solid var(--lime-ink); border-radius:15px 20px 5px 20px; box-shadow:6px 6px 0px var(--violet); transform:rotate(1deg); position:relative; margin-bottom:25px;">'+
-      '<div class="baz-avatar" style="background:var(--lime); border:3px solid var(--fg); border-radius:12px; transform:rotate(-8deg); box-shadow:3px 3px 0px var(--violet); display:grid; place-items:center;">'+
-        '<span style="font-size:28px">'+emoji+'</span>'+
-      '</div>'+
-      '<div class="baz-speech">'+
-        '<div class="baz-name" style="color:var(--violet); font-family:Impact, sans-serif; font-size:18px; letter-spacing:1px; font-style:italic">BAZ</div>'+
-        '<div class="baz-text" style="color:#120B14; font-weight:800; font-family:\'Trebuchet MS\', sans-serif; font-size:15px">'+text+'</div>'+
-      '</div>'+
-      '<div style="position:absolute; bottom:-16px; left:25px; width:0; height:0; border-left:12px solid transparent; border-right:12px solid transparent; border-top:16px solid var(--lime-ink);"></div>'+
-      '<div style="position:absolute; bottom:-9px; left:29px; width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:10px solid #FFFDF5; z-index:1;"></div>'+
-    '</div>';
-  }
-  
-  // Mode normal (Premium)
-  var emojiNormal = (typeof BAZ_EMOJI !== 'undefined' && BAZ_EMOJI[mood]) ? BAZ_EMOJI[mood] : '👾';
-  return '<div class="baz-container">'+
-    '<div class="baz-avatar"><span style="font-size:32px">'+emojiNormal+'</span></div>'+
+  return '<div class="baz-container" style="background:#FFFDF5; border:4px solid var(--lime-ink); border-radius:15px 20px 5px 20px; box-shadow:6px 6px 0px var(--violet); transform:rotate(1deg);">'+
+    '<div class="baz-avatar">'+bazAvatarHtml(mood)+'</div>'+
     '<div class="baz-speech">'+
-      '<div class="baz-name">BAZ</div>'+
-      '<div class="baz-text">'+text+'</div>'+
+      '<div class="baz-name" style="color:var(--violet); font-family:Impact, sans-serif; font-size:16px; letter-spacing:1px; font-style:italic">BAZ</div>'+
+      '<div class="baz-text" style="color:#120B14; font-weight:800; font-family:\'Trebuchet MS\', sans-serif">'+text+'</div>'+
     '</div>'+
+    '<div style="position:absolute; bottom:-20px; left:20px; width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:20px solid var(--lime-ink);"></div>'+
+    '<div style="position:absolute; bottom:-14px; left:23px; width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-top:14px solid #FFFDF5; z-index:1;"></div>'+
   '</div>';
 }
+
 /* === CSS STREETWEAR : MAXIMAL IMPACT === */
 (function(){
   var css = `
-  /* L'effet de "Slam" avec un rebond et une ombre dure */
   @keyframes slamHard {
     0% { transform: scale(3) rotate(10deg); opacity: 0; filter: blur(10px); }
     40% { transform: scale(0.9) rotate(-5deg); opacity: 1; filter: blur(0); box-shadow: 15px 15px 0px var(--lime); }
@@ -5253,7 +5257,6 @@ function bazBubble(text, mood){
     animation: slamHard 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 
-  /* Le bruit/éclat d'encre pour le changement de page */
   .ink-splat {
     position: fixed; inset: 0; z-index: 9999; pointer-events: none;
     background: var(--violet);
@@ -5266,7 +5269,6 @@ function bazBubble(text, mood){
     100% { clip-path: circle(100% at 50% 50%); opacity: 0; }
   }
 
-  /* Les bordures des cartes en mode streetwear sont plus agressives */
   [data-theme="streetwear"] .card {
     border: 5px solid var(--fg) !important;
     border-radius: 2px 25px 5px 20px !important;
@@ -5277,7 +5279,59 @@ function bazBubble(text, mood){
   style.innerHTML = css;
   document.head.appendChild(style);
 })();
+
+/* === CSS STREETWEAR UNIQUE (Nettoyé) === */
+(function(){
+  var style = document.createElement('style');
+  style.innerHTML = `
+  :root {
+    --bg: #120B14;
+    --surface: #1E1222; 
+    --surface-2: #2D1832; 
+    --line: #5A254B; 
+    --fg: #FFFDF5; 
+    --muted: #D1B5C5;
+    --lime: #FFDE00;
+    --lime-ink: #120B14; 
+    --violet: #FF2A2A;
+    --violet-soft: #FF6666; 
+    --display: Impact, 'Arial Black', sans-serif;
+    color-scheme: dark;
+  }
+  
+  body { background: var(--bg) !important; }
+  
+  .btn, .game {
+    border-radius: 4px 12px 6px 15px !important;
+    transform: rotate(-1.5deg);
+    border: 3px solid var(--fg) !important; 
+    box-shadow: 6px 6px 0px rgba(0,0,0,0.6) !important;
+  }
+  .btn:active, .game:active {
+    transform: rotate(-1.5deg) translate(4px, 4px) !important;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.6) !important;
+  }
+  
+  .card {
+    background: var(--surface) !important;
+    border: 4px solid var(--fg) !important;
+    border-radius: 2px 20px 4px 15px !important;
+    box-shadow: 8px 8px 0px var(--violet) !important;
+    transform: rotate(0.5deg);
+  }
+  
+  h1 {
+    text-transform: uppercase;
+    font-style: italic;
+    text-shadow: 3px 3px 0px var(--violet), -3px -3px 0px var(--lime);
+    letter-spacing: 1px;
+  }
+  `;
+  document.head.appendChild(style);
+})();
+
 S._fresh=true;olBoot();render();
+
 // Animation d'intro
 setTimeout(function(){
   var splash = document.getElementById('splash-screen');
@@ -5286,7 +5340,10 @@ setTimeout(function(){
     setTimeout(function(){ splash.remove(); }, 800); // On le supprime du DOM après l'animation
   }
 }, 2500);
+
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
+
 })();
 </script>
-</body></html>
+</body>
+</html>
