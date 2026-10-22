@@ -2893,7 +2893,6 @@ function olSubscribe(){
     olRender();
   }
   
-  // 1. Écoute de l'état du salon
   OL.unsubs.push(Rr(c).onSnapshot(function(snap){
     if(!OL.on)return;
     if(!snap.exists){if(!OL.host)olGone('Le salon a été fermé.');return}
@@ -2913,7 +2912,6 @@ function olSubscribe(){
     olRender();
   },onErr));
 
-  // 2. Écoute de la liste des joueurs (avec filtre anti-fantômes)
   OL.unsubs.push(Rp(c).onSnapshot(function(q){
     if(!OL.on)return;
     var m={}, l=[];
@@ -2921,34 +2919,11 @@ function olSubscribe(){
       var v=dc.data(); v.id=dc.id; m[dc.id]=v; l.push(v);
     });
     
-    // 🧹 NETTOYAGE DES FANTÔMES (Action 2)
-    var now = Date.now();
-    l = l.filter(function(p){
-      if (p.id === (OL.room && OL.room.host)) return true; // On garde toujours l'hôte
-      if (p.id === PID) return true; // On se garde toujours soi-même
-      if (now - (p.ts || 0) > 30000) { // Si inactif depuis 30 sec
-        Pd(c, p.id).delete().catch(function(){});
-        return false;
-      }
-      return true;
-    });
-
+    // On garde juste le tri, on a supprimé le filtre qui buggait
     l.sort(function(a,b){return (a.ts||0)-(b.ts||0)||(a.id<b.id?-1:1)});
+    
     OL.players=m; OL.plist=l;
     
-    // Vérification des réactions
-    var myP = m[PID];
-    if(myP && myP.react) {
-      m[PID].react = null;
-    }
-    l.forEach(function(p){
-      if(p.react && p.react.t > (OL.lastReact || 0)){
-        OL.lastReact = p.react.t;
-        broadcastReaction(p.react.e);
-        if(p.id!==PID) Pd(c,p.id).update({react:null}).catch(function(){});
-      }
-    });
-
     if(OL.joined&&!m[PID]){
       olGone('Tu as été retiré du salon.');
       return;
@@ -2961,16 +2936,14 @@ function olSubscribe(){
     olRender();
   },onErr));
 
-  // 3. PING DE SÉCURITÉ (Action 1 - Keep Alive)
+  // PING DE SÉCURITÉ
   if(OL.keepAlive) clearInterval(OL.keepAlive);
   OL.keepAlive = setInterval(function() {
     if (OL.on && PID) {
-      // On met à jour le timestamp pour dire "je suis là"
       Pd(OL.code, PID).update({ ts: Date.now() }).catch(function(){});
     }
   }, 10000);
 
-  // 4. Écoute des secrets (si on n'est pas en mode écran commun)
   if(!OL.display){
     OL.unsubs.push(Sd(c,PID).onSnapshot(function(snap){
       if(!OL.on)return;
