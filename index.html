@@ -2867,10 +2867,8 @@ async function olOpen(code,opts){
   
   S.screen='online'; S._fresh=true; S.sheet=null; render();
   
-  // On lance la connexion normale (qui gère les mises à jour automatiquement)
   olSubscribe();
 
-  // On vérifie si on est l'hôte (sans bloquer l'écran)
   try{
     var sn = await Rr(code).get();
     if(sn.exists) {
@@ -2903,7 +2901,6 @@ function checkHost(){
 }
 function olSubscribe(){
   var c=OL.code;
-  
   function onErr(){
     OL.err='Connexion perdue. Recharge la page pour reprendre.';
     olRender();
@@ -2935,9 +2932,7 @@ function olSubscribe(){
       var v=dc.data(); v.id=dc.id; m[dc.id]=v; l.push(v);
     });
     
-    // On garde juste le tri, on a supprimé le filtre qui buggait
     l.sort(function(a,b){return (a.ts||0)-(b.ts||0)||(a.id<b.id?-1:1)});
-    
     OL.players=m; OL.plist=l;
     
     if(OL.joined&&!m[PID]){
@@ -2951,14 +2946,6 @@ function olSubscribe(){
     }
     olRender();
   },onErr));
-
-  // PING DE SÉCURITÉ
-  if(OL.keepAlive) clearInterval(OL.keepAlive);
-  OL.keepAlive = setInterval(function() {
-    if (OL.on && PID) {
-      Pd(OL.code, PID).update({ ts: Date.now() }).catch(function(){});
-    }
-  }, 10000);
 
   if(!OL.display){
     OL.unsubs.push(Sd(c,PID).onSnapshot(function(snap){
@@ -3025,6 +3012,12 @@ function olRender(){
   OL.rq=requestAnimationFrame(function(){
     OL.rq=0;
     if(!OL.on||S.screen!=='online')return;
+    
+    // On arrête le minuteur de secours si par hasard il tourne encore
+    if (OL.room && OL.fallbackTimer) {
+      clearInterval(OL.fallbackTimer);
+      OL.fallbackTimer = null;
+    }
     
     var ae=document.activeElement;
     if(OL.drawing||document.querySelector('.hold.show')||(ae&&ae.tagName==='INPUT'&&app.contains(ae)&&!ae.readOnly)){
