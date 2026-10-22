@@ -2809,33 +2809,65 @@ async function olCreate(){
   }
 }
 async function olJoin(){
-  var nm=OH.name.trim().slice(0,16),code=OH.code.trim();
+  var nm=OH.name.trim().slice(0,16), code=OH.code.trim();
   if(!nm){OH.err='Choisis un prénom.';return render()}
   if(!/^\d{4}$/.test(code)){OH.err='Le code a 4 chiffres.';return render()}
   
   if(OH.busy) return;
-  OH.busy=true;OH.err='';render();
+  OH.busy=true; OH.err=''; render();
   
   try{
-    await olInit();var b=olBlock();if(b)throw b;
-    var sn=await Rr(code).get();if(!sn.exists)throw 'Partie introuvable. Vérifie le code.';
-    var room=sn.data();if(room.status==='closed')throw 'Cette partie est terminée.';
-    var q=await Rp(code).get(),mine=null,names=[],cnt=[0,0];
-    q.docs.forEach(function(d){var v=d.data();if(d.id===PID)mine=v;else names.push(norm(v.name||''));cnt[v.team===1?1:0]++});
+    await olInit();
+    var b=olBlock(); if(b) throw b;
+    
+    // 1. On vérifie que le salon existe
+    var sn = await Rr(code).get();
+    if(!sn.exists) throw 'Partie introuvable. Vérifie le code.';
+    
+    var room = sn.data();
+    if(room.status === 'closed') throw 'Cette partie est terminée.';
+    
+    // 2. On récupère la liste actuelle des joueurs
+    var q = await Rp(code).get();
+    var mine = null, names = [];
+    q.docs.forEach(function(d){
+      var v = d.data();
+      if(d.id === PID) mine = v;
+      else names.push(norm(v.name || ''));
+    });
+    
+    // 3. Si on est un nouveau joueur, on s'ajoute (sans bloquer si on est déjà là)
     if(!mine){
-      if(room.status==='play')throw 'La partie a déjà commencé.';
-      if(q.docs.length>=(room.game==='d'?10:12))throw 'Le salon est complet ('+(room.game==='d'?10:12)+' joueurs maximum).';
-      if(names.indexOf(norm(nm))>=0)throw 'Ce prénom est déjà pris dans ce salon.';
-      await Pd(code,PID).set({name:nm,ci:ciFor(PID),team:cnt[1]<cnt[0]?1:0,spy:false,ts:Date.now(),act:'',avatar:getMyAvatar()});
+      if(room.status === 'play') throw 'La partie a déjà commencé.';
+      if(q.docs.length >= (room.game === 'd' ? 10 : 12)) throw 'Le salon est complet.';
+      if(names.indexOf(norm(nm)) >= 0) throw 'Ce prénom est déjà pris.';
+      
+      // On ajoute le joueur dans la base
+      await Pd(code, PID).set({
+        name: nm, 
+        ci: ciFor(PID), 
+        team: 0, 
+        spy: false, 
+        ts: Date.now(), 
+        act: '', 
+        avatar: getMyAvatar()
+      });
     }
-    olStore({name:nm,code:code});OH.busy=false;
     
-    // On s'assure que le jeu du salon est bien pris en compte
-    OH.game = room.game; 
+    // 4. ON LANCE LA CONNEXION (L'écran va s'afficher tout de suite)
+    olStore({name:nm, code:code});
+    OH.busy = false;
     
+    // On garde le jeu en mémoire
+    OH.game = room.game;
+    
+    // On lance l'écran (qui va utiliser le Ping de secours pour afficher les autres joueurs)
     await olOpen(code);
-  }catch(e){
-    OH.busy=false;OH.err=errText(e);render();
+    
+  } catch(e) {
+    OH.busy = false;
+    OH.err = errText(e);
+    render();
   }
 }
 function olTeardown(){clearTimeout(OL.tm);if(OL&&OL.unsubs)OL.unsubs.forEach(function(u){try{u()}catch(e){}});if(OL)OL.unsubs=[]}
@@ -3029,13 +3061,32 @@ function olOnState(s){var p=OL.s,first=!OL.init;OL.init=true;OL.s=s;
   if(s.ph==='end'&&(!p||p.ph!=='end'))OL.fxEnd=true;
   if(s.g==='u'&&s.mw&&s.mw.ok!==null&&(!p||!p.mw||p.mw.ok===null))OL.fxMw=true;
   if(s.g==='m'&&s.lt&&(!p||p.lt!==s.lt)){OL.fxCard={i:s.last,k:s.lg};OL.sel=null}}
-function olRender(){if(!OL.on||OL.rq)return;
-  OL.rq=requestAnimationFrame(function(){OL.rq=0;if(!OL.on||S.screen!=='online')return;
+function olRender(){
+  if(!OL.on||OL.rq)return;
+  
+  OL.rq=requestAnimationFrame(function(){
+    OL.rq=0;
+    if(!OL.on||S.screen!=='online')return;
+    
+    // Si on est connecté, on arrête le minuteur de secours (fini les clignotements)
+    if (OL.room && OL.fallbackTimer) {
+      clearInterval(OL.fallbackTimer);
+      OL.fallbackTimer = null;
+    }
+    
     var ae=document.activeElement;
-    if(OL.drawing||document.querySelector('.hold.show')||(ae&&ae.tagName==='INPUT'&&app.contains(ae)&&!ae.readOnly)){OL.deferred=true;return}
+    if(OL.drawing||document.querySelector('.hold.show')||(ae&&ae.tagName==='INPUT'&&app.contains(ae)&&!ae.readOnly)){
+      OL.deferred=true;
+      return;
+    }
+    
     var s=OL.s,sig=OL.status+'|'+(s?[s.ph,s.round,s.speak,s.turn,s.vk,s.cur,s.dstep].join('|'):'');
     if(sig!==OL.sig){OL.sig=sig;S._fresh=true}
-    render();olFx()})}
+    
+    render();
+    olFx();
+  });
+}
 document.addEventListener('pointerup',function(){if(OL.on&&OL.deferred){OL.deferred=false;setTimeout(olRender,80)}});
 app.addEventListener('focusout',function(){if(OL.on&&OL.deferred){OL.deferred=false;setTimeout(olRender,150)}});
 function olFx(){var s=OL.s;
