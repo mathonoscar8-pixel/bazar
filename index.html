@@ -2764,18 +2764,18 @@ async function olCreate(){
     
     await olWipe(code);
     
-    // On prépare les réglages par défaut selon le jeu choisi
+    // Initialisation des règles selon le jeu
     var cfg = {};
-    if(OH.game==='m') cfg={size:S.my.size,names:[S.my.names[0],S.my.names[1]]};
-    else if(OH.game==='l') cfg={np:6,rounds:2,secs:90,cats:LCATS.slice()};
-    else if(OH.game==='d') cfg={rounds:2,per:1,tdraw:60,tfake:40,tvote:25,cats:DCATS.slice(),custom:'',clear:false,dbl:true,hearts:true,hint:true,who:true,display:true};
-    else if(OH.game==='s') cfg={size:S.my.size,names:[S.my.names[0],S.my.names[1]]};
-    else if(OH.game==='dd') cfg={};
-    else if(OH.game==='c') cfg={};
-    else if(OH.game==='f') cfg={};
-    else cfg={uc:1,mw:0,cats:CATS.slice(),reveal:true}; // Undercover par défaut
+    if(OH.game==='m') cfg = {size:S.my.size,names:[S.my.names[0],S.my.names[1]]};
+    else if(OH.game==='l') cfg = {np:6,rounds:2,secs:90,cats:LCATS.slice()};
+    else if(OH.game==='d') cfg = {rounds:2,per:1,tdraw:60,tfake:40,tvote:25,cats:DCATS.slice(),custom:'',clear:false,dbl:true,hearts:true,hint:true,who:true,display:true};
+    else if(OH.game==='s') cfg = {};
+    else if(OH.game==='dd') cfg = {};
+    else if(OH.game==='c') cfg = {}; // Qui a écrit ça
+    else if(OH.game==='f') cfg = {}; // Faux Avis
+    else cfg = {uc:1,mw:0,cats:CATS.slice(),reveal:true}; // Undercover
 
-    // Création du salon dans la base de données
+    // Création du salon
     await Rr(code).set({
       code: code, 
       host: PID, 
@@ -2789,7 +2789,7 @@ async function olCreate(){
       v: Date.now()
     });
     
-    // Ajout de l'hôte dans le salon
+    // Ajout de l'hôte
     await Pd(code, PID).set({
       name: nm, 
       ci: ciFor(PID), 
@@ -3064,6 +3064,7 @@ function olPushCfg(){if(!OL.host)return;OL.cpend++;
   OL.cq=OL.cq.then(function(){return Rr(OL.code).update({cfg:JSON.stringify(OL.cfg),v:Date.now()})}).catch(function(){}).then(function(){OL.cpend=Math.max(0,OL.cpend-1)})}
 function olIssueU(){var n=OL.plist.length,c=OL.cfg;
   if(n<3)return 'Il faut au moins 3 joueurs.';
+  if(OL.game === 'c' || OL.game === 'f' || OL.game === 's' || OL.game === 'dd') return ''; // Ces jeux n'ont pas besoin de catégories
   if(!(c.cats||[]).length)return 'Choisis au moins une catégorie de mots.';
   if(!cfgOk(n,c))return 'Les rôles choisis ne conviennent pas pour '+n+' joueurs.';
   return ''}
@@ -4122,27 +4123,16 @@ function lAct(a,d){var c=OL.cfg||{},s=OL.s;
 /* ---------- BAZAR Dessins : dessine, bluffe, vote ---------- */
 var DCATS=['Absurde','Animaux','Quotidien','Fantastique','Osé'];
 var DP=[
-['Un nuage qui fait ses valises','Absurde'],['Un grille-pain en pleine crise de confiance','Absurde'],['Un escalier qui ne mène nulle part et en est fier','Absurde'],
-['Un fromage qui passe son permis de conduire','Absurde'],['Un parapluie triste un jour de soleil','Absurde'],['Un spaghetti qui s\'échappe de prison','Absurde'],
-['Un lundi matin personnifié','Absurde'],['Une chaussette qui cherche son âme sœur','Absurde'],['Un trombone qui passe un entretien d\'embauche','Absurde'],
-['Une horloge qui arrive en retard','Absurde'],['Un ballon de baudruche qui a peur des épingles','Absurde'],['Un canapé qui court un marathon','Absurde'],
-['Une lampe qui raconte une histoire à dormir debout','Absurde'],['Un croissant en vacances à la montagne','Absurde'],
-['Un hérisson qui essaie de faire un câlin','Animaux'],['Une girafe coincée dans un ascenseur','Animaux'],['Un poulpe qui fait ses lacets','Animaux'],
-['Un escargot qui arrive premier à la course','Animaux'],['Un panda qui déménage','Animaux'],['Une vache qui fait du surf','Animaux'],
-['Un flamant rose à son premier cours de yoga','Animaux'],['Un hamster qui dirige une entreprise','Animaux'],['Un pingouin chez le coiffeur','Animaux'],
-['Un crocodile qui se brosse les dents','Animaux'],['Une tortue très pressée','Animaux'],['Un chat qui pose pour son portrait officiel','Animaux'],
-['Un réveil qui sonne un dimanche','Quotidien'],['Un embouteillage de caddies','Quotidien'],['Une soirée pyjama qui tourne mal','Quotidien'],
-['Un parent qui monte un meuble sans la notice','Quotidien'],['Une file d\'attente à la boulangerie','Quotidien'],['Un pique-nique sous la pluie','Quotidien'],
-['La dernière part de pizza','Quotidien'],['Un wifi qui rend l\'âme','Quotidien'],['Un déménagement avec beaucoup trop de cartons','Quotidien'],
-['Une vaisselle qui s\'empile','Quotidien'],['Un anniversaire surprise raté','Quotidien'],['Un ascenseur en panne avec un voisin bavard','Quotidien'],
-['Un dragon qui a mal aux dents','Fantastique'],['Une sorcière qui rate sa potion de beauté','Fantastique'],['Un fantôme timide','Fantastique'],
-['Un vampire au soleil sans crème','Fantastique'],['Un robot qui apprend à danser','Fantastique'],['Une licorne au supermarché','Fantastique'],
-['Un extraterrestre perdu en forêt','Fantastique'],['Une fée au chômage','Fantastique'],['Un monstre sous le lit qui a peur du noir','Fantastique'],
-['Un chevalier qui n\'arrive pas à enlever son armure','Fantastique'],
-['Un premier rendez-vous qui tourne au fiasco','Osé'],['Un maillot de bain qui rétrécit au lavage','Osé'],['Un message envoyé à la mauvaise personne','Osé'],
-['Une soirée où tout le monde a trop bu','Osé'],['Un slow avec quelqu\'un de beaucoup trop grand','Osé'],['Un voisin qui voit trop de choses par la fenêtre','Osé'],
-['Une chemise qui se déboutonne au pire moment','Osé'],['Un cadeau coquin offert à la mauvaise personne','Osé'],['Un bisou volé sous le gui','Osé'],
-['Un caleçon porte-bonheur','Osé'],['Un lendemain de soirée difficile','Osé'],['Une photo de vacances qu\'on regrette d\'avoir postée','Osé']
+["Un chat qui joue au foot","Animaux"],["Un chien qui fait du vélo","Animaux"],["Un poisson qui fume","Animaux"],
+["Un oiseau avec un chapeau","Animaux"],["Une vache sur un trampoline","Animaux"],["Un ours qui mange une glace","Animaux"],
+["Un soleil avec des lunettes de soleil","Quotidien"],["Un nuage qui pleut sur une maison","Quotidien"],["Une pizza qui marche","Quotidien"],
+["Un téléphone qui se noie","Quotidien"],["Une voiture volante","Quotidien"],["Un sapin de Noël en été","Quotidien"],
+["Une sorcière sur un balai","Fantastique"],["Un dragon qui crache des fleurs","Fantastique"],["Un fantôme dans le métro","Fantastique"],
+["Un extraterrestre qui fait du shopping","Fantastique"],["Un chevalier avec un parapluie","Fantastique"],["Une sirène qui lit un livre","Fantastique"],
+["Un astronaute qui mange une pizza","Absurde"],["Un robot qui arrose des fleurs","Absurde"],["Un requin qui se brosse les dents","Absurde"],
+["Une girafe dans un ascenseur","Absurde"],["Un escargot à la course","Absurde"],["Un lapin qui fait de la magie","Absurde"],
+["Deux personnes qui se disputent une pizza","Osé"],["Un couple qui fait un câlin","Osé"],["Un coup de foudre à la plage","Osé"],
+["Un baiser sous la pluie","Osé"],["Une soirée qui finit mal","Osé"],["Une déclaration d'amour ratée","Osé"]
 ];
 var DL=['Mon oncle Gérard en vacances','Le jour où tout a basculé','Une dispute pour rien','Le dernier qui part éteint la lumière','Un grand malentendu','Monsieur Patate au travail',
 'Une journée qui commence mal','Le secret de la voisine','Un cadeau qu\'on n\'attendait pas','Une idée géniale de 3 heures du matin','Un départ en grande pompe','Un petit coup de mou',
