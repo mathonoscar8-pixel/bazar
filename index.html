@@ -3116,17 +3116,52 @@ function hostProcess(){if(!OL.host||!OL.G)return;
     if(a.n>(OL.lastN[p.id]||0)){OL.lastN[p.id]=a.n;hostAct(p.id,a)}})}
 async function olStart(){
   if(!OL.host||OL.starting)return;
-  var iss=OL.game==='m'?olIssueM():(OL.game==='l'?olIssueL():(OL.game==='d'?olIssueD():olIssueU()));if(iss){OL.err=iss;return olRender()}
+  var iss = '';
+  if(OL.game==='m') iss = olIssueM();
+  else if(OL.game==='l') iss = olIssueL();
+  else if(OL.game==='d') iss = olIssueD();
+  else if(OL.plist.length < 3) iss = 'Il faut au moins 3 joueurs.';
+  else if(OL.game==='u' && !(OL.cfg.cats||[]).length) iss = 'Choisis au moins une catégorie de mots.';
+  
+  if(iss){OL.err=iss;return olRender()}
   OL.starting=true;OL.err='';olRender();
+  
   try{
     OL.plist.forEach(function(p){var a=jp(p.act,null);OL.lastN[p.id]=a&&a.n?a.n:0});
-    var g=OL.game==='f'?mkGameF():OL.game==='c'?mkGameC():OL.game==='dd'?mkGameD2():OL.game==='s'?mkGameS():OL.game==='m'?mkGameM():(OL.game==='l'?mkGameL():(OL.game==='d'?mkGameD():mkGameU())),secs=g.g==='l'?[]:g.secs;if(g.g!=='l')delete g.secs;
-    for(var i=0;i<secs.length;i++)await Sd(OL.code,secs[i][0]).set(secs[i][1]);
-    g.lastN=OL.lastN;OL.G=g;
+    
+    var g;
+    if(OL.game==='f') g = mkGameF();
+    else if(OL.game==='c') g = mkGameC();
+    else if(OL.game==='dd') g = mkGameD2();
+    else if(OL.game==='s') g = mkGameS();
+    else if(OL.game==='m') g = mkGameM();
+    else if(OL.game==='l') g = mkGameL();
+    else if(OL.game==='d') g = mkGameD();
+    else g = mkGameU();
+    
+    // On récupère les secrets (les questions, les mots, etc.)
+    var secs = (g.secs || []); 
+    
+    // On enregistre les secrets dans la base de données
+    for(var i=0;i<secs.length;i++) {
+      await Sd(OL.code,secs[i][0]).set(secs[i][1]);
+    }
+    
+    g.lastN=OL.lastN;
+    OL.G=g;
+    
+    // On lance la partie
     await Rr(OL.code).update({status:'play',s:JSON.stringify(pubG(g)),cfg:JSON.stringify(OL.cfg),scores:JSON.stringify(OL.scores),wins:JSON.stringify(OL.wins),v:Date.now()});
-    await Hd(OL.code).set({g:JSON.stringify(g)});hlSched()
-  }catch(e){OL.err='Impossible de lancer la partie. Réessaie.';OL.G=null}
-  OL.starting=false;olRender()}
+    await Hd(OL.code).set({g:JSON.stringify(g)});
+    hlSched();
+  }catch(e){
+    OL.err='Impossible de lancer la partie. Réessaie.';
+    console.error(e);
+    OL.G=null;
+  }
+  OL.starting=false;
+  olRender();
+}
 async function olLobby(){if(!OL.host)return;OL.G=null;S.sheet=null;
   try{await Hd(OL.code).delete();await Rr(OL.code).update({status:'lobby',s:'',v:Date.now()})}catch(e){}}
 
