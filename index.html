@@ -5637,6 +5637,64 @@ function hcTally(g){
   g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});
   g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
 }
+/* ================= LOGIQUE ET VUES : QUI A ÉCRIT ÇA ? ================= */
+function mkGameC(){
+  var q = CONFESS[Math.floor(Math.random()*CONFESS.length)];
+  var g={g:'c',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
+  return g;
+}
+
+function pubC(g){
+  var s={g:'c',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+
+function vOConfessWrite(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  return obar('À toi d\'écrire')+'<div class="wrap"><div class="now"><span class="eyebrow">La question est</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
+  '<form id="confessform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="cfinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta réponse anonyme..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma réponse</button></form></div>';
+}
+/* ================= LOGIQUE ET VUES : LE FAUX AVIS ================= */
+function mkGameF(){
+  var vraiesReponses = {
+    "Quel est le vrai nom du cri du paresseux ?": "Le paresseux ne crie pas, il soupire",
+    "Combien de cœurs possède une pieuvre ?": "3",
+    "Quelle est la capitale de l'Australie ?": "Canberra",
+    "Quel animal est capable de survivre le plus longtemps sans boire ?": "Le chameau",
+    "Quel est le pays qui consomme le plus de fromage par habitant ?": "Le Danemark",
+    "Quel est le nom du plus grand désert du monde ?": "L'Antarctique",
+    "Combien d'os possède un bébé à la naissance ?": "300",
+    "Quel fruit est le plus lourd du monde ?": "Le jacquier",
+    "Quelle est la durée de vie moyenne d'un escargot ?": "3 ans",
+    "Quel est le seul métal qui est liquide à température ambiante ?": "Le mercure",
+    "Quel est le nom de la peur des longues files d'attente ?": "L'ouragie",
+    "Combien de temps met la lumière du soleil pour atteindre la Terre ?": "8 minutes",
+    "Quel est le pays d'origine de la pizza ?": "L'Italie",
+    "Quel est l'organe le plus lourd du corps humain ?": "Le foie",
+    "Quel est le nom du bébé du kangourou ?": "Le joey"
+  };
+  var q = FAUXAVIS[Math.floor(Math.random()*FAUXAVIS.length)];
+  var real = vraiesReponses[q] || "Réponse inconnue";
+  var g={g:'f',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,real:real,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
+  return g;
+}
+
+function pubF(g){
+  var s={g:'f',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;if(s.voted.indexOf(PID)>=0&&g.answers)s.opts.forEach(function(o,i){if(o.id===PID)o.mine=true;});}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+
+function vOFauxWrite(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Fausse réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  return obar('À toi d\'inventer')+'<div class="wrap"><div class="now"><span class="eyebrow">Question</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div><p class="muted">Invente une fausse réponse crédible.</p></div>'+
+  '<form id="fauxform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="fxinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta fausse réponse..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma fausse réponse</button></form></div>';
+}
 S._fresh=true;olBoot();render();
 
 // Animation d'intro
