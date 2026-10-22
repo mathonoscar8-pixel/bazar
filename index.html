@@ -2846,29 +2846,26 @@ async function olOpen(code,opts){
   
   S.screen='online'; S._fresh=true; S.sheet=null; render();
   
-  var timeoutId = setTimeout(function(){
-    if(OL.on && !OL.room) olGone('Le serveur met trop de temps à répondre. Vérifie ta connexion.');
-  }, 8000);
+  // 1. ON S'ABONNE TOUT DE SUITE (L'écran va se mettre à jour dès que le serveur répond)
+  olSubscribe();
 
+  // 2. ON VÉRIFIE SI ON EST L'HÔTE EN ARRIÈRE-PLAN (sans bloquer l'écran)
   try{
     var sn = await Rr(code).get();
-    clearTimeout(timeoutId);
-    if(!sn.exists) throw 'Partie introuvable.';
-    
-    OL.host = sn.data().host === PID;
-    
-    if(OL.host) {
-      var h = await Hd(code).get();
-      if(h.exists) {
-        OL.G = jp(h.data().g,null);
-        if(OL.G) OL.lastN = OL.G.lastN || {};
-        hlSched();
-      }
+    if(sn.exists) {
+       OL.host = sn.data().host === PID;
+       if(OL.host) {
+         var h = await Hd(code).get();
+         if(h.exists) {
+           OL.G = jp(h.data().g,null);
+           if(OL.G) OL.lastN = OL.G.lastN || {};
+           hlSched();
+         }
+       }
+       olRender(); // On rafraîchit l'écran une fois qu'on sait si on est hôte
     }
-    olSubscribe();
   }catch(e){
-    clearTimeout(timeoutId);
-    olGone(errText(e));
+    // Si ça échoue, le snapshot de olSubscribe fera le travail de toute façon
   }
 }
 function checkHost(){
