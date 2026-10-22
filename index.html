@@ -2846,10 +2846,42 @@ async function olOpen(code,opts){
   
   S.screen='online'; S._fresh=true; S.sheet=null; render();
   
-  // ON S'ABONNE TOUT DE SUITE : dès que le serveur envoie les données, l'écran change !
+  // 1. On lance l'écoute normale
   olSubscribe();
 
-  // On vérifie l'hôte en arrière-plan
+  // 2. LE PING DE SECOURS (Force la lecture toutes les 2 secondes si on est bloqué)
+  if(OL.fallbackTimer) clearInterval(OL.fallbackTimer);
+  OL.fallbackTimer = setInterval(async function() {
+    // Si on est toujours bloqué sur l'écran de chargement
+    if(OL.on && !OL.room) {
+      try {
+        var sn = await Rr(code).get();
+        if(sn.exists) {
+          OL.room = sn.data();
+          OL.game = OL.room.game;
+          OL.status = OL.room.status;
+          OL.cfg = jp(OL.room.cfg, {});
+          OL.scores = jp(OL.room.scores, {});
+          OL.wins = jp(OL.room.wins, [0,0]);
+          olOnState(jp(OL.room.s, null));
+          
+          // On récupère aussi la liste des joueurs
+          var pq = await Rp(code).get();
+          var m={}, l=[];
+          pq.docs.forEach(function(dc){ var v=dc.data(); v.id=dc.id; m[dc.id]=v; l.push(v); });
+          l.sort(function(a,b){return (a.ts||0)-(b.ts||0)});
+          OL.players=m; OL.plist=l;
+          
+          olRender();
+        }
+      } catch(e) {}
+    } else if (OL.room) {
+      // Si on a réussi à charger, on arrête le secours
+      clearInterval(OL.fallbackTimer);
+    }
+  }, 2000);
+
+  // 3. On vérifie si on est l'hôte
   try{
     var sn = await Rr(code).get();
     if(sn.exists) {
@@ -2863,12 +2895,8 @@ async function olOpen(code,opts){
          }
        }
        olRender(); 
-    } else {
-       olGone('Salon introuvable.');
     }
-  }catch(e){
-    // Si erreur réseau, on laisse le temps à olSubscribe de faire son travail
-  }
+  }catch(e){}
 }
 function checkHost(){
   if(!OL.on||!OL.room||OL.host)return;
