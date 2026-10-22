@@ -4998,87 +4998,36 @@ function vOLobbyC(){
   '<section class="card"><h2>Comment jouer ?</h2><p class="muted small">Une question s\'affiche. Tout le monde écrit une réponse anonyme. Ensuite, on vote tous pour la réponse la plus drôle !</p></section>'+
   '</div>'+olDock(iss)
 }
-function mkGameC(){
-  var q = CONFESS[Math.floor(Math.random()*CONFESS.length)];
-  var g={g:'c',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
-  return g;
-}
-function pubC(g){
-  var s={g:'c',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
-  if(g.ph==='vote'){s.opts=g.opts;}
-  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
-  return s;
-}
-function vOConfessWrite(){
+function vOFauxVote(){
   var s=OL.s, me=PID, done=OL.my.vote===s.vk;
-  if(done) return obar('Réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
-  return obar('À toi d\'écrire')+'<div class="wrap"><div class="now"><span class="eyebrow">La question est</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
-  '<form id="confessform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="cfinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta réponse anonyme..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma réponse</button></form></div>';
+  if(done) return obar('Vote envoyé')+'<div class="wrap"><div class="who"><h2>Vote enregistré !</h2><p class="muted">En attente des autres… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  
+  var opts=s.opts.map(function(o,i){
+    var mine = o.mine ? '<span class="small muted"> (la tienne)</span>' : '';
+    return '<button class="pick" data-act="opick_faux" data-i="'+i+'" aria-pressed="'+(OL.pick===i)+'"'+(o.mine?' disabled style="opacity:0.5"':'')+'>'+esc(o.t)+mine+'</button>'
+  }).join('');
+  
+  return obar('Vote')+'<div class="wrap"><div class="now"><span class="eyebrow">Quelle est la VRAIE réponse ?</span><div class="big" style="font-size:20px;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
+  '<div class="grid" style="grid-template-columns:1fr">'+opts+'</div></div>'+
+  '<div class="dock"><button class="btn btn-primary" data-act="ovote_faux"'+(OL.pick!=null?'':' disabled')+'>'+(OL.pick!=null?'Voter pour cette réponse':'Choisis une réponse')+'</button></div>';
 }
-function hcAct(uid,a,g){
-  var host=uid===PID;
-  switch(a.t){
-    case 'write':{if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcToVote(g)}break}
-    case 'vote':{if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;var opt=g.opts[a.i];if(opt.id===uid)return;g.votes=g.votes||{};g.votes[uid]=opt;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcTally(g)}break}
-    case 'close_write':if(!host||g.ph!=='write')return;hcToVote(g);break;
-    case 'close_vote':if(!host||g.ph!=='vote')return;hcTally(g);break;
-    case 'cont':{if(!host||g.ph!=='result')return;
-      var oldQ=g.q,pool=CONFESS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
-      g.q=newQ;g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
-    default:return
-  }
-}
-function hcToVote(g){
-  g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';
-  var arr=[];
-  for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}
-  g.opts=shuffle(arr);
-}
-function hcTally(g){
-  var gains={};g.players.forEach(function(id){gains[id]=0});
-  var mx=0,win=null;
-  for(var uid in g.votes){
-    var opt=g.votes[uid];
-    if(opt.id) { gains[opt.id]+=1; }
-  }
-  g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});
-  g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
+function vOFauxResult(){
+  var s=OL.s;
+  var list=s.opts.map(function(o){
+    var isReal = (o.t===s.real);
+    var pts = s.gains[o.id] ? ' <span class="tag ok">+'+s.gains[o.id]+' pts</span>' : '';
+    return '<div class="dop rv'+(isReal?' real':'')+'"><span class="tx">'+esc(o.t)+(isReal?' <span class="eyebrow" style="color:var(--lime)">★ Vraie réponse</span>':'')+'<br><span class="muted small">par '+esc(pn(o.id))+'</span>'+pts+'</span></div>'
+  }).join('');
+  return obar('Résultat')+'<div class="wrap"><div class="win"><span class="eyebrow">La vraie réponse était</span><h1 style="color:var(--lime);font-size:26px">'+esc(s.real)+'</h1></div>'+
+  '<section class="card"><h3>Les réponses</h3><div class="order">'+list+'</div></section></div>'+
+  '<div class="dock">'+(OL.host?'<button class="btn btn-primary" data-act="onext_faux">Question suivante</button><button class="btn btn-ghost" data-act="oagain">Quitter le salon</button>':'<p class="note">En attente de l\'hôte…</p>')+'</div>';
 }
 
-/* ================= LOGIQUE ET VUES : LE FAUX AVIS ================= */
-var VRAIES_REPONSES = {
-  "Quel est le vrai nom du cri du paresseux ?": "Le paresseux ne crie pas, il soupire",
-  "Combien de cœurs possède une pieuvre ?": "3",
-  "Quelle est la capitale de l'Australie ?": "Canberra",
-  "Quel animal est capable de survivre le plus longtemps sans boire ?": "Le chameau",
-  "Quel est le pays qui consomme le plus de fromage par habitant ?": "Le Danemark",
-  "Quel est le nom du plus grand désert du monde ?": "L'Antarctique",
-  "Combien d'os possède un bébé à la naissance ?": "300",
-  "Quel fruit est le plus lourd du monde ?": "Le jacquier",
-  "Quelle est la durée de vie moyenne d'un escargot ?": "3 ans",
-  "Quel est le seul métal qui est liquide à température ambiante ?": "Le mercure",
-  "Quel est le nom de la peur des longues files d'attente ?": "L'ouragie",
-  "Combien de temps met la lumière du soleil pour atteindre la Terre ?": "8 minutes",
-  "Quel est le pays d'origine de la pizza ?": "L'Italie",
-  "Quel est l'organe le plus lourd du corps humain ?": "Le foie",
-  "Quel est le nom du bébé du kangourou ?": "Le joey"
-};
-function mkGameF(){
-  var q = FAUXAVIS[Math.floor(Math.random()*FAUXAVIS.length)];
-  var real = VRAIES_REPONSES[q] || "Réponse inconnue";
-  return {g:'f',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,real:real,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
-}
 function pubF(g){
   var s={g:'f',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
   if(g.ph==='vote'){s.opts=g.opts;if(s.voted.indexOf(PID)>=0&&g.answers)s.opts.forEach(function(o,i){if(o.id===PID)o.mine=true;});}
   if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
   return s;
-}
-function vOFauxWrite(){
-  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
-  if(done) return obar('Fausse réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
-  return obar('À toi d\'inventer')+'<div class="wrap"><div class="now"><span class="eyebrow">Question</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div><p class="muted">Invente une fausse réponse crédible.</p></div>'+
-  '<form id="fauxform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="fxinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta fausse réponse..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma fausse réponse</button></form></div>';
 }
 function hfAct(uid,a,g){
   var host=uid===PID;
@@ -5089,7 +5038,7 @@ function hfAct(uid,a,g){
     case 'close_vote':if(!host||g.ph!=='vote')return;hfTally(g);break;
     case 'cont':{if(!host||g.ph!=='result')return;
       var oldQ=g.q,pool=FAUXAVIS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
-      g.q=newQ;g.real=VRAIES_REPONSES[newQ]||"Réponse inconnue";g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
+      g.q=newQ;g.real=vraiesReponses[newQ]||"Réponse inconnue";g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
     default:return
   }
 }
@@ -5110,7 +5059,371 @@ function hfTally(g){
   g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});
   g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
 }
-/* === CSS STREETWEAR UNIQUE (Restauré) === */
+/* === BULLDOZER CSS : EFFETS SPECIAUX === */
+(function(){
+  var css = `
+  @keyframes stampSlam {
+    0% { transform: scale(3) rotate(-15deg); opacity: 0; }
+    70% { transform: scale(0.9) rotate(-5deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-5deg); opacity: 1; }
+  }
+  .stamp-overlay {
+    position: fixed; inset: 0; background: rgba(11, 15, 30, 0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; pointer-events: none; animation: fadeOutStamp 0.5s 1.5s forwards;
+  }
+  .stamp-text {
+    font: 900 80px var(--display); color: var(--danger);
+    border: 8px solid var(--danger); padding: 10px 40px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    animation: stampSlam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    box-shadow: 0 0 50px rgba(255, 122, 122, 0.5); text-shadow: 0 5px 10px rgba(0,0,0,0.5); background: var(--bg);
+  }
+  @keyframes fadeOutStamp { to { opacity: 0; visibility: hidden; } }
+
+  @keyframes dealCard3D {
+    0% { transform: translateY(200px) rotateX(-90deg) scale(0.5); opacity: 0; }
+    60% { transform: translateY(-15px) rotateX(10deg) scale(1.05); opacity: 1; }
+    100% { transform: translateY(0) rotateX(0deg) scale(1); opacity: 1; }
+  }
+  .hold.dealing {
+    animation: dealCard3D 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    transform-style: preserve-3d; box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 0 2px var(--lime);
+  }
+  `;
+  var style = document.createElement('style');
+  style.innerHTML = css;
+  document.head.appendChild(style);
+})();
+/* === BULLDOZER CSS : ANIMATIONS BLOCKBUSTER === */
+(function(){
+  var css = `
+  /* 1. Le Scanner 3D (Undercover) */
+  .scan-overlay {
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    background: rgba(11, 15, 30, 0.9);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .scan-laser {
+    position: absolute; left: 0; width: 100%; height: 4px;
+    background: var(--lime); box-shadow: 0 0 20px 5px var(--lime);
+    animation: scanAnim 1.5s ease-in-out forwards;
+  }
+  @keyframes scanAnim {
+    0% { top: -10%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 110%; opacity: 0; }
+  }
+  .scan-target {
+    width: 120px; height: 120px; border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 20px; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .scan-target::after {
+    content: ''; position: absolute; inset: 0; background: rgba(184, 255, 69, 0.1);
+    animation: pulseTarget 1s infinite;
+  }
+  @keyframes pulseTarget { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.6; } }
+
+  /* 2. Le Mode Cinéma (Débat / Élimination) */
+  .cinema-bar {
+    position: fixed; left: 0; width: 100%; height: 12vh; background: #000;
+    z-index: 9998; pointer-events: none;
+    transition: transform 0.6s cubic-bezier(0.8, 0, 0.2, 1);
+  }
+  .cinema-top { top: 0; transform: translateY(-100%); }
+  .cinema-bottom { bottom: 0; transform: translateY(100%); }
+  .cinema-active .cinema-top { transform: translateY(0); }
+  .cinema-active .cinema-bottom { transform: translateY(0); }
+  .cinema-text {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+    font: 900 40px var(--display); color: #fff; text-transform: uppercase;
+    letter-spacing: 0.2em; opacity: 0; z-index: 9999;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none;
+    text-shadow: 0 0 20px rgba(255,255,255,0.5); text-align: center;
+  }
+  .cinema-active .cinema-text { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+  /* 3. Transition de page "Glitch" rapide */
+  @keyframes pageGlitch {
+    0% { clip-path: inset(0 0 0 0); transform: translateX(0); }
+    20% { clip-path: inset(20% 0 60% 0); transform: translateX(-10px); }
+    40% { clip-path: inset(60% 0 10% 0); transform: translateX(10px); }
+    60% { clip-path: inset(10% 0 70% 0); transform: translateX(-5px); }
+    80% { clip-path: inset(80% 0 5% 0); transform: translateX(5px); }
+    100% { clip-path: inset(0 0 0 0); transform: translateX(0); }
+  }
+  .page-glitch { animation: pageGlitch 0.3s ease-out forwards; }
+  `;
+  var style = document.createElement('style');
+  style.innerHTML = css;
+  document.head.appendChild(style);
+})();
+
+// Fonction globale pour déclencher le mode cinéma
+function playCinemaText(txt, duration) {
+  var top = document.createElement('div'); top.className = 'cinema-bar cinema-top';
+  var bot = document.createElement('div'); bot.className = 'cinema-bar cinema-bottom';
+  var text = document.createElement('div'); text.className = 'cinema-text'; text.innerHTML = txt;
+  document.body.appendChild(top); document.body.appendChild(bot); document.body.appendChild(text);
+  
+  requestAnimationFrame(function(){
+    document.body.classList.add('cinema-active');
+  });
+  if(typeof sfxWhoosh === 'function') sfxWhoosh();
+  
+  setTimeout(function(){
+    document.body.classList.remove('cinema-active');
+    setTimeout(function(){ top.remove(); bot.remove(); text.remove(); }, 600);
+  }, duration || 2000);
+}
+/* === CSS KILL FEED === */
+(function(){
+  var css = `
+  .killfeed-item {
+    position: fixed; right: 20px; top: 80px; background: rgba(11, 15, 30, 0.95);
+    border: 1px solid var(--danger); border-radius: 12px; padding: 10px 15px;
+    display: flex; align-items: center; gap: 10px; z-index: 99999;
+    transform: translateX(150%); opacity: 0;
+    animation: slideInKill 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOutKill 0.4s 3s forwards;
+    box-shadow: 0 4px 15px rgba(229, 72, 77, 0.4);
+  }
+  .killfeed-item span { font: 700 14px var(--display); color: #fff; }
+  @keyframes slideInKill { to { transform: translateX(0); opacity: 1; } }
+  @keyframes fadeOutKill { to { transform: translateX(150%); opacity: 0; } }
+  `;
+  var style = document.createElement('style');
+  style.innerHTML = css;
+  document.head.appendChild(style);
+})();
+function showKillFeed(playerName, playerAvatarHtml) {
+  if (typeof RM !== 'undefined' && RM) return;
+  var el = document.createElement('div');
+  el.className = 'killfeed-item';
+  el.innerHTML = playerAvatarHtml + '<span>' + esc(playerName) + ' a été éliminé(e) !</span>';
+  document.body.appendChild(el);
+  if (typeof sfxError === 'function') sfxError();
+  setTimeout(function(){ el.remove(); }, 3500);
+}
+function animateNumbers() {
+  var els = document.querySelectorAll('.trow .ct');
+  els.forEach(function(el) {
+    var text = el.textContent;
+    var match = text.match(/\d+/);
+    if(!match) return;
+    var target = parseInt(match[0]);
+    if(target === 0) return;
+    
+    var current = 0;
+    el.textContent = "0 vote" + (target > 1 ? "s" : "");
+    
+    var timer = setInterval(function() {
+      current++;
+      el.textContent = current + " vote" + (target > 1 ? "s" : "");
+      if(typeof sfxSlot === 'function') sfxSlot(); // <-- Le bruit de machine à sous
+      if(current >= target) {
+        clearInterval(timer);
+        if(typeof sfxPop === 'function') sfxPop(); // <-- Le "pop" de validation à la fin
+      }
+    }, 150); 
+  });
+}
+/* === CSS MASCOTTE ENVAHISSANTE === */
+(function(){
+  var css = `
+  .baz-invader {
+    position: fixed; z-index: 99999; font-size: 80px; pointer-events: none;
+    animation: bazBounce 2s linear forwards;
+    filter: drop-shadow(0 0 20px var(--lime));
+  }
+  @keyframes bazBounce {
+    0% { left: -100px; top: 50%; transform: translateY(-50%) scale(1) rotate(0deg); }
+    25% { top: 30%; transform: translateY(-50%) scale(1.2) rotate(15deg); }
+    50% { top: 60%; transform: translateY(-50%) scale(1) rotate(-15deg); }
+    75% { top: 40%; transform: translateY(-50%) scale(1.1) rotate(10deg); }
+    100% { left: 110vw; top: 50%; transform: translateY(-50%) scale(1) rotate(0deg); }
+  }
+  `;
+  var style = document.createElement('style');
+  style.innerHTML = css;
+  document.head.appendChild(style);
+})();
+function bazInvasion() {
+  if (typeof RM !== 'undefined' && RM) return;
+  var emoji = (typeof BAZ_EMOJI !== 'undefined') ? (BAZ_EMOJI.surprised || '😮') : '👾';
+  var el = document.createElement('div');
+  el.className = 'baz-invader';
+  el.textContent = emoji;
+  document.body.appendChild(el);
+  
+  if (typeof sfxWhoosh === 'function') sfxWhoosh();
+  if (typeof buzz === 'function') buzz([50, 50, 50, 50]);
+  
+  // On fait spawn des étoiles sur son passage
+  var i = 0;
+  var interval = setInterval(function() {
+    var rect = el.getBoundingClientRect();
+    if(rect.left > 0 && rect.left < window.innerWidth) {
+       if(typeof burst === 'function') burst(rect.left, rect.top + 40, 5, {speed: 5, size: 8, life: 40});
+    }
+    i++;
+    if(i > 20) clearInterval(interval);
+  }, 100);
+  
+  setTimeout(function(){ el.remove(); }, 2000);
+}
+/* === BULLDOZER CSS : THEMES IMMERGES + BAZAR === */
+(function(){
+  var css = `
+  /* ... (Garde tes thèmes Cyberpunk, Sunset, Forest existants ici) ... */
+  /* Je remets juste les autres thèmes pour être sûr que tu ne les perdes pas */
+  [data-theme="cyberpunk"] { --bg: #05050A; --surface: #0C0A1A; --surface-2: #15122D; --line: #2E235C; --fg: #F4F4F9; --muted: #9C98B8; --lime: #00F0FF; --lime-ink: #05050A; --violet: #FF007F; --violet-soft: #FF66B2; --font-display: 'Courier New', monospace; color-scheme: dark; }
+  [data-theme="cyberpunk"] .card { border-color: rgba(0,240,255,0.4) !important; box-shadow: 0 0 20px rgba(255,0,127,0.2) !important; }
+  [data-theme="cyberpunk"] .btn-primary { box-shadow: 0 0 20px rgba(0,240,255,0.6) !important; text-transform: uppercase; letter-spacing: 2px; }
+
+  [data-theme="sunset"] { --bg: #1A0B12; --surface: #2D141F; --surface-2: #401B2A; --line: #6B2941; --fg: #FFF5F5; --muted: #D6A1B2; --lime: #FFB347; --lime-ink: #1A0B12; --violet: #FF4B4B; --violet-soft: #FF8585; --font-display: Georgia, serif; color-scheme: dark; }
+  [data-theme="sunset"] .card { background: linear-gradient(135deg, rgba(255,75,75,0.1), rgba(255,179,71,0.05)) !important; border: 1px solid rgba(255,179,71,0.3) !important; }
+  [data-theme="sunset"] .btn-primary { background: linear-gradient(135deg, #FF4B4B, #FFB347) !important; border: none !important; color: #FFF; }
+
+  [data-theme="forest"] { --bg: #05100A; --surface: #0A1A11; --surface-2: #122B1D; --line: #235C3B; --fg: #F0FDF4; --muted: #A3C9B3; --lime: #34D399; --lime-ink: #05100A; --violet: #FBBF24; --violet-soft: #FDE68A; --font-display: 'Trebuchet MS', sans-serif; color-scheme: dark; }
+  [data-theme="forest"] .card { background: rgba(10,26,17,0.7) !important; border: 1px solid rgba(52,211,153,0.2) !important; }
+  [data-theme="forest"] .btn-primary { border-radius: 30px !important; background: linear-gradient(135deg, #34D399, #059669) !important; }
+
+  /* ========================================= */
+  /* 🔥 LE NOUVEAU THEME "BAZAR STREETWEAR" 🔥 */
+  /* ========================================= */
+  [data-theme="streetwear"] {
+    --bg: #120B14; /* Bleu nuit très sombre presque noir */
+    --surface: #1E1222; 
+    --surface-2: #2D1832; 
+    --line: #5A254B; 
+    --fg: #FFFDF5; 
+    --muted: #D1B5C5;
+    --lime: #FFDE00; /* Jaune vif */
+    --lime-ink: #120B14; 
+    --violet: #FF2A2A; /* Rouge carmin */
+    --violet-soft: #FF6666; 
+    --font-display: Impact, 'Arial Black', sans-serif; /* Police Comics ultra épaisse */
+    color-scheme: dark;
+  }
+
+  /* Les boutons ont un effet "déchiré" et incliné */
+  [data-theme="streetwear"] .btn, 
+  [data-theme="streetwear"] .game {
+    border-radius: 4px 12px 6px 15px !important; /* Bords irréguliers */
+    transform: rotate(-1.5deg); /* Légèrement de travers */
+    border: 3px solid var(--fg) !important; 
+    box-shadow: 6px 6px 0px rgba(0,0,0,0.6) !important; /* Ombre dure style Comics */
+  }
+  [data-theme="streetwear"] .btn:active {
+    transform: rotate(-1.5deg) translate(4px, 4px) !important; /* S'enfonce au clic */
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.6) !important;
+  }
+
+  /* Les cartes ont un fond texturé et des bords décalés */
+  [data-theme="streetwear"] .card {
+    background: var(--surface) !important;
+    border: 4px solid var(--fg) !important;
+    border-radius: 2px 20px 4px 15px !important;
+    box-shadow: 8px 8px 0px var(--violet) !important; /* Ombre rouge */
+    transform: rotate(0.5deg);
+  }
+
+  /* Les titres h1 ont un effet de texte superposé */
+  [data-theme="streetwear"] h1 {
+    text-transform: uppercase;
+    font-style: italic;
+    text-shadow: 3px 3px 0px var(--violet), -3px -3px 0px var(--lime); /* Effet 3D glitch */
+    letter-spacing: 1px;
+  }
+
+  /* Le bouton thème */
+  .theme-picker-btn {
+    position: fixed; bottom: 90px; right: 20px; width: 50px; height: 50px;
+    border-radius: 50%; background: var(--surface-2); border: 2px solid var(--violet);
+    color: var(--fg); font-size: 24px; display: grid; place-items: center;
+    z-index: 1000; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.2s, background 0.3s;
+  }
+  .theme-picker-btn:hover { transform: scale(1.1) rotate(15deg); background: var(--violet); color: #fff; }
+  
+  /* Éclats sur l'écran (Substitut au fond étoilé) */
+  [data-theme="streetwear"] .bg-eclats { display: block !important; }
+  `;
+  var style = document.createElement('style');
+  style.innerHTML = css;
+  document.head.appendChild(style);
+})();
+
+// Ajouter le bouton flottant à l'écran
+
+function av(p,small){
+  var sz=small?'36':'44';
+  var st='width:'+sz+'px;height:'+sz+'px;min-width:'+sz+'px;border-radius:50%;display:grid;place-items:center;font:700 '+(small?'15':'18')+'px var(--display);';
+  if(p.avatar && p.avatar.base!=null){
+    var bg=AV_COLORS[p.avatar.color]||'#333';
+    var base=AV_BASES[p.avatar.base]||'';
+    var hat=AV_HATS[p.avatar.hat]||'';
+    var pos=AV_POS[p.avatar.base]||{t:0,s:1};
+    var scale=small?0.8:1;
+    return '<span class="av'+(small?' sm':'')+'" style="'+st+'background:'+bg+';position:relative;overflow:visible" aria-hidden="true"><span style="font-size:'+(small?'20':'26')+'px;line-height:1;z-index:1">'+base+'</span>'+(hat?'<span style="position:absolute;top:'+((pos.t||0)*scale)+'px;left:50%;transform:translateX(-50%) scale('+pos.s+');font-size:'+(small?'16':'22')+'px;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3))">'+hat+'</span>':'')+'</span>'
+  }
+  var c=PAL[p.ci%PAL.length];
+  var ini=(p.name.trim().charAt(0)||'?').toUpperCase();
+  return '<span class="av'+(small?' sm':'')+'" style="'+st+'background:'+c[0]+';color:'+c[1]+'" aria-hidden="true">'+esc(ini)+'</span>'
+}
+
+/* === MASCOTTE BAZ (MODE BD / STREETWEAR) === */
+function bazBubble(text, mood){
+  return '<div class="baz-container" style="background:#FFFDF5; border:4px solid var(--lime-ink); border-radius:15px 20px 5px 20px; box-shadow:6px 6px 0px var(--violet); transform:rotate(1deg);">'+
+    '<div class="baz-avatar">'+bazAvatarHtml(mood)+'</div>'+
+    '<div class="baz-speech">'+
+      '<div class="baz-name" style="color:var(--violet); font-family:Impact, sans-serif; font-size:16px; letter-spacing:1px; font-style:italic">BAZ</div>'+
+      '<div class="baz-text" style="color:#120B14; font-weight:800; font-family:\'Trebuchet MS\', sans-serif">'+text+'</div>'+
+    '</div>'+
+    '<div style="position:absolute; bottom:-20px; left:20px; width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:20px solid var(--lime-ink);"></div>'+
+    '<div style="position:absolute; bottom:-14px; left:23px; width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-top:14px solid #FFFDF5; z-index:1;"></div>'+
+  '</div>';
+}
+
+/* === CSS STREETWEAR : MAXIMAL IMPACT === */
+(function(){
+  var css = `
+  @keyframes slamHard {
+    0% { transform: scale(3) rotate(10deg); opacity: 0; filter: blur(10px); }
+    40% { transform: scale(0.9) rotate(-5deg); opacity: 1; filter: blur(0); box-shadow: 15px 15px 0px var(--lime); }
+    70% { transform: scale(1.05) rotate(2deg); box-shadow: 0px 0px 0px var(--lime); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; box-shadow: 8px 8px 0px var(--violet); }
+  }
+  .slam-hard {
+    animation: slamHard 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  .ink-splat {
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    background: var(--violet);
+    clip-path: circle(0% at 50% 50%);
+    animation: splatAnim 0.6s ease-in-out forwards;
+  }
+  @keyframes splatAnim {
+    0% { clip-path: circle(0% at 50% 50%); opacity: 1; }
+    50% { clip-path: circle(100% at 50% 50%); opacity: 1; }
+    100% { clip-path: circle(100% at 50% 50%); opacity: 0; }
+  }
+
+  [data-theme="streetwear"] .card {
+    border: 5px solid var(--fg) !important;
+    border-radius: 2px 25px 5px 20px !important;
+    box-shadow: 12px 12px 0px var(--violet) !important;
+  }
+  `;
+  var style = document.createElement('style');
+  style.innerHTML = css;
+  document.head.appendChild(style);
+})();
+
+/* === CSS STREETWEAR UNIQUE (Nettoyé) === */
 (function(){
   var style = document.createElement('style');
   style.innerHTML = `
@@ -5150,7 +5463,7 @@ function hfTally(g){
     transform: rotate(0.5deg);
   }
   
-  h1 {
+    h1 {
     text-transform: uppercase;
     font-style: italic;
     text-shadow: 3px 3px 0px var(--violet), -3px -3px 0px var(--lime);
@@ -5159,80 +5472,370 @@ function hfTally(g){
 
   /* === MODE JOUR (Carnet de croquis) === */
   [data-theme="light"] {
-    --bg: #F4F1E9;
+    --bg: #F4F1E9; /* Blanc cassé / Vieux papier */
     --surface: #FFFFFF; 
     --surface-2: #F0EDE4; 
     --line: #D1CDC0; 
-    --fg: #120B14;
+    --fg: #120B14; /* Texte noir */
     --muted: #5A5A5A;
-    --lime: #B8FF45;
+    --lime: #B8FF45; /* On garde le vert citron */
     --lime-ink: #120B14;
-    --violet: #8466FF;
+    --violet: #8466FF; /* On garde le violet */
     --violet-soft: #6B4EFF;
   }
+  
   [data-theme="light"] body { background: var(--bg) !important; color: var(--fg); }
-  [data-theme="light"] .card { background: var(--surface) !important; border: 4px solid var(--fg) !important; box-shadow: 8px 8px 0px var(--violet) !important; }
-  [data-theme="light"] .btn, [data-theme="light"] .game { border: 3px solid var(--fg) !important; box-shadow: 6px 6px 0px rgba(0,0,0,0.8) !important; }
-  [data-theme="light"] .btn-primary { background: var(--lime) !important; color: var(--lime-ink) !important; }
-  [data-theme="light"] .btn-secondary { border-color: var(--violet) !important; color: var(--violet) !important; }
-  [data-theme="light"] .baz-container { background: #FFFFFF !important; border-color: var(--fg) !important; box-shadow: 6px 6px 0px var(--violet) !important; }
+  
+  [data-theme="light"] .card {
+    background: var(--surface) !important;
+    border: 4px solid var(--fg) !important;
+    box-shadow: 8px 8px 0px var(--violet) !important;
+  }
+  
+  [data-theme="light"] .btn, 
+  [data-theme="light"] .game {
+    border: 3px solid var(--fg) !important; 
+    box-shadow: 6px 6px 0px rgba(0,0,0,0.8) !important;
+  }
+  
+  [data-theme="light"] .btn-primary {
+    background: var(--lime) !important;
+    color: var(--lime-ink) !important;
+  }
+  
+  [data-theme="light"] .btn-secondary {
+    border-color: var(--violet) !important;
+    color: var(--violet) !important;
+  }
+
+  [data-theme="light"] .baz-container {
+    background: #FFFFFF !important;
+    border-color: var(--fg) !important;
+    box-shadow: 6px 6px 0px var(--violet) !important;
+  }
   [data-theme="light"] .baz-text { color: var(--fg) !important; }
-  [data-theme="light"] .game { background: #FFFFFF !important; border: 3px solid #120B14 !important; box-shadow: 6px 6px 0px var(--violet) !important; }
-  [data-theme="light"] .game .gt b { color: #120B14 !important; }
-  [data-theme="light"] .game .gt .muted { color: #5A5A5A !important; }
-  [data-theme="light"] .game .tile.v { border: 2px solid #120B14 !important; }
-  [data-theme="light"] .badge { color: #120B14 !important; border-color: #120B14 !important; background: transparent !important; }
-  [data-theme="light"] .badge.on { background: var(--lime) !important; border-color: #120B14 !important; }
-  [data-theme="light"] .wm1 { background: none !important; -webkit-text-fill-color: #120B14 !important; text-shadow: none !important; }
-  [data-theme="light"] .wm2 { background: none !important; -webkit-text-fill-color: var(--violet) !important; text-shadow: none !important; }
-  [data-theme="light"] h1 { text-shadow: 3px 3px 0px var(--violet), -2px -2px 0px #120B14, 2px 2px 0px #120B14 !important; }
-  `;
+  [data-theme="light"] .game {
+    background: #FFFFFF !important;
+    border: 3px solid #120B14 !important;
+    box-shadow: 6px 6px 0px var(--violet) !important;
+  }
+  [data-theme="light"] .game .gt b {
+    color: #120B14 !important;
+  }
+  [data-theme="light"] .game .gt .muted {
+    color: #5A5A5A !important;
+  }
+  [data-theme="light"] .game .tile.v {
+    border: 2px solid #120B14 !important;
+  }
+  [data-theme="light"] .badge {
+    color: #120B14 !important;
+    border-color: #120B14 !important;
+    background: transparent !important;
+  }
+  [data-theme="light"] .badge.on {
+    background: var(--lime) !important;
+    border-color: #120B14 !important;
+  }
+
+  /* --- CORRECTION DU TEXTE DU LOGO --- */
+  [data-theme="light"] .wm1 {
+    background: none !important;
+    -webkit-text-fill-color: #120B14 !important;
+    text-shadow: none !important;
+  }
+  [data-theme="light"] .wm2 {
+    background: none !important;
+    -webkit-text-fill-color: var(--violet) !important;
+    text-shadow: none !important;
+  }
+
+  /* --- EFFET COMICS SUR LES TITRES --- */
+  [data-theme="light"] h1 {
+    text-shadow: 3px 3px 0px var(--violet), -2px -2px 0px #120B14, 2px 2px 0px #120B14 !important;
+  }
+`;
   document.head.appendChild(style);
 })();
-// 🕒 Tic-tac du chrono
-function sfxTick(urgent) {
-  if(!SFX.on)return;sfxInit();var c=SFX.ctx;if(!c)return;
-  var o=c.createOscillator(), g=c.createGain();
-  o.type='square'; o.frequency.setValueAtTime(urgent ? 1200 : 800, c.currentTime);
-  g.gain.setValueAtTime(urgent ? 0.08 : 0.04, c.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.05);
-  o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+0.06);
+
+/* ================= LOGIQUE ET VUES : QUI A ÉCRIT ÇA ? ================= */
+function vOLobbyC(){
+  var h=OL.host,iss=OL.plist.length<3?'Il faut au moins 3 joueurs.':'';
+  return obar('Qui a écrit ça ?')+'<div class="wrap">'+olShare()+olPlayers()+
+  '<section class="card"><h2>Comment jouer ?</h2><p class="muted small">Une question s\'affiche. Tout le monde écrit une réponse anonyme. Ensuite, on vote tous pour la réponse la plus drôle !</p></section>'+
+  '</div>'+olDock(iss)
 }
-// 🎰 Bruitage machine à sous
-function sfxSlot() {
-  if(!SFX.on)return;sfxInit();var c=SFX.ctx;if(!c)return;
-  var o=c.createOscillator(), g=c.createGain();
-  o.type='triangle'; o.frequency.setValueAtTime(600, c.currentTime);
-  o.frequency.exponentialRampToValueAtTime(300, c.currentTime+0.08);
-  g.gain.setValueAtTime(0.06, c.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime+0.1);
-  o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+0.12);
+
+function pubC(g){
+  var s={g:'c',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
 }
-// 🌪️ Swoosh de transition
-function sfxSwooshPage() {
-  if(!SFX.on)return;sfxInit();var c=SFX.ctx;if(!c)return;
-  var buf=c.createBuffer(1,c.sampleRate*0.4,c.sampleRate),d=buf.getChannelData(0);
-  for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-  var s=c.createBufferSource();s.buffer=buf;
-  var f=c.createBiquadFilter();f.type='bandpass';
-  f.frequency.setValueAtTime(200, c.currentTime);
-  f.frequency.exponentialRampToValueAtTime(3000, c.currentTime+0.3);
-  var g=c.createGain();g.gain.setValueAtTime(0.05, c.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.4);
-  s.connect(f);f.connect(g);g.connect(c.destination);s.start();s.stop(c.currentTime+0.45);
+
+function hcAct(uid,a,g){
+  var host=uid===PID;
+  switch(a.t){
+    case 'write':{if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcToVote(g)}break}
+    case 'vote':{if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;var opt=g.opts[a.i];if(opt.id===uid)return;g.votes=g.votes||{};g.votes[uid]=opt;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcTally(g)}break}
+    case 'close_write':if(!host||g.ph!=='write')return;hcToVote(g);break;
+    case 'close_vote':if(!host||g.ph!=='vote')return;hcTally(g);break;
+    case 'cont':{if(!host||g.ph!=='result')return;
+      var oldQ=g.q,pool=CONFESS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
+      g.q=newQ;g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
+    default:return
+  }
 }
-// 🃏 Bruit de carte
-function sfxCardFlip() {
-  if(!SFX.on)return;sfxInit();var c=SFX.ctx;if(!c)return;
-  var buf=c.createBuffer(1,c.sampleRate*0.1,c.sampleRate),d=buf.getChannelData(0);
-  for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
-  var s=c.createBufferSource();s.buffer=buf;
-  var f=c.createBiquadFilter();f.type='highpass';f.frequency.value=2000;
-  var g=c.createGain();g.gain.setValueAtTime(0.1,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.1);
-  s.connect(f);f.connect(g);g.connect(c.destination);s.start();s.stop(c.currentTime+0.15);
+function hcToVote(g){
+  g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';
+  var arr=[];
+  for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}
+  g.opts=shuffle(arr);
 }
-function vibEliminate() { if(navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]); }
-function vibTurn() { if(navigator.vibrate) navigator.vibrate([30, 40, 30]); }
+function hcTally(g){
+  var gains={};g.players.forEach(function(id){gains[id]=0});
+  var mx=0,win=null;
+  for(var uid in g.votes){
+    var opt=g.votes[uid];
+    if(opt.id) { gains[opt.id]+=1; }
+  }
+  g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});
+  g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
+}
+/* ================= LOGIQUE ET VUES : QUI A ÉCRIT ÇA ? ================= */
+
+function pubC(g){
+  var s={g:'c',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+
+/* ================= LOGIQUE ET VUES : LE FAUX AVIS ================= */
+
+function pubF(g){
+  var s={g:'f',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;if(s.voted.indexOf(PID)>=0&&g.answers)s.opts.forEach(function(o,i){if(o.id===PID)o.mine=true;});}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+
+/* ================= LOGIQUE : QUI A ÉCRIT ÇA ? ================= */
+function mkGameC(){
+  var q = CONFESS[Math.floor(Math.random()*CONFESS.length)];
+  var g={g:'c',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
+  return g;
+}
+
+function pubC(g){
+  var s={g:'c',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+
+function vOConfessWrite(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  return obar('À toi d\'écrire')+'<div class="wrap"><div class="now"><span class="eyebrow">La question est</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
+  '<form id="confessform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="cfinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta réponse anonyme..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma réponse</button></form></div>';
+}
+
+function hcAct(uid,a,g){
+  var host=uid===PID;
+  switch(a.t){
+    case 'write':{if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcToVote(g)}break}
+    case 'vote':{if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;var opt=g.opts[a.i];if(opt.id===uid)return;g.votes=g.votes||{};g.votes[uid]=opt;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcTally(g)}break}
+    case 'close_write':if(!host||g.ph!=='write')return;hcToVote(g);break;
+    case 'close_vote':if(!host||g.ph!=='vote')return;hcTally(g);break;
+    case 'cont':{if(!host||g.ph!=='result')return;
+      var oldQ=g.q,pool=CONFESS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
+      g.q=newQ;g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
+    default:return
+  }
+}
+function hcToVote(g){
+  g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';
+  var arr=[];
+  for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}
+  g.opts=shuffle(arr);
+}
+function hcTally(g){
+  var gains={};g.players.forEach(function(id){gains[id]=0});
+  var mx=0,win=null;
+  for(var uid in g.votes){
+    var opt=g.votes[uid];
+    if(opt.id) { gains[opt.id]+=1; }
+  }
+  g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});
+  g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
+}
+
+/* ================= LOGIQUE : LE FAUX AVIS ================= */
+function mkGameF(){
+  var vraiesReponses = {
+    "Quel est le vrai nom du cri du paresseux ?": "Le paresseux ne crie pas, il soupire",
+    "Combien de cœurs possède une pieuvre ?": "3",
+    "Quelle est la capitale de l'Australie ?": "Canberra",
+    "Quel animal est capable de survivre le plus longtemps sans boire ?": "Le chameau",
+    "Quel est le pays qui consomme le plus de fromage par habitant ?": "Le Danemark",
+    "Quel est le nom du plus grand désert du monde ?": "L'Antarctique",
+    "Combien d'os possède un bébé à la naissance ?": "300",
+    "Quel fruit est le plus lourd du monde ?": "Le jacquier",
+    "Quelle est la durée de vie moyenne d'un escargot ?": "3 ans",
+    "Quel est le seul métal qui est liquide à température ambiante ?": "Le mercure",
+    "Quel est le nom de la peur des longues files d'attente ?": "L'ouragie",
+    "Combien de temps met la lumière du soleil pour atteindre la Terre ?": "8 minutes",
+    "Quel est le pays d'origine de la pizza ?": "L'Italie",
+    "Quel est l'organe le plus lourd du corps humain ?": "Le foie",
+    "Quel est le nom du bébé du kangourou ?": "Le joey"
+  };
+  var q = FAUXAVIS[Math.floor(Math.random()*FAUXAVIS.length)];
+  var real = vraiesReponses[q] || "Réponse inconnue";
+  var g={g:'f',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,real:real,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
+  return g;
+}
+
+function pubF(g){
+  var s={g:'f',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;if(s.voted.indexOf(PID)>=0&&g.answers)s.opts.forEach(function(o,i){if(o.id===PID)o.mine=true;});}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+
+function vOFauxWrite(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Fausse réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente des autres joueurs… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  return obar('À toi d\'inventer')+'<div class="wrap"><div class="now"><span class="eyebrow">Question</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div><p class="muted">Invente une fausse réponse crédible.</p></div>'+
+  '<form id="fauxform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="fxinput" autocomplete="off" autocapitalize="sentences" placeholder="Ta fausse réponse..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer ma fausse réponse</button></form></div>';
+}
+
+function hfAct(uid,a,g){
+  var host=uid===PID;
+  switch(a.t){
+    case 'write':{if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hfToVote(g)}break}
+    case 'vote':{if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;var opt=g.opts[a.i];if(opt.id===uid)return;g.votes=g.votes||{};g.votes[uid]=opt;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hfTally(g)}break}
+    case 'close_write':if(!host||g.ph!=='write')return;hfToVote(g);break;
+    case 'close_vote':if(!host||g.ph!=='vote')return;hfTally(g);break;
+    case 'cont':{if(!host||g.ph!=='result')return;
+      var oldQ=g.q,pool=FAUXAVIS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
+      var vraiesReponses = {
+        "Quel est le vrai nom du cri du paresseux ?": "Le paresseux ne crie pas, il soupire",
+        "Combien de cœurs possède une pieuvre ?": "3",
+        "Quelle est la capitale de l'Australie ?": "Canberra",
+        "Quel animal est capable de survivre le plus longtemps sans boire ?": "Le chameau",
+        "Quel est le pays qui consomme le plus de fromage par habitant ?": "Le Danemark",
+        "Quel est le nom du plus grand désert du monde ?": "L'Antarctique",
+        "Combien d'os possède un bébé à la naissance ?": "300",
+        "Quel fruit est le plus lourd du monde ?": "Le jacquier",
+        "Quelle est la durée de vie moyenne d'un escargot ?": "3 ans",
+        "Quel est le seul métal qui est liquide à température ambiante ?": "Le mercure",
+        "Quel est le nom de la peur des longues files d'attente ?": "L'ouragie",
+        "Combien de temps met la lumière du soleil pour atteindre la Terre ?": "8 minutes",
+        "Quel est le pays d'origine de la pizza ?": "L'Italie",
+        "Quel est l'organe le plus lourd du corps humain ?": "Le foie",
+        "Quel est le nom du bébé du kangourou ?": "Le joey"
+      };
+      g.q=newQ;g.real=vraiesReponses[newQ]||"Réponse inconnue";g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;break}
+    default:return
+  }
+}
+function hfToVote(g){
+  g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';
+  var arr=[{id:'real',t:g.real}];
+  for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}
+  g.opts=shuffle(arr);
+}
+function hfTally(g){
+  var gains={};g.players.forEach(function(id){gains[id]=0});
+  var mx=0,win=null;
+  for(var uid in g.votes){
+    var opt=g.votes[uid];
+    if(opt.id==='real'){gains[uid]+=2;} 
+    else {gains[opt.id]+=1;}
+  }
+  g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});
+  g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';
+}
+/* ================= QUI A ÉCRIT ÇA ? ================= */
+function mkGameC(){
+  var q = CONFESS[Math.floor(Math.random()*CONFESS.length)];
+  return {g:'c',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
+}
+function pubC(g){
+  var s={g:'c',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote') s.opts=g.opts;
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+function vOConfessWrite(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  return obar('À toi d\'écrire')+'<div class="wrap"><div class="now"><span class="eyebrow">La question est</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div></div>'+
+  '<form id="confessform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="cfinput" autocomplete="off" placeholder="Ta réponse anonyme..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer</button></form></div>';
+}
+function hcAct(uid,a,g){
+  var host=uid===PID;
+  if(a.t==='write'){if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcToVote(g)}}
+  else if(a.t==='vote'){if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;var opt=g.opts[a.i];if(opt.id===uid)return;g.votes=g.votes||{};g.votes[uid]=opt;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hcTally(g)}}
+  else if(a.t==='close_write'&&host&&g.ph==='write'){hcToVote(g)}
+  else if(a.t==='close_vote'&&host&&g.ph==='vote'){hcTally(g)}
+  else if(a.t==='cont'&&host&&g.ph==='result'){
+    var oldQ=g.q,pool=CONFESS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
+    g.q=newQ;g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;
+  }
+}
+function hcToVote(g){g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';var arr=[];for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}g.opts=shuffle(arr);}
+function hcTally(g){var gains={};g.players.forEach(function(id){gains[id]=0});var mx=0,win=null;for(var uid in g.votes){var opt=g.votes[uid];if(opt.id) gains[opt.id]+=1;}g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';}
+
+/* ================= LE FAUX AVIS ================= */
+var VRAIES_REPONSES = {
+  "Quel est le vrai nom du cri du paresseux ?": "Le paresseux ne crie pas, il soupire",
+  "Combien de cœurs possède une pieuvre ?": "3",
+  "Quelle est la capitale de l'Australie ?": "Canberra",
+  "Quel animal est capable de survivre le plus longtemps sans boire ?": "Le chameau",
+  "Quel est le pays qui consomme le plus de fromage par habitant ?": "Le Danemark",
+  "Quel est le nom du plus grand désert du monde ?": "L'Antarctique",
+  "Combien d'os possède un bébé à la naissance ?": "300",
+  "Quel fruit est le plus lourd du monde ?": "Le jacquier",
+  "Quelle est la durée de vie moyenne d'un escargot ?": "3 ans",
+  "Quel est le seul métal qui est liquide à température ambiante ?": "Le mercure",
+  "Quel est le nom de la peur des longues files d'attente ?": "L'ouragie",
+  "Combien de temps met la lumière du soleil pour atteindre la Terre ?": "8 minutes",
+  "Quel est le pays d'origine de la pizza ?": "L'Italie",
+  "Quel est l'organe le plus lourd du corps humain ?": "Le foie",
+  "Quel est le nom du bébé du kangourou ?": "Le joey"
+};
+function mkGameF(){
+  var q = FAUXAVIS[Math.floor(Math.random()*FAUXAVIS.length)];
+  var real = VRAIES_REPONSES[q] || "Réponse inconnue";
+  return {g:'f',gid:String(Date.now()),ph:'write',players:OL.plist.map(function(p){return p.id}),q:q,real:real,vk:Date.now()+'-1',voted:[],answers:{},opts:[],tally:{},gains:{},winner:null,maxVotes:0};
+}
+function pubF(g){
+  var s={g:'f',gid:g.gid,ph:g.ph,players:g.players,q:g.q,vk:g.vk,voted:g.voted};
+  if(g.ph==='vote'){s.opts=g.opts;if(s.voted.indexOf(PID)>=0&&g.answers)s.opts.forEach(function(o,i){if(o.id===PID)o.mine=true;});}
+  if(g.ph==='result'){s.opts=g.opts;s.real=g.real;s.gains=g.gains;s.maxVotes=g.maxVotes;}
+  return s;
+}
+function vOFauxWrite(){
+  var s=OL.s, me=PID, done=OL.my.vote===s.vk;
+  if(done) return obar('Réponse envoyée')+'<div class="wrap"><div class="who"><span class="eyebrow">Question</span><h2 style="font-size:22px">'+esc(s.q)+'</h2><p class="muted" style="margin-top:20px">En attente… ('+s.voted.length+' / '+s.players.length+')</p></div></div>';
+  return obar('À toi d\'inventer')+'<div class="wrap"><div class="now"><span class="eyebrow">Question</span><div class="big" style="font-size:24px;line-height:1.3;margin-bottom:20px">'+esc(s.q)+'</div><p class="muted">Invente une fausse réponse crédible.</p></div>'+
+  '<form id="fauxform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="fxinput" autocomplete="off" placeholder="Ta fausse réponse..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer</button></form></div>';
+}
+function hfAct(uid,a,g){
+  var host=uid===PID;
+  if(a.t==='write'){if(g.ph!=='write'||g.voted.indexOf(uid)>=0)return;var t=String(a.tx||'').trim().slice(0,80);if(!t)return;g.answers[uid]=t;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hfToVote(g)}}
+  else if(a.t==='vote'){if(g.ph!=='vote'||g.voted.indexOf(uid)>=0||a.i==null||!g.opts[a.i])return;var opt=g.opts[a.i];if(opt.id===uid)return;g.votes=g.votes||{};g.votes[uid]=opt;g.voted.push(uid);if(g.players.every(function(id){return g.voted.indexOf(id)>=0})){hfTally(g)}}
+  else if(a.t==='close_write'&&host&&g.ph==='write'){hfToVote(g)}
+  else if(a.t==='close_vote'&&host&&g.ph==='vote'){hfTally(g)}
+  else if(a.t==='cont'&&host&&g.ph==='result'){
+    var oldQ=g.q,pool=FAUXAVIS.filter(function(x){return x!==oldQ}),newQ=pool[Math.floor(Math.random()*pool.length)];
+    g.q=newQ;g.real=VRAIES_REPONSES[newQ]||"Réponse inconnue";g.ph='write';g.voted=[];g.answers={};g.votes={};g.opts=[];g.tally={};g.gains={};g.winner=null;g.vk=Date.now()+'-'+g.q.length;
+  }
+}
+function hfToVote(g){g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';var arr=[{id:'real',t:g.real}];for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}g.opts=shuffle(arr);}
+function hfTally(g){var gains={};g.players.forEach(function(id){gains[id]=0});var mx=0,win=null;for(var uid in g.votes){var opt=g.votes[uid];if(opt.id==='real'){gains[uid]+=2;}else{gains[opt.id]+=1;}}g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';}
 S._fresh=true;olBoot();render();
 
 // Animation d'intro
