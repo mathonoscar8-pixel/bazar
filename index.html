@@ -2759,11 +2759,11 @@ async function olCreate(){
       var sn=await Rr(c).get();
       if(!sn.exists||Date.now()-(sn.data().ts||0)>6*36e5) code=c;
     }
-    if(!code) throw 'Impossible de trouver un code.';
+    if(!code) throw 'Impossible de trouver un code. Réessaie.';
     
     await olWipe(code);
     
-    // On prépare les règles AVANT de créer le salon
+    // Définition des règles (cfg) pour chaque jeu
     var cfg = {};
     if(OH.game==='m') cfg = {size:S.my.size,names:[S.my.names[0],S.my.names[1]]};
     else if(OH.game==='l') cfg = {np:6,rounds:2,secs:90,cats:LCATS.slice()};
@@ -2772,9 +2772,9 @@ async function olCreate(){
     else if(OH.game==='dd') cfg = {};
     else if(OH.game==='c') cfg = {};
     else if(OH.game==='f') cfg = {};
-    else cfg = {uc:1,mw:0,cats:CATS.slice(),reveal:true}; // Undercover
+    else cfg = {uc:1,mw:0,cats:CATS.slice(),reveal:true}; // Undercover par défaut
 
-    // 1. Création du salon
+    // Création du salon
     await Rr(code).set({
       code: code, 
       host: PID, 
@@ -2788,7 +2788,7 @@ async function olCreate(){
       v: Date.now()
     });
     
-    // 2. Ajout de l'hôte
+    // Ajout de l'hôte
     await Pd(code, PID).set({
       name: nm, 
       ci: ciFor(PID), 
