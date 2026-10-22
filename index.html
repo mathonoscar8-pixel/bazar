@@ -2846,10 +2846,10 @@ async function olOpen(code,opts){
   
   S.screen='online'; S._fresh=true; S.sheet=null; render();
   
-  // 1. ON S'ABONNE TOUT DE SUITE (L'écran va se mettre à jour dès que le serveur répond)
+  // ON S'ABONNE TOUT DE SUITE : dès que le serveur envoie les données, l'écran change !
   olSubscribe();
 
-  // 2. ON VÉRIFIE SI ON EST L'HÔTE EN ARRIÈRE-PLAN (sans bloquer l'écran)
+  // On vérifie l'hôte en arrière-plan
   try{
     var sn = await Rr(code).get();
     if(sn.exists) {
@@ -2862,10 +2862,12 @@ async function olOpen(code,opts){
            hlSched();
          }
        }
-       olRender(); // On rafraîchit l'écran une fois qu'on sait si on est hôte
+       olRender(); 
+    } else {
+       olGone('Salon introuvable.');
     }
   }catch(e){
-    // Si ça échoue, le snapshot de olSubscribe fera le travail de toute façon
+    // Si erreur réseau, on laisse le temps à olSubscribe de faire son travail
   }
 }
 function checkHost(){
