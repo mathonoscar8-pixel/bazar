@@ -4425,16 +4425,38 @@ app.addEventListener('change',function(e){var d=e.target.dataset||{};if(d.input=
 app.addEventListener('keydown',function(e){var d=e.target.dataset||{};if(e.key==='Enter'&&d.input==='dfake'){e.preventDefault();dSendFake();e.target.blur()}});
 
 async function olJoinDisplay(){
-  var code=OH.code.trim();if(!/^\d{4}$/.test(code)){OH.err='Entre le code à 4 chiffres de la partie.';return homeRender()}
-  OH.busy=true;OH.err='';homeRender();
-  try{await olInit();var b=olBlock();if(b&&!/lecture seule/.test(b))throw b;
-    if(!DB)throw 'Le mode en ligne n\'est pas disponible ici.';
-    var sn=await Rr(code).get();if(!sn.exists)throw 'Partie introuvable. Vérifie le code.';
-    var room=sn.data();if(room.game!=='d')throw 'L\'écran commun est réservé à BAZAR Dessins.';
-    var cf=jp(room.cfg,{});if(cf.display===false)throw 'L\'hôte n\'autorise pas l\'écran commun.';
-    if(room.status==='closed')throw 'Cette partie est terminée.';
-    OH.busy=false;await olOpen(code,{display:true});
-  }catch(e){OH.busy=false;OH.err=errText(e);homeRender()}}
+  var code = OH.code.trim();
+  if(!/^\d{4}$/.test(code)){ OH.err='Entre le code à 4 chiffres.'; return homeRender(); }
+  
+  OH.busy=true; OH.err=''; homeRender();
+  
+  try {
+    await olInit();
+    if(!DB) throw 'Le mode en ligne n\'est pas disponible ici.';
+    
+    var sn = await Rr(code).get();
+    if(!sn.exists) throw 'Partie introuvable. Vérifie le code.';
+    
+    var room = sn.data();
+    if(room.status === 'closed') throw 'Cette partie est terminée.';
+    
+    // ON ENLÈVE LA SÉCURITÉ QUI BLOQUAIT POUR UNDERCOVER
+    // if(room.game !== 'd') throw 'L\'écran commun est réservé à BAZAR Dessins.';
+    
+    var cf = jp(room.cfg, {});
+    // ON AUTORISE L'ÉCRAN POUR TOUS LES JEUX
+    // if(cf.display === false) throw 'L\'hôte n\'autorise pas l\'écran commun.';
+    
+    OH.busy = false;
+    await olOpen(code, { display: true });
+  } catch(e) {
+    OH.busy = false;
+    OH.err = errText(e);
+    // On affiche l'erreur à l'écran pour comprendre pourquoi ça bloque
+    alert("Erreur Écran TV : " + OH.err); 
+    homeRender();
+  }
+}
 
 /* ---------- Musique d'ambiance : composée sur place avec Web Audio (aucun fichier, donc libre de droits) ---------- */
 var MU={on:true,ctx:null,bus:null,step:0,next:0,tm:0,started:false};
