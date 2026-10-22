@@ -1729,6 +1729,7 @@ function vHome(){return '<div class="wrap">'+
    '<button class="btn btn-secondary" data-act="ojoin_home" style="font-size:18px;height:54px">Rejoindre un salon</button>'+
    '</div>'+
  '</section>'+
+ '<button class="btn btn-ghost" data-act="otv_mode" style="font-size:15px;height:44px;margin-top:5px">📺 Mode Grand Écran (TV)</button>'+
 
  '<section style="display:flex;flex-direction:column;gap:12px" aria-label="Nos jeux">'+
  '<span class="eyebrow" style="margin-top:10px">🕵️ BLUFF & MENSONGES</span>'+
@@ -3241,7 +3242,80 @@ function obar(meta){return '<div class="bar"><button class="icon-btn" data-act="
 function hold(mini){return '<div class="hold'+(mini?' mini':'')+'" id="hold" tabindex="0" role="button" aria-label="Maintiens pour voir ton mot"><div class="front">'+I.eye+'<b>Maintiens pour voir ton mot</b>'+(mini?'':'<span>Relâche pour le cacher</span>')+'</div><div class="back" id="holdback"></div></div>'}
 function holdWord(s){var w=OL.sec&&OL.sec.k===s.gid?OL.sec.w:undefined;
   S._hold=w===undefined?'<div class="word" style="font-size:26px">Chargement…</div>':(w?'<span class="eyebrow" style="color:var(--violet)">Ton mot</span><div class="word">'+esc(w)+'</div>':'<div class="word" style="font-size:32px">Tu n\'as pas de mot</div><p style="color:#323A68">Écoute les indices et bluffe.</p>')}
+function vOTVUndercover(){
+  var s = OL.s;
+  var codeHtml = '<div class="codetag" style="font-size:24px; padding:10px 20px;">PARTIE #'+esc(OL.code)+'</div>';
+  
+  if (s.ph === 'reveal') {
+    return '<div class="wrap wide" style="text-align:center;padding-top:10vh;">'+codeHtml+
+      '<h1 style="font-size:60px; color:var(--lime); text-shadow:4px 4px 0px #120B14, -2px -2px 0px var(--violet);">LISEZ VOTRE MOT</h1>'+
+      '<p class="lead" style="font-size:30px; margin-top:20px;">Regardez votre téléphone en secret...</p>'+
+      '</div>';
+  }
+  
+  if (s.ph === 'clues') {
+    var cur = s.order[s.speak];
+    return '<div class="wrap wide" style="text-align:center;padding-top:10vh;">'+codeHtml+
+      '<h1 style="font-size:60px; color:var(--violet); text-shadow:4px 4px 0px #120B14;">AU TOUR DE</h1>'+
+      '<div class="big" style="font-size:100px; color:var(--lime); text-shadow:6px 6px 0px #120B14; transform:rotate(-2deg); margin:30px 0;">'+esc(pn(cur))+'</div>'+
+      '<p class="lead" style="font-size:30px;">De donner un indice !</p>'+
+      '</div>';
+  }
+  
+  if (s.ph === 'vote') {
+    return '<div class="wrap wide" style="text-align:center;padding-top:10vh;">'+codeHtml+
+      '<h1 style="font-size:60px; color:var(--lime); text-shadow:4px 4px 0px #120B14;">VOTEZ SUR VOS TÉLÉPHONES</h1>'+
+      '<p class="lead" style="font-size:30px; margin-top:20px;">Qui est l\'imposteur ?</p>'+
+      '<div class="timer" style="max-width:800px; margin:40px auto;"><i style="width:'+(s.voted.length/s.alive.length*100)+'%"></i></div>'+
+      '<p style="font-size:24px; color:var(--fg);">'+s.voted.length+' / '+s.alive.length+' joueurs ont voté</p>'+
+      '</div>';
+  }
+  
+  if (s.ph === 'result') {
+    if (!s.elim) {
+      return '<div class="wrap wide" style="text-align:center;padding-top:10vh;">'+codeHtml+
+        '<h1 style="font-size:60px; color:var(--violet); text-shadow:4px 4px 0px #120B14;">ÉGALITÉ !</h1>'+
+        '<p class="lead" style="font-size:30px;">Personne n\'est éliminé. Nouveau tour.</p>'+
+        '</div>';
+    }
+    return '<div class="wrap wide" style="text-align:center;padding-top:10vh;">'+codeHtml+
+      '<h1 style="font-size:60px; color:var(--violet); text-shadow:4px 4px 0px #120B14;">ÉLIMINÉ !</h1>'+
+      '<div class="big" style="font-size:100px; color:var(--lime); text-shadow:6px 6px 0px #120B14; transform:rotate(-2deg); margin:30px 0;">'+esc(pn(s.elim))+'</div>'+
+      (s.er ? '<div class="role" style="font-size:40px; color:#120B14; background:var(--fg); padding:15px; border-radius:15px; border:4px solid #120B14; display:inline-block; box-shadow:6px 6px 0px var(--violet);">'+ROLE[s.er]+'</div>' : '')+
+      '</div>';
+  }
+  
+  if (s.ph === 'end') {
+    return '<div class="wrap wide" style="text-align:center;padding-top:10vh;">'+codeHtml+
+      '<h1 style="font-size:60px; color:var(--violet); text-shadow:4px 4px 0px #120B14;">FIN DE PARTIE</h1>'+
+      '<p class="lead" style="font-size:30px; margin-top:20px;">Regardez le classement sur vos téléphones !</p>'+
+      '</div>';
+  }
+  
+  return '<div class="wrap wide" style="text-align:center;padding-top:20vh;">'+codeHtml+
+    '<h1 style="font-size:60px; color:var(--lime); text-shadow:4px 4px 0px #120B14;">PATIENTEZ...</h1>'+
+    '<p class="lead" style="font-size:30px;">La partie continue sur vos téléphones.</p>'+
+    '</div>';
+}
 function vOLoad(msg){
+  // Si on est sur le grand écran ET que le salon est en attente
+  if(OL.display && OL.room && OL.status === 'lobby') {
+    var link = olLink(OL.code);
+    var playersHtml = OL.plist.map(function(p){
+      return '<div style="background:var(--lime); color:#120B14; padding:10px 20px; border-radius:8px; font:900 24px var(--display); border:3px solid #120B14; box-shadow:4px 4px 0px var(--violet); transform:rotate('+(Math.random()*4-2)+'deg)">'+esc(p.name)+'</div>';
+    }).join('');
+    
+    return '<div class="wrap wide" style="text-align:center; padding-top:5vh;">'+
+      '<h1 style="font-size:60px; color:var(--violet); text-shadow: 4px 4px 0px #120B14;">REJOIGNEZ LA PARTIE</h1>'+
+      '<div class="codebig" style="font-size:120px; letter-spacing:20px; color:var(--lime); text-shadow: 6px 6px 0px #120B14, -4px -4px 0px var(--violet); margin:20px 0;">'+esc(OL.code)+'</div>'+
+      '<div class="qrbox" style="padding:15px; border-radius:20px; border:5px solid #120B14; box-shadow:8px 8px 0px var(--violet); background:#fff; display:inline-block;">'+qrSvg(link, 300)+'</div>'+
+      '<h2 style="margin-top:40px; font-size:32px; color:var(--fg);">Joueurs connectés ('+OL.plist.length+')</h2>'+
+      '<div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-top:20px;">'+playersHtml+'</div>'+
+      '<p class="note" style="margin-top:40px; font-size:20px;">En attente de l\'hôte pour lancer la partie...</p>'+
+    '</div>';
+  }
+  
+  // Mode normal (téléphone)
   return '<div class="wrap"><div class="who"><span class="eyebrow">BAZAR Party</span><p class="muted">'+esc(msg)+'</p>'+(OL.err?'<p class="issue" role="status">'+esc(OL.err)+'</p>':'')+
   '<button class="btn btn-ghost" data-act="oleave" style="margin-top:20px">Quitter le salon</button>'+
   '</div></div>'
@@ -3344,33 +3418,35 @@ function vOLobbyM(){var c=OL.cfg,h=OL.host,me=OL.players[PID]||{team:0},nm=c.nam
   return obar('Codenames')+'<div class="wrap wide">'+olShare()+'<section class="card"><h2>Équipes</h2><div class="tcols">'+cols+'</div></section>'+mine+olPlayers()+set+'</div>'+olDock(iss)}
 
 function vOnline(){
-  if(!OL.on||!OL.room)return vOLoad('Connexion au salon…');
+  if(!OL.on || !OL.room) return vOLoad('Connexion au salon…');
+  if(OL.cfg == null) return vOLoad('Chargement du salon…');
   
-  var cok = OL.cfg != null; 
-  if(!cok)return vOLoad('Chargement du salon…');
+  // --- MODE TV / GRAND ÉCRAN ---
+  if (OL.display) {
+    if (OL.status === 'lobby' || !OL.s) return vOLoad(''); 
+    
+    // Si c'est Dessins, on utilise l'écran TV des dessins
+    if (OL.game === 'd') return vOGameD();
+    
+    // Si c'est Undercover, on utilise le nouvel écran TV
+    if (OL.game === 'u') return vOTVUndercover();
+    
+    return '<div class="wrap wide" style="text-align:center;padding-top:20vh;"><h1>La partie a commencé !</h1><p class="lead">Suivez les instructions sur vos téléphones.</p></div>';
+  }
   
-  if(OL.status==='lobby'||!OL.s){
-    if(OL.status==='play'&&!OL.s) return vOLoad('Chargement de la partie…');
+  // --- MODE JOUEUR (Téléphone) ---
+  if(OL.status === 'lobby' || !OL.s){
+    if(OL.status === 'play' && !OL.s) return vOLoad('Chargement de la partie…');
     
-    // Si c'est un tournoi, on affiche l'écran d'attente spécial
-    if(OL.game==='t') {
-      var gamesList = OL.cfg.games ? OL.cfg.games.map(function(g){
-        var names = {l:'Petit Bac', d:'Dessins', s:'Susceptible', dd:'Débat', c:'Qui a écrit ça', f:'Faux Avis', u:'Undercover', m:'Codenames'};
-        return names[g] || g;
-      }).join(' ➔ ') : 'Aucun';
-      
-      var startBtn = OL.host 
-        ? '<button class="btn btn-primary" data-act="start_tourney"'+(OL.plist.length<3?' disabled':'')+'>Lancer le Tournoi !</button>'
-        : '<p class="note">En attente de l\'hôte…</p>';
-
-      return obar('Tournoi BAZAR')+'<div class="wrap">'+olShare()+olPlayers()+
-      '<section class="card"><h2>Les jeux du tournoi</h2><p class="muted" style="font-weight:600;color:var(--lime);line-height:1.5">'+gamesList+'</p>'+
-      '<p class="muted small" style="margin-top:10px">Les points de chaque jeu s\'additionneront pour un grand classement final !</p></section>'+
-      '</div><div class="dock"><p class="issue" role="status">'+(OL.host && OL.plist.length<3?'Il faut au moins 3 joueurs.':'')+'</p>'+startBtn+'</div>';
-    }
+    var lobbyHtml = '';
+    if(OL.game === 'm') lobbyHtml = vOLobbyM();
+    else if(OL.game === 'l') lobbyHtml = vOLobbyL();
+    else if(OL.game === 'd') lobbyHtml = vOLobbyD();
+    else if(OL.game === 'c') lobbyHtml = vOLobbyC();
+    else if(OL.game === 'f') lobbyHtml = vOLobbyF();
+    else if(OL.game === 's') lobbyHtml = vOLobbyS();
+    else lobbyHtml = vOLobbyU();
     
-    // Pour les autres jeux, on garde l'affichage normal
-    var lobbyHtml = (OL.game==='m'?vOLobbyM():(OL.game==='l'?vOLobbyL():(OL.game==='d'?vOLobbyD():(OL.game==='c'?vOLobbyC():(OL.game==='f'?vOLobbyF():(OL.game==='s'?vOLobbyS():vOLobbyU()))))));
     var tip = BAZ_TIPS[OL.game] || "En attente des joueurs...";
     
     return lobbyHtml.replace('<section class="card"><h2>Équipes</h2>', bazBubble(tip)+'<section class="card"><h2>Équipes</h2>')
@@ -3379,7 +3455,15 @@ function vOnline(){
                     .replace('<section class="card"><h2>Les jeux du tournoi</h2>', bazBubble(tip)+'<section class="card"><h2>Les jeux du tournoi</h2>');
   }
   
-  return OL.game==='m'?vOGameM():(OL.game==='l'?vOGameL():(OL.game==='d'?vOGameD():(OL.game==='c'?vOConfessWrite():(OL.game==='f'?vOFauxWrite():(OL.game==='s'?vOSusceptVote():vOGameU())))));
+  // --- JEU EN COURS (Téléphone) ---
+  if (OL.game === 'm') return vOGameM();
+  if (OL.game === 'l') return vOGameL();
+  if (OL.game === 'd') return vOGameD();
+  if (OL.game === 'p') return vOGameP();
+  if (OL.game === 'c') return vOConfessWrite();
+  if (OL.game === 'f') return vOFauxWrite();
+  if (OL.game === 's') return vOSusceptVote();
+  return vOGameU();
 }
 
 function vOGameU(){var s=OL.s,me=PID,al=s.alive.indexOf(me)>=0,h=OL.host,bar=obar('Tour '+s.round+' · '+s.alive.length+' en jeu');
@@ -3570,6 +3654,17 @@ function generateShareImage(gameType){
 function olAct(a,d){
   var c=OL.cfg||{},i;
   switch(a){
+    case 'otv_mode': {
+      var c = prompt("Entre le code du salon (4 chiffres) pour l'afficher sur cet écran :");
+      if(c && /^\d{4}$/.test(c)) {
+        OH.code = c;
+        OH.name = "Écran TV"; // On force un nom
+        olJoinDisplay(); // On utilise la fonction qu'on avait faite pour les dessins !
+      } else if (c) {
+        toast("Le code doit contenir 4 chiffres.");
+      }
+      break;
+    }
     case 'ohome':OH.err='';go('ohome');break;case 'goback':goBack();break;case 'ojoin_home':OH.game='u';OH.err='';go('ohome');setTimeout(function(){var el=document.getElementById('ocd');if(el){el.focus();el.scrollIntoView({behavior:'smooth',block:'center'});}},150);break;
 case 'oscanqr':go('scanner');break;
 case 'profile':go('profile');break;case 'wheel':go('wheel');break;case 'shop':go('shop');break;
@@ -4523,10 +4618,18 @@ function musicToggle(){MU.on=!MU.on;try{localStorage.setItem('bazar-music',MU.on
   if(MU.on)muStart();else muStop();musicPaint();vib(10)}
 function themeHtml(fix){var isLight=(document.documentElement.getAttribute('data-theme')==='light');
   return '<button class="icon-btn mus'+(fix?' fix':'')+'" data-act="theme" aria-label="Changer de thème" style="'+(fix?'top:calc(10px + env(safe-area-inset-top));right:168px':'')+'">'+(isLight?'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>':'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>')+'</button>'}
-function themeToggle(){var isLight=(document.documentElement.getAttribute('data-theme')==='light');
-  if(isLight){document.documentElement.removeAttribute('data-theme');try{localStorage.setItem('bazar-theme','dark')}catch(e){}}
-  else{document.documentElement.setAttribute('data-theme','light');try{localStorage.setItem('bazar-theme','light')}catch(e){}}
-  render();vib(10)}
+function themeToggle(){
+  var isLight=(document.documentElement.getAttribute('data-theme')==='light');
+  if(isLight){
+    document.documentElement.removeAttribute('data-theme');
+    try{localStorage.setItem('bazar-theme','dark')}catch(e){}
+  } else {
+    document.documentElement.setAttribute('data-theme','light');
+    try{localStorage.setItem('bazar-theme','light')}catch(e){}
+  }
+  render();
+  if(typeof vib === 'function') vib(10);
+}
 (function(){
   try{
     var t = localStorage.getItem('bazar-theme') || 'streetwear';
@@ -5320,13 +5423,98 @@ function bazBubble(text, mood){
     transform: rotate(0.5deg);
   }
   
-  h1 {
+    h1 {
     text-transform: uppercase;
     font-style: italic;
     text-shadow: 3px 3px 0px var(--violet), -3px -3px 0px var(--lime);
     letter-spacing: 1px;
   }
-  `;
+
+  /* === MODE JOUR (Carnet de croquis) === */
+  [data-theme="light"] {
+    --bg: #F4F1E9; /* Blanc cassé / Vieux papier */
+    --surface: #FFFFFF; 
+    --surface-2: #F0EDE4; 
+    --line: #D1CDC0; 
+    --fg: #120B14; /* Texte noir */
+    --muted: #5A5A5A;
+    --lime: #B8FF45; /* On garde le vert citron */
+    --lime-ink: #120B14;
+    --violet: #8466FF; /* On garde le violet */
+    --violet-soft: #6B4EFF;
+  }
+  
+  [data-theme="light"] body { background: var(--bg) !important; color: var(--fg); }
+  
+  [data-theme="light"] .card {
+    background: var(--surface) !important;
+    border: 4px solid var(--fg) !important;
+    box-shadow: 8px 8px 0px var(--violet) !important;
+  }
+  
+  [data-theme="light"] .btn, 
+  [data-theme="light"] .game {
+    border: 3px solid var(--fg) !important; 
+    box-shadow: 6px 6px 0px rgba(0,0,0,0.8) !important;
+  }
+  
+  [data-theme="light"] .btn-primary {
+    background: var(--lime) !important;
+    color: var(--lime-ink) !important;
+  }
+  
+  [data-theme="light"] .btn-secondary {
+    border-color: var(--violet) !important;
+    color: var(--violet) !important;
+  }
+
+  [data-theme="light"] .baz-container {
+    background: #FFFFFF !important;
+    border-color: var(--fg) !important;
+    box-shadow: 6px 6px 0px var(--violet) !important;
+  }
+  [data-theme="light"] .baz-text { color: var(--fg) !important; }
+  [data-theme="light"] .game {
+    background: #FFFFFF !important;
+    border: 3px solid #120B14 !important;
+    box-shadow: 6px 6px 0px var(--violet) !important;
+  }
+  [data-theme="light"] .game .gt b {
+    color: #120B14 !important;
+  }
+  [data-theme="light"] .game .gt .muted {
+    color: #5A5A5A !important;
+  }
+  [data-theme="light"] .game .tile.v {
+    border: 2px solid #120B14 !important;
+  }
+  [data-theme="light"] .badge {
+    color: #120B14 !important;
+    border-color: #120B14 !important;
+    background: transparent !important;
+  }
+  [data-theme="light"] .badge.on {
+    background: var(--lime) !important;
+    border-color: #120B14 !important;
+  }
+
+  /* --- CORRECTION DU TEXTE DU LOGO --- */
+  [data-theme="light"] .wm1 {
+    background: none !important;
+    -webkit-text-fill-color: #120B14 !important;
+    text-shadow: none !important;
+  }
+  [data-theme="light"] .wm2 {
+    background: none !important;
+    -webkit-text-fill-color: var(--violet) !important;
+    text-shadow: none !important;
+  }
+
+  /* --- EFFET COMICS SUR LES TITRES --- */
+  [data-theme="light"] h1 {
+    text-shadow: 3px 3px 0px var(--violet), -2px -2px 0px #120B14, 2px 2px 0px #120B14 !important;
+  }
+`;
   document.head.appendChild(style);
 })();
 
