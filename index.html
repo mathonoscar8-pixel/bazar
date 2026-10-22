@@ -2823,26 +2823,19 @@ async function olJoin(){
     // 1. On vérifie que le salon existe
     var sn = await Rr(code).get();
     if(!sn.exists) throw 'Partie introuvable. Vérifie le code.';
-    
     var room = sn.data();
     if(room.status === 'closed') throw 'Cette partie est terminée.';
     
-    // 2. On récupère la liste actuelle des joueurs
+    // 2. On récupère la liste des joueurs
     var q = await Rp(code).get();
-    var mine = null, names = [];
+    var mine = null;
     q.docs.forEach(function(d){
-      var v = d.data();
-      if(d.id === PID) mine = v;
-      else names.push(norm(v.name || ''));
+      if(d.id === PID) mine = d.data();
     });
     
-    // 3. Si on est un nouveau joueur, on s'ajoute (sans bloquer si on est déjà là)
+    // 3. Si on n'est pas encore dans le salon, on s'ajoute
     if(!mine){
       if(room.status === 'play') throw 'La partie a déjà commencé.';
-      if(q.docs.length >= (room.game === 'd' ? 10 : 12)) throw 'Le salon est complet.';
-      if(names.indexOf(norm(nm)) >= 0) throw 'Ce prénom est déjà pris.';
-      
-      // On ajoute le joueur dans la base
       await Pd(code, PID).set({
         name: nm, 
         ci: ciFor(PID), 
@@ -2854,14 +2847,11 @@ async function olJoin(){
       });
     }
     
-    // 4. ON LANCE LA CONNEXION (L'écran va s'afficher tout de suite)
     olStore({name:nm, code:code});
     OH.busy = false;
-    
-    // On garde le jeu en mémoire
     OH.game = room.game;
     
-    // On lance l'écran (qui va utiliser le Ping de secours pour afficher les autres joueurs)
+    // 4. On ouvre l'écran du salon
     await olOpen(code);
     
   } catch(e) {
@@ -2874,13 +2864,8 @@ function olTeardown(){clearTimeout(OL.tm);if(OL&&OL.unsubs)OL.unsubs.forEach(fun
 async function olOpen(code,opts){
   olTeardown();
   OL={on:true,code:code,host:false,game:null,room:null,cfg:{},players:{},plist:[],sec:null,s:null,status:'',unsubs:[],err:'',sel:null,cn:2,cw:'',cerr:'',my:{},myN:Date.now(),lastN:{},scores:{},wins:[0,0],G:null,init:false,flip:false,pick:null,joined:false,cq:Promise.resolve(),cpend:0,sig:'',used:(function(){try{return JSON.parse(localStorage.getItem('bazar-undercover-online-used-v2')||'[]')}catch(e){return []}})(),la:[],lv:{},lvk:0,lph:'',display:!!(opts&&opts.display),dart:{},danim:{},dfp:{},dr:null,dfake:{w:'',sent:false,msg:'',at:0},dv:{pick:null,heart:null,sent:false},myfake:''};
-  
   S.screen='online'; S._fresh=true; S.sheet=null; render();
-  
-  // On lance la connexion normale (qui gère les mises à jour automatiquement)
   olSubscribe();
-
-  // On vérifie si on est l'hôte (sans bloquer l'écran)
   try{
     var sn = await Rr(code).get();
     if(sn.exists) {
