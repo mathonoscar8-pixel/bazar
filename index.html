@@ -2864,8 +2864,13 @@ function olTeardown(){clearTimeout(OL.tm);if(OL&&OL.unsubs)OL.unsubs.forEach(fun
 async function olOpen(code,opts){
   olTeardown();
   OL={on:true,code:code,host:false,game:null,room:null,cfg:{},players:{},plist:[],sec:null,s:null,status:'',unsubs:[],err:'',sel:null,cn:2,cw:'',cerr:'',my:{},myN:Date.now(),lastN:{},scores:{},wins:[0,0],G:null,init:false,flip:false,pick:null,joined:false,cq:Promise.resolve(),cpend:0,sig:'',used:(function(){try{return JSON.parse(localStorage.getItem('bazar-undercover-online-used-v2')||'[]')}catch(e){return []}})(),la:[],lv:{},lvk:0,lph:'',display:!!(opts&&opts.display),dart:{},danim:{},dfp:{},dr:null,dfake:{w:'',sent:false,msg:'',at:0},dv:{pick:null,heart:null,sent:false},myfake:''};
+  
   S.screen='online'; S._fresh=true; S.sheet=null; render();
+  
+  // On lance la connexion normale (qui gère les mises à jour automatiquement)
   olSubscribe();
+
+  // On vérifie si on est l'hôte (sans bloquer l'écran)
   try{
     var sn = await Rr(code).get();
     if(sn.exists) {
@@ -3017,29 +3022,19 @@ function olOnState(s){var p=OL.s,first=!OL.init;OL.init=true;OL.s=s;
   if(s.g==='m'&&s.lt&&(!p||p.lt!==s.lt)){OL.fxCard={i:s.last,k:s.lg};OL.sel=null}}
 function olRender(){
   if(!OL.on||OL.rq)return;
-  
   OL.rq=requestAnimationFrame(function(){
     OL.rq=0;
     if(!OL.on||S.screen!=='online')return;
-    
-    // Si on est connecté, on arrête le minuteur de secours (fini les clignotements)
-    if (OL.room && OL.fallbackTimer) {
-      clearInterval(OL.fallbackTimer);
-      OL.fallbackTimer = null;
-    }
     
     var ae=document.activeElement;
     if(OL.drawing||document.querySelector('.hold.show')||(ae&&ae.tagName==='INPUT'&&app.contains(ae)&&!ae.readOnly)){
       OL.deferred=true;
       return;
     }
-    
     var s=OL.s,sig=OL.status+'|'+(s?[s.ph,s.round,s.speak,s.turn,s.vk,s.cur,s.dstep].join('|'):'');
     if(sig!==OL.sig){OL.sig=sig;S._fresh=true}
-    
-    render();
-    olFx();
-  });
+    render();olFx()
+  })
 }
 document.addEventListener('pointerup',function(){if(OL.on&&OL.deferred){OL.deferred=false;setTimeout(olRender,80)}});
 app.addEventListener('focusout',function(){if(OL.on&&OL.deferred){OL.deferred=false;setTimeout(olRender,150)}});
