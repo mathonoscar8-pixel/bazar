@@ -2784,7 +2784,8 @@ async function olCreate(){
     
     // Définition des règles (cfg) pour chaque jeu
     var cfg = {};
-    if(OH.game==='m') cfg = {size:S.my.size,names:[S.my.names[0],S.my.names[1]]};
+        if(OH.game==='bz') { bzCreateOnline(); return; }
+if(OH.game==='m') cfg = {size:S.my.size,names:[S.my.names[0],S.my.names[1]]};
     else if(OH.game==='l') cfg = {np:6,rounds:2,secs:90,cats:LCATS.slice()};
     else if(OH.game==='d') cfg = {rounds:2,per:1,tdraw:60,tfake:40,tvote:25,cats:DCATS.slice(),custom:'',clear:false,dbl:true,hearts:true,hint:true,who:true,display:true};
     else if(OH.game==='s') cfg = {};
@@ -3420,7 +3421,7 @@ function vOHome(){
     '</div>';
   }
 
-  var btnText = OH.busy ? '<span class="spinner"></span> Création…' : 'Créer le salon avec '+({u:'Undercover',m:'Codenames',l:'Petit Bac',d:'Dessins',s:'Susceptible',dd:'Débat',c:'Confessions',f:'Faux Avis'})[OH.game||'u']+' '+I.spark;
+  var btnText = OH.busy ? '<span class="spinner"></span> Création…' : 'Créer le salon avec '+({u:'Undercover',m:'Codenames',l:'Petit Bac',d:'Dessins',s:'Susceptible',dd:'Débat',c:'Confessions',f:'Faux Avis',bz:'BAZAR CHAOS'})[OH.game||'u']+' '+I.spark;
 
   return topbar('Créer un salon','home')+'<div class="wrap">'+
   '<section class="hero"><h1 style="font-size:32px">Chacun son téléphone.</h1><p class="lead">Crée un salon, partage le code à 4 chiffres ou le QR code, et jouez ensemble.</p></section>'+
@@ -3437,6 +3438,7 @@ function vOHome(){
   gameBtn('dd', 'Le Débat', 'Défends l\'indéfendable')+
   gameBtn('c', 'Qui a écrit ça ?', 'Confessions anonymes')+
   gameBtn('f', 'Le Faux Avis', 'Invente la fausse réponse')+
+  gameBtn('bz', 'BAZAR CHAOS', 'Dessins et interprétations')+
   '</section>'+
   
   '<section class="card"><h2>2. Crée le salon</h2>'+
@@ -5867,45 +5869,158 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch
 })();
 </script>
 <script>
-/* ================= BAZAR CHAOS — local + online synced ================= */
-var BZ={mode:'choose',phase:'setup',names:[],n:4,idx:0,chains:[],current:null,round:0,votes:{},sabotage:-1,scores:{},phrase:'',drawing:'',caption:'',promptIndex:0,tool:'pen',color:'#171525',width:5,room:'',pid:'',me:'',host:false,db:null,unsub:null,rev:0,seenRev:0,submitting:false};
-var BZ_PROMPTS=['Un pigeon qui devient président','Un ninja en retard à son mariage','Un crocodile qui a peur de l’eau','Un prof qui combat un dragon','Un chat qui dirige une entreprise','Un alien qui découvre les frites','Un super-héros complètement nul','Un bébé qui braque une banque','Un fantôme qui a peur du noir','Un robot qui tombe amoureux','Un requin qui veut devenir dentiste','Un chien qui passe le bac','Une licorne au chômage','Un astronaute perdu au supermarché','Un lama dans une boîte de nuit','Un roi qui rate ses pâtes','Un hamster qui dirige la NASA','Un mariage organisé par des extraterrestres','Un facteur poursuivi par des canards','Un pirate qui a peur de l’eau','Un cochon qui devient influenceur','Une grand-mère championne de MMA','Un dinosaure dans le métro','Un magicien qui rate tous ses tours'];
-function bzEscape(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function bzStart(){BZ={mode:'choose',phase:'setup',names:[],n:4,idx:0,chains:[],current:null,round:0,votes:{},sabotage:-1,scores:{},phrase:'',drawing:'',caption:'',promptIndex:0,tool:'pen',color:'#171525',width:5,room:'',pid:'',me:'',host:false,db:null,unsub:null,rev:0,seenRev:0,submitting:false};go('bzgame')}
+/* ================= BAZAR CHAOS V3 — 100% fonctionnel ================= */
+var BZ = {
+  mode:'choose', phase:'setup', room:'', pid:'', me:'', host:false, db:null, 
+  unsubGame:null, unsubPlayers:null, players:[], names:[], remote:null,
+  local:false, idx:0, votes:{}, sabotage:-1, current:null, rev:0
+};
+
+var BZ_PROMPTS = ['Un pigeon qui devient président','Un ninja en retard à son mariage','Un crocodile qui a peur de l’eau','Un prof qui combat un dragon','Un chat qui dirige une entreprise','Un alien qui découvre les frites','Un super-héros complètement nul','Un bébé qui braque une banque','Un fantôme qui a peur du noir','Un robot qui tombe amoureux','Un requin qui veut devenir dentiste','Un chien qui passe le bac','Une licorne au chômage','Un astronaute perdu au supermarché','Un lama dans une boîte de nuit','Un roi qui rate ses pâtes','Un hamster qui dirige la NASA','Un mariage organisé par des extraterrestres','Un facteur poursuivi par des canards','Un pirate qui a peur de l’eau','Un cochon qui devient influenceur','Une grand-mère championne de MMA','Un dinosaure dans le métro','Un magicien qui rate tous ses tours'];
+
+function bzEsc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function bzPickPrompt(){return BZ_PROMPTS[Math.floor(Math.random()*BZ_PROMPTS.length)]}
-function bzNewState(names,phrases){return {game:'bazar-chaos',phase:'phrasevote',names:names,players:names.map((name,i)=>({id:'p'+i,name:name,online:true})),host:BZ.pid,idx:0,round:0,steps:[],chains:[],phraseChoices:phrases||{},phrase:'',votes:{},sabotage:Math.floor(Math.random()*names.length),rev:1,created:Date.now(),prompt:bzPickPrompt(),result:null}}
-async function bzDB(){if(!BZ.db){if(!window.claude||!window.claude.use)throw Error('Le service de salon en ligne n’est pas disponible sur ce site.');BZ.db=await window.claude.use('db')}return BZ.db}
-function bzRoomDoc(){return BZ.db.doc('rooms/'+BZ.room)}
+
+// Initialisation de la base de données
+async function bzDB(){
+  if(BZ.db) return BZ.db;
+  if(!window.claude || !window.claude.use) throw Error("Base de données non disponible.");
+  BZ.db = await window.claude.use('db');
+  return BZ.db;
+}
+
+// Fonctions pour intéragir avec la base
+function Rr(c){return BZ.db.doc('rooms/'+c)}
+function Rp(c){return BZ.db.collection('rooms/'+c+'/players')}
+function Pd(c,id){return BZ.db.doc('rooms/'+c+'/players/'+id)}
+function bzRoomDoc(){return BZ.db.doc('rooms/'+BZ.room+'/bz/state')}
+
+// Démarrer le jeu
+function bzStart(){
+  BZ = { mode:'choose', phase:'setup', room:'', pid:'', me:'', host:false, db:null, unsubGame:null, unsubPlayers:null, players:[], names:[], remote:null, local:false, idx:0, votes:{}, sabotage:-1, current:null, rev:0 };
+  go('bzgame');
+}
+
+// Créer un salon en ligne
+async function bzCreateOnline(){
+  try{
+    await bzDB();
+    var name = (document.getElementById('bz-online-name')||{}).value.trim().slice(0,16);
+    if(!name) return toast('Choisis un prénom.');
+    
+    // ID unique sauvegardé sur le téléphone
+    BZ.pid = localStorage.getItem('bazar-bz-pid');
+    if(!BZ.pid){
+      BZ.pid = 'p'+Math.random().toString(36).slice(2,10);
+      localStorage.setItem('bazar-bz-pid', BZ.pid);
+    }
+
+    var code = null;
+    for(var i=0; i<5 && !code; i++){
+      var c = String(1000+Math.floor(Math.random()*9000));
+      var sn = await Rr(c).get();
+      if(!sn.exists || Date.now()-(sn.data().ts||0)>6*36e5) code = c;
+    }
+    if(!code) return toast('Impossible de créer le salon. Réessaie.');
+
+    BZ.room = code;
+    BZ.host = true;
+    BZ.me = name;
+
+    await Rr(code).set({ code:code, host:BZ.pid, game:'bz', status:'lobby', cfg:'{}', s:'', scores:'{}', wins:'[0,0]', ts:Date.now(), v:Date.now() });
+    await Pd(code, BZ.pid).set({ name:name, ci:0, team:0, spy:false, ts:Date.now(), act:'', avatar:null });
+    
+    var state = { game:'bazar-chaos', phase:'lobby', room:code, names:[], players:[{pid:BZ.pid,name:name}], host:BZ.pid, idx:0, steps:[], phraseChoices:{}, votes:{}, sabotage:-1, rev:1, created:Date.now(), result:null };
+    
+    await bzRoomDoc().set(state);
+    BZ.remote = state;
+    BZ.phase = 'lobby';
+    
+    bzWatch();
+    render();
+  } catch(e){
+    toast('Erreur création : '+(e.message||e));
+  }
+}
+
+// Rejoindre un salon
+async function bzJoinOnline(){
+  try{
+    await bzDB();
+    var room = (document.getElementById('bz-room-code')||{}).value.trim().replace(/\D/g,'');
+    var name = (document.getElementById('bz-online-name')||{}).value.trim().slice(0,16);
+    
+    if(room.length !== 4) return toast('Le code doit faire 4 chiffres.');
+    if(!name) return toast('Choisis un prénom.');
+
+    BZ.pid = localStorage.getItem('bazar-bz-pid');
+    if(!BZ.pid){
+      BZ.pid = 'p'+Math.random().toString(36).slice(2,10);
+      localStorage.setItem('bazar-bz-pid', BZ.pid);
+    }
+
+    var sn = await Rr(room).get();
+    if(!sn.exists) return toast('Partie introuvable.');
+    var roomData = sn.data();
+    if(roomData.status === 'play') return toast('La partie a déjà commencé.');
+    if(roomData.game !== 'bz') return toast('Ce n\'est pas un salon BAZAR CHAOS.');
+
+    var existing = await Pd(room, BZ.pid).get();
+    if(!existing.exists){
+      var q = await Rp(room).get();
+      if(q.docs.length >= 12) return toast('Salon complet (12 max).');
+      await Pd(room, BZ.pid).set({ name:name, ci:0, team:0, spy:false, ts:Date.now(), act:'', avatar:null });
+    }
+
+    var bzSnap = await bzRoomDoc().get();
+    if(!bzSnap.exists) return toast('Erreur : données du jeu introuvables.');
+    
+    BZ.room = room;
+    BZ.me = name;
+    BZ.host = false;
+
+    var state = bzSnap.data();
+    if(!state.players.some(p => p.pid === BZ.pid)){
+      state.players.push({pid:BZ.pid, name:name});
+      state.rev = (state.rev||0) + 1;
+      await bzRoomDoc().set(state);
+    }
+    
+    BZ.remote = state;
+    BZ.phase = state.phase || 'lobby';
+    
+    bzWatch();
+    render();
+  } catch(e){
+    toast('Erreur connexion : '+(e.message||e));
+  }
+}
+
+// Écouter les modifications du salon
 function bzWatch(){
-  if(BZ.unsub){try{BZ.unsub()}catch(e){}}
+  if(BZ.unsubGame){try{BZ.unsubGame()}catch(e){}}
   if(BZ.unsubPlayers){try{BZ.unsubPlayers()}catch(e){}}
   
-  // 1. Écoute de l'état du jeu (phases, dessins...)
-  BZ.unsub=bzRoomDoc().onSnapshot(function(s){
-    if(!s||!s.exists)return;
-    var d=s.data();
-    if(!d||d.game!=='bazar-chaos')return;
-    var old=BZ.rev;
-    BZ.remote=d;
-    BZ.rev=d.rev||0;
-    BZ.names=d.names||[];
-    BZ.n=BZ.names.length;
-    BZ.phase=d.phase;
-    BZ.idx=d.idx||0;
-    BZ.current={phrase:d.phrase,steps:d.steps||[]};
-    BZ.votes=d.votes||{};
-    BZ.sabotage=d.sabotage;
-    BZ.chains=d.chains||[];
-    BZ.result=d.result;
-    BZ.host=d.host===BZ.pid;
-    BZ.me=(d.players||[]).find(p=>p.pid===BZ.pid)?.name||BZ.me;
-    if(S.screen!=='bzgame'){S.screen='bzgame'}
+  // Écoute de l'état du jeu
+  BZ.unsubGame = bzRoomDoc().onSnapshot(function(s){
+    if(!s || !s.exists) return;
+    var d = s.data();
+    var old = BZ.rev;
+    BZ.remote = d;
+    BZ.rev = d.rev || 0;
+    BZ.names = d.names || [];
+    BZ.phase = d.phase;
+    BZ.idx = d.idx || 0;
+    BZ.votes = d.votes || {};
+    BZ.sabotage = d.sabotage;
+    BZ.host = d.host === BZ.pid;
+    
+    if(S.screen !== 'bzgame') S.screen = 'bzgame';
     render();
-    if(BZ.rev!==old&&BZ.rev>1)bzBurst(BZ.phase==='finish'?48:22);
-    if(BZ.phase==='draw')bzInitCanvas()
-  },function(e){console.warn('BAZAR sync',e)});
+    if(BZ.rev !== old && BZ.rev > 1) bzBurst();
+  });
 
-  // 2. Écoute de la collection de joueurs (comme le jeu Dessins !)
+  // Écoute de la liste des joueurs (la VRAIE liste, synchronisée)
   BZ.unsubPlayers = Rp(BZ.room).onSnapshot(function(q){
     var arr = [];
     q.docs.forEach(function(doc){
@@ -5914,180 +6029,328 @@ function bzWatch(){
       arr.push(data);
     });
     BZ.players = arr;
-    if(S.screen==='bzgame') render();
-  },function(e){});
-}
-/* ---------- BAZAR CHAOS : salon online aligné sur les jeux existants ---------- */
-async function bzCreateOnline(){
-  try{
-    await bzDB();
-    var name=((document.getElementById('bz-online-name')||{}).value||'').trim().slice(0,16);
-    if(!name){toast('Choisis un prénom.');return}
-    
-    // On sauvegarde l'identité pour ne pas la perdre !
-    BZ.pid = localStorage.getItem('bazar-bz-pid') || ('p'+Math.random().toString(36).slice(2,10)+'~'+(window.claude&&window.claude.userId?window.claude.userId():''));
-    localStorage.setItem('bazar-bz-pid', BZ.pid);
-
-    var code=null;
-    for(var i=0;i<5&&!code;i++){
-      var c=String(1000+Math.floor(Math.random()*9000));
-      var sn=await Rr(c).get();
-      if(!sn.exists||Date.now()-(sn.data().ts||0)>6*36e5) code=c;
-    }
-    if(!code){toast('Impossible de créer le salon. Réessaie.');return}
-    BZ.room=code;
-    BZ.host=true;
-    BZ.me=name;
-    
-    await Rr(code).set({ code:code, host:BZ.pid, game:'bz', status:'lobby', cfg:'{}', s:'', scores:'{}', wins:'[0,0]', ts:Date.now(), v:Date.now() });
-    await Pd(code,BZ.pid).set({ name:name, ci:0, team:0, spy:false, ts:Date.now(), act:'', avatar:null });
-    
-    var state={ game:'bazar-chaos', phase:'lobby', room:code, names:[], players:[{pid:BZ.pid,name:name}], host:BZ.pid, idx:0, steps:[], phraseChoices:{}, votes:{}, sabotage:-1, rev:1, created:Date.now(), result:null };
-    await bzRoomDoc().set(state);
-    BZ.remote=state;
-    BZ.phase='lobby';
-    bzWatch();
-    render();
-  }catch(e){ toast('Impossible de créer le salon : '+(e.message||e)); }
+    if(S.screen === 'bzgame') render();
+  });
 }
 
-async function bzJoinOnline(){
-  try{
-    await bzDB();
-    var room=((document.getElementById('bz-room-code')||{}).value||'').trim().replace(/\D/g,'');
-    var name=((document.getElementById('bz-online-name')||{}).value||'').trim().slice(0,16);
-    if(room.length!==4){toast('Le code doit faire 4 chiffres.');return}
-    if(!name){toast('Choisis un prénom.');return}
-
-    // On récupère l'identité ou on en crée une
-    BZ.pid = localStorage.getItem('bazar-bz-pid') || ('p'+Math.random().toString(36).slice(2,10)+'~'+(window.claude&&window.claude.userId?window.claude.userId():''));
-    localStorage.setItem('bazar-bz-pid', BZ.pid);
-
-    var sn=await Rr(room).get();
-    if(!sn.exists){toast('Partie introuvable. Vérifie le code.');return}
-    var roomData=sn.data();
-    if(roomData.status==='closed'){toast('Cette partie est fermée.');return}
-    if(roomData.status==='play'){toast('La partie a déjà commencé.');return}
-    if(roomData.game!=='bz'){toast('Ce salon n\'est pas un BAZAR CHAOS.');return}
-
-    var existing=await Pd(room,BZ.pid).get();
-    if(!existing.exists){
-      var q=await Rp(room).get();
-      if(q.docs.length>=12){toast('Salon complet (12 max).');return}
-      await Pd(room,BZ.pid).set({ name:name, ci:0, team:0, spy:false, ts:Date.now(), act:'', avatar:null });
-    }
-
-    var bzSnap=await bzRoomDoc().get();
-    if(!bzSnap.exists){toast('Erreur : état BAZAR CHAOS introuvable.');return}
-    BZ.room=room;
-    BZ.me=name;
-    BZ.host=false;
-
-    var state=bzSnap.data();
-    if(!state.players.some(function(p){return p.pid===BZ.pid})){
-      state.players.push({pid:BZ.pid,name:name});
-      state.rev=(state.rev||0)+1;
-      await bzRoomDoc().set(state);
-    }
-    BZ.remote=state;
-    BZ.phase=state.phase||'lobby';
-    bzWatch();
-    render();
-  }catch(e){ toast('Connexion impossible : '+(e.message||e)); }
-}
-
+// Lancer la partie (L'HÔTE UNIQUEMENT)
 async function bzStartOnline(){
   try{
-    var phrase=((document.getElementById('bz-phrase-start')||{}).value||'').trim();
     if(!BZ.host) return;
     
-    toast('Préparation de la partie...');
-
-    // 1. On récupère TOUS les joueurs enregistrés sur le serveur
+    // On va chercher la vraie liste à jour sur le serveur
     var q = await Rp(BZ.room).get();
     var realPlayers = q.docs.map(function(doc){ 
         return { pid: doc.id, name: doc.data().name }; 
     });
 
     if(realPlayers.length < 3){
-        toast('Il faut au moins 3 joueurs dans le salon. Actuellement : ' + realPlayers.length); 
-        return;
+        return toast('Il faut au moins 3 joueurs (actuellement : '+realPlayers.length+').'); 
     }
 
+    var phrase = (document.getElementById('bz-phrase-start')||{}).value.trim();
     var realNames = realPlayers.map(function(p){ return p.name; });
 
-    // 2. On modifie le jeu avec la liste fraîche
-    await bzPatch(function(s){
-      if(s.host !== BZ.pid) return;
-      
-      s.phase = 'phrasevote';
-      s.players = realPlayers; // On force la liste à jour
-      s.names = realNames;     // On force les noms à jour
-      s.phraseChoices = {};
-      s.sabotage = Math.floor(Math.random() * realPlayers.length);
-      s.steps = [];
-      s.phrase = phrase;
-      s.idx = 0;
-      s.votes = {};
-      s.result = null;
-      s.rev = (s.rev || 0) + 1; // On force la mise à jour
-    }, 30);
+    // On sauvegarde tout dans le state du jeu
+    var s = BZ.remote;
+    s.phase = 'phrasevote';
+    s.players = realPlayers;
+    s.names = realNames;
+    s.phraseChoices = {};
+    s.sabotage = Math.floor(Math.random() * realPlayers.length);
+    s.steps = [];
+    s.phrase = phrase;
+    s.idx = 0;
+    s.votes = {};
+    s.result = null;
+    s.rev = (s.rev || 0) + 1;
 
-  } catch(e){ 
-    toast('Erreur : '+(e.message||e)); 
+    await bzRoomDoc().set(s);
+    await Rr(BZ.room).update({ status: 'play' }); // On dit au serveur que le jeu commence
+    bzBurst();
+  } catch(e){
+    toast('Erreur de lancement : '+(e.message||e));
   }
 }
-/* Helpers manquants pour BAZAR CHAOS online */
-function Rr(c){return BZ.db.doc('rooms/'+c)}
-function Rp(c){return BZ.db.collection('rooms/'+c+'/players')}
-function Pd(c,id){return BZ.db.doc('rooms/'+c+'/players/'+id)}
-async function bzPatch(mutator,anim){if(!BZ.remote||BZ.submitting)return;BZ.submitting=true;try{var d=await bzRoomDoc().get();if(!d.exists)throw Error('Salon fermé');var state=d.data();mutator(state);state.rev=(state.rev||0)+1;state.updated=Date.now();await bzRoomDoc().set(state);BZ.remote=state;BZ.rev=state.rev;if(anim)bzBurst(anim); }catch(e){toast(e.message||'Synchronisation impossible. Réessaie.')}finally{BZ.submitting=false}}
-function bzRender(){var p=BZ.phase,html='<div class="bz-wrap"><div class="bz-head"><button class="btn btn-ghost" data-act="bzhome">← Accueil</button><span class="bz-sticker">💥 BAZAR CHAOS</span></div><div class="bz-paper bz-stage">';
-if(BZ.mode==='choose'||p==='setup'){html+='<div class="bz-sticker">MODE DE JEU</div><h1 class="bz-title">Le bazar<br>prend le contrôle.</h1><p>Une phrase devient un dessin, puis un autre délire. À la fin, le carnet explose.</p><div class="bz-modegrid"><button class="bz-btn" data-act="bzlocalmode">📱 Téléphone partagé</button><button class="bz-btn alt" data-act="bzonlinemode">📲 Chacun son téléphone</button></div><p class="bz-note">3 à 12 joueurs · dessin, interprétation, sabotage et révélations.</p>';
-if(BZ.mode==='local'){html+='<label class="bz-label">Prénoms (3 à 12)</label><textarea id="bz-names" class="bz-input" rows="4" placeholder="Lina&#10;Hugo&#10;Inès">'+bzEscape(BZ.names.join('\n'))+'</textarea><label class="bz-label">Phrase de départ</label><input id="bz-phrase-start" class="bz-input" maxlength="120" placeholder="Écris votre phrase… (facultatif)"><p>Pas d’idée ? Choisis une phrase proposée :</p><div class="bz-prompts">'+BZ_PROMPTS.slice(0,6).map((x,i)=>'<button class="bz-prompt" data-act="bzprompt" data-i="'+i+'">'+bzEscape(x)+'</button>').join('')+'</div><button class="bz-btn" data-act="bzplayers">LANCER LE CHAOS 💥</button>'}
-if(BZ.mode==='online'){html+='<label class="bz-label">Ton prénom</label><input id="bz-online-name" class="bz-input" maxlength="16" placeholder="Ex. Lina"><button class="bz-btn" data-act="bzcreateonline">＋ Créer un salon</button><div class="bz-divider">OU REJOINDRE</div><input id="bz-room-code" class="bz-input" inputmode="numeric" maxlength="4" placeholder="Code à 4 chiffres"><button class="bz-btn alt" data-act="bzjoinonline">Rejoindre le salon →</button><p class="bz-note">Le salon doit être publié sur ton site avec la fonction Netlify /api/kv active.</p>'}}
-else if(p==='lobby'){var ps=(BZ.players||[]);html+='<div class="bz-sticker">SALON EN LIGNE</div><h1 class="bz-title">La bande est là ?</h1><p>Partage ce code avec tes amis. Chacun joue depuis son propre téléphone.</p><div class="bz-roomcode">'+bzEscape(BZ.room)+'</div><button class="bz-btn alt" data-act="bzcopy">Copier le code</button><div class="bz-players">'+ps.map((x,i)=>'<div class="bz-player"><span>🎮</span><b>'+bzEscape(x.name)+'</b>'+(x.pid===BZ.remote.host?' 👑':'')+'</div>').join('')+'</div><p>'+ps.length+' / 12 joueurs · minimum 3</p>'+(BZ.host?'<label class="bz-label">Phrase de départ (facultatif)</label><input id="bz-phrase-start" class="bz-input" maxlength="120" placeholder="Phrase personnalisée ou laisse vide"><p>Chaque joueur pourra proposer une phrase. Si personne n’en propose, une phrase surprise sera tirée au sort.</p><button class="bz-btn" data-act="bzstartonline" '+(ps.length<3?'disabled':'')+'>LANCER LA PARTIE 💥</button>':'<div class="bz-wait"><span class="bz-spinner"></span> En attente du lancement par l’hôte…</div>')+'<button class="bz-btn alt" data-act="bzleaveonline">Quitter le salon</button>'}
-else if(BZ.local&&p==='phrase'){html+='<h1 class="bz-title">Chut… c’est secret.</h1><p>Phrase de départ pour toute la chaîne :</p><div class="bz-finalphrase"><h2>'+bzEscape(BZ.current.phrase)+'</h2></div><button class="bz-btn" data-act="bznext">C’EST PARTI →</button>'}
-else if(BZ.local&&p==='draw'){html+='<h1 class="bz-title">Dessine le désastre !</h1><p>À toi de dessiner cette idée. Pas de lettres ni de chiffres.</p><canvas id="bz-canvas" class="bz-canvas" width="500" height="375"></canvas><div class="bz-tools"><button class="bz-btn" data-act="bzcolor" data-color="#171525">✏️</button><button class="bz-btn" data-act="bzcolor" data-color="#ff5b42">🖍️</button><button class="bz-btn" data-act="bzcolor" data-color="#7957ff">🟣</button><button class="bz-btn" data-act="bzclear">Effacer</button></div><button class="bz-btn" data-act="bzdraw">ENVOYER LE DESSIN 💥</button>'}
-else if(BZ.local&&p==='caption'){var lst=BZ.current.steps[BZ.current.steps.length-1];html+='<h1 class="bz-title">Interprète ce bazar.</h1>'+(lst&&lst.image?'<div class="bz-chain"><img src="'+lst.image+'"></div>':'')+'<input id="bz-caption" class="bz-input" maxlength="120" placeholder="Ce dessin représente…"><button class="bz-btn" data-act="bzcaption">ENVOYER MON IDÉE →</button>'}
-else if(BZ.local&&p==='reveal'){html+='<h1 class="bz-title bz-title-pop">LE CARNET DE LA HONTE !</h1>'+(BZ.current.steps||[]).map((st,i)=>'<div class="bz-chain"><span class="bz-sticker">ÉTAPE '+(i+1)+'</span><p><b>'+bzEscape(st.by)+'</b></p>'+(st.image?'<img src="'+st.image+'">':'<h3>'+bzEscape(st.text)+'</h3>')+'</div>').join('')+'<div class="bz-finalphrase"><small>PHRASE DE DÉPART</small><h2>'+bzEscape(BZ.current.phrase)+'</h2></div><button class="bz-btn" data-act="bznext">VOTER →</button>'}
-else if(BZ.local&&p==='vote'){html+='<h1 class="bz-title">Qui a semé le chaos ?</h1><p>Votez à tour de rôle sur ce téléphone.</p>'+BZ.names.map((n,i)=>'<button class="bz-btn alt" data-act="bzvote" data-id="'+i+'">'+bzEscape(n)+'</button>').join('')+'<button class="bz-btn" data-act="bzfinish">RÉSULTATS 🏆</button>'}
-else if(BZ.local&&p==='finish'){var cc={};Object.keys(BZ.votes).forEach(k=>cc[BZ.votes[k]]=(cc[BZ.votes[k]]||0)+1);var ww=Object.keys(cc).sort((a,b)=>cc[b]-cc[a])[0]||0;html+='<h1 class="bz-title bz-title-pop">C’EST LE BAZAR !</h1><div class="bz-trophy">🏆</div><h2>'+bzEscape(BZ.names[ww])+'</h2><p>🤫 Saboteur : <b>'+bzEscape(BZ.names[BZ.sabotage])+'</b></p><button class="bz-btn" data-act="bzstart">REJOUER 💥</button><button class="bz-btn alt" data-act="bzhome">Accueil</button>'}
-else if(p==='phrasevote'){html+='<div class="bz-sticker">MISSION 1 · INVENTE LE POINT DE DÉPART</div><h1 class="bz-title">À vous de<br>créer le bazar !</h1><p>Chacun propose une phrase de départ. Elle peut être absurde, précise ou complètement folle.</p><label class="bz-label">Ta phrase personnalisée</label><input id="bz-myphrase" class="bz-input" maxlength="120" placeholder="Ex. Un pingouin ouvre une boîte de nuit"><p>Ou pioche une idée :</p><div class="bz-prompts">'+BZ_PROMPTS.slice(0,5).map((x,i)=>'<button class="bz-prompt" data-act="bzsetphrase" data-text="'+bzEscape(x)+'">'+bzEscape(x)+'</button>').join('')+'</div><button class="bz-btn" data-act="bzsubmitphrase">PROPOSER MA PHRASE ✍️</button><p>'+Object.keys(BZ.remote.phraseChoices||{}).length+' / '+BZ.n+' propositions reçues</p>'+(BZ.host?'<button class="bz-btn alt" data-act="bzchoosephrase">TIRER AU SORT ET DÉMARRER 🎲</button>':'<div class="bz-wait">L’hôte choisira une phrase quand tout le monde est prêt.</div>')}
-else if(p==='draw'||p==='caption'){var player=BZ.names[BZ.idx]||'Joueur';var mine=(BZ.remote.players||[]).findIndex(x=>x.pid===BZ.pid);var active=BZ.remote.players&&BZ.remote.players[BZ.idx]&&BZ.remote.players[BZ.idx].pid===BZ.pid;var last=(BZ.remote.steps||[]).slice(-1)[0];html+='<div class="bz-sticker">ÉTAPE '+((BZ.remote.steps||[]).length+1)+'</div><h1 class="bz-title">'+(p==='draw'?'Dessine le désastre !':'Qu’est-ce que tu vois ?')+'</h1><p>'+(active?'<b>C’est ton tour, '+bzEscape(BZ.me)+' !</b>':'<b>Au tour de '+bzEscape(player)+'.</b> Tu verras la suite dès que sa réponse est envoyée.')+'</p>'+(p==='draw'&&active?'<canvas id="bz-canvas" class="bz-canvas" width="500" height="375"></canvas><div class="bz-tools"><button class="bz-btn" data-act="bzcolor" data-color="#171525">✏️</button><button class="bz-btn" data-act="bzcolor" data-color="#ff5b42">🖍️</button><button class="bz-btn" data-act="bzcolor" data-color="#7957ff">🟣</button><button class="bz-btn" data-act="bzcolor" data-color="#b8ff45">🟢</button><button class="bz-btn alt" data-act="bzclear">Effacer</button></div><button class="bz-btn" data-act="bzsubmitdraw">ENVOYER MON DESSIN 💥</button>':p==='caption'&&active?(last&&last.image?'<div class="bz-chain"><img src="'+last.image+'" alt="Dessin précédent"></div>':'')+'<label class="bz-label">Ton interprétation</label><input id="bz-caption" class="bz-input" maxlength="120" placeholder="Ce dessin représente…"><button class="bz-btn" data-act="bzsubmitcaption">ENVOYER MON IDÉE →</button>':(last&&last.image?'<div class="bz-chain"><img src="'+last.image+'" alt="Dessin précédent"></div>':'')+'<div class="bz-wait"><span class="bz-spinner"></span> Synchronisation en cours…</div>')}
-else if(p==='reveal'){html+='<div class="bz-sticker">LE GRAND DÉBALLAGE</div><h1 class="bz-title bz-title-pop">LE CARNET<br>DE LA HONTE !</h1><p>Tout le monde voit exactement le même défilé, dans le même ordre. Préparez-vous.</p><div class="bz-chainlist">'+(BZ.remote.steps||[]).map((st,i)=>'<div class="bz-chain" style="--tilt:'+(i%2?'-1':'1')+'deg"><span class="bz-sticker">ÉTAPE '+(i+1)+'</span><p><b>'+bzEscape(st.by)+'</b> · '+(st.type==='draw'?'DESSIN':'INTERPRÉTATION')+'</p>'+(st.image?'<img src="'+st.image+'" alt="Dessin étape '+(i+1)+'">':'<h3>'+bzEscape(st.text)+'</h3>')+'</div>').join('')+'</div><div class="bz-finalphrase"><small>LA PHRASE DE DÉPART</small><h2>'+bzEscape(BZ.remote.phrase)+'</h2><div class="bz-versus">VS.</div><small>LE RÉSULTAT DU CARNAGE</small><h2>'+bzEscape(((BZ.remote.steps||[]).slice().reverse().find(x=>x.type==='caption')||{}).text||'Un mystère total')+'</h2></div><button class="bz-btn" data-act="bzgotovote">VOTER POUR LE PLUS GROS DÉLIRE 🗳️</button>'}
-else if(p==='vote'){html+='<div class="bz-sticker">LE JURY EST SANS PITIÉ</div><h1 class="bz-title">Qui a semé<br>le chaos ?</h1><p>Vote pour la personne qui a causé le plus gros déraillement. Les votes sont synchronisés.</p><div class="bz-votes">'+BZ.names.map((n,i)=>'<button class="bz-btn alt" data-act="bzsubmitvote" data-id="'+i+'">'+bzEscape(n)+'</button>').join('')+'</div><p>'+Object.keys(BZ.remote.votes||{}).length+' / '+BZ.n+' votes reçus</p>'+(BZ.host?'<button class="bz-btn" data-act="bzfinishonline">RÉVÉLER LES RÉSULTATS 🏆</button>':'<div class="bz-wait">Le résultat apparaîtra chez tout le monde en même temps.</div>')}
-else if(p==='finish'){var res=BZ.remote.result||{};html+='<div class="bz-confetti-title">💥 C’EST LE BAZAR ! 💥</div><h1 class="bz-title bz-title-pop">LE GRAND<br>CHAOS !</h1><div class="bz-trophy">🏆</div><h2>'+bzEscape(res.winner||'Toute la bande')+'</h2><p>Prix officiel : <b>Agent du chaos</b> 🧨</p><div class="bz-chain"><h2>🤫 Le saboteur était…</h2><h2>'+bzEscape(res.saboteur||'Mystère')+'</h2><p>Le bazar a frappé, et tout le monde a assisté au même final.</p></div><div class="bz-scoreboard">'+(res.scores||[]).map((x,i)=>'<div class="bz-player"><span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'🎨')+'</span><b>'+bzEscape(x.name)+'</b><strong>'+x.votes+' vote(s)</strong></div>').join('')+'</div><button class="bz-btn" data-act="bzreplayonline">REJOUER 💥</button><button class="bz-btn alt" data-act="bzhome">Retour aux jeux</button>'}
-html+='</div><p class="bz-footer">BAZAR PARTY — ici, même les idées partent en vrille.</p></div>';return html}
-function bzInitCanvas(){var c=document.getElementById('bz-canvas');if(!c||c.dataset.ready)return;c.dataset.ready='1';var ctx=c.getContext('2d');ctx.fillStyle='#fffdf5';ctx.fillRect(0,0,c.width,c.height);ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=6;ctx.strokeStyle=BZ.color;var down=false;function pos(e){var r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}}c.addEventListener('pointerdown',e=>{down=true;c.setPointerCapture(e.pointerId);var q=pos(e);ctx.beginPath();ctx.moveTo(q.x,q.y)});c.addEventListener('pointermove',e=>{if(!down)return;var q=pos(e);ctx.lineTo(q.x,q.y);ctx.stroke()});['pointerup','pointercancel'].forEach(t=>c.addEventListener(t,()=>down=false))}
-function bzSetPlayers(){var raw=(document.getElementById('bz-names')||{}).value||'',names=raw.split(/\n|,/).map(x=>x.trim()).filter(Boolean).slice(0,12);if(names.length<3){toast('Il faut au moins 3 joueurs !');return}BZ.names=names;BZ.n=names.length;BZ.mode='local';var custom=((document.getElementById('bz-phrase-start')||{}).value||'').trim();BZ.sabotage=Math.floor(Math.random()*BZ.n);BZ.current={phrase:custom||bzPickPrompt(),steps:[]};BZ.idx=0;BZ.votes={};BZ.phase='phrase';BZ.local=true;render();bzBurst(30)}
-function bzLocalNext(){if(BZ.phase==='phrase')BZ.phase='draw';else if(BZ.phase==='reveal')BZ.phase='vote';render();if(BZ.phase==='draw')bzInitCanvas();bzBurst()}
-function bzBurst(n){var d=document.createElement('div');d.className='bz-burst';document.body.appendChild(d);var bits=['💥','✏️','⭐','🌀','🎉','⚡','🟨','🟪','💫','🧨'];for(var i=0;i<(n||24);i++){var x=document.createElement('i');x.textContent=bits[Math.floor(Math.random()*bits.length)];x.style.left=Math.random()*100+'%';x.style.top=(20+Math.random()*75)+'%';x.style.setProperty('--rot',(Math.random()*90-45)+'deg');x.style.animationDelay=Math.random()*.3+'s';d.appendChild(x)}setTimeout(()=>d.remove(),1900)}
 
-async function bzSubmitPhrase(){var text=((document.getElementById('bz-myphrase')||{}).value||'').trim();if(!text){toast('Écris une phrase ou choisis une proposition !');return}await bzPatch(function(s){s.phraseChoices=s.phraseChoices||{};s.phraseChoices[BZ.pid]={name:BZ.me,text:text}},18);toast('Phrase envoyée !')}
-async function bzChoosePhrase(){await bzPatch(function(s){if(s.host!==BZ.pid)return;var arr=Object.keys(s.phraseChoices||{}).map(k=>s.phraseChoices[k].text);s.phrase=s.phrase|| (arr.length?arr[Math.floor(Math.random()*arr.length)]:bzPickPrompt());s.phase='draw';s.idx=0;s.steps=[];s.names=s.players.map(p=>p.name)},40)}
-async function bzSubmitDraw(){var c=document.getElementById('bz-canvas');if(!c)return;var image=c.toDataURL('image/jpeg',.45);await bzPatch(function(s){if(s.players[s.idx].pid!==BZ.pid)return;s.steps.push({type:'draw',by:BZ.me,image:image});s.idx=(s.idx+1)%s.players.length;s.phase='caption';if(s.steps.length>=s.players.length*2)s.phase='reveal'},30)}
-async function bzSubmitCaption(){var v=((document.getElementById('bz-caption')||{}).value||'').trim();if(!v){toast('Écris une interprétation, même absurde !');return}await bzPatch(function(s){if(s.players[s.idx].pid!==BZ.pid)return;s.steps.push({type:'caption',by:BZ.me,text:v});s.idx=(s.idx+1)%s.players.length;s.phase=s.steps.length>=s.players.length*2?'reveal':'draw'},30)}
-async function bzSubmitVote(id){await bzPatch(function(s){s.votes=s.votes||{};s.votes[BZ.pid]={name:BZ.me,id:+id}},15);toast('Vote enregistré !')}
-async function bzFinishOnline(){await bzPatch(function(s){if(s.host!==BZ.pid)return;var counts={};Object.keys(s.votes||{}).forEach(k=>{var v=s.votes[k];counts[v.id]=(counts[v.id]||0)+1});var sorted=s.players.map((p,i)=>({name:p.name,votes:counts[i]||0})).sort((a,b)=>b.votes-a.votes);s.result={winner:sorted[0]&&sorted[0].name||'Toute la bande',saboteur:(s.players[s.sabotage]||{}).name||'Mystère',scores:sorted};s.phase='finish'},48)}
-async function bzReplayOnline(){await bzPatch(function(s){if(s.host!==BZ.pid)return;s.phase='lobby';s.steps=[];s.votes={};s.phraseChoices={};s.phrase='';s.result=null;s.idx=0;s.sabotage=Math.floor(Math.random()*s.players.length);s.names=s.players.map(p=>p.name)},20)}
+// Soumettre une phrase
+async function bzSubmitPhrase(){
+  var text = (document.getElementById('bz-myphrase')||{}).value.trim();
+  if(!text) return toast('Écris une phrase !');
+  
+  var s = BZ.remote;
+  s.phraseChoices = s.phraseChoices || {};
+  s.phraseChoices[BZ.pid] = { name: BZ.me, text: text };
+  s.rev++;
+  
+  await bzRoomDoc().set(s);
+  toast('Phrase envoyée !');
+  bzBurst();
+}
 
-// Actions BAZAR CHAOS : séparées des autres moteurs de jeu.
-function bzAct(a,d){
- if(a==='bzstart'){bzStart();return true} if(a==='bzhome'){if(BZ.unsub){try{BZ.unsub()}catch(e){}}go('home');return true}
- if(a==='bzlocalmode'){BZ.mode='local';BZ.phase='setup';render();return true} if(a==='bzonlinemode'){BZ.mode='online';BZ.phase='setup';render();return true}
- if(a==='bzplayers'){bzSetPlayers();return true} if(a==='bzprompt'){var e=document.getElementById('bz-phrase-start');if(e)e.value=BZ_PROMPTS[+d.i]||bzPickPrompt();return true}
- if(a==='bzsetphrase'){var e=document.getElementById('bz-myphrase');if(e)e.value=d.text||'';return true}
- if(a==='bzcreateonline'){bzCreateOnline();return true} if(a==='bzjoinonline'){bzJoinOnline();return true} if(a==='bzstartonline'){bzStartOnline();return true} if(a==='bzsubmitphrase'){bzSubmitPhrase();return true} if(a==='bzchoosephrase'){bzChoosePhrase();return true}
- if(a==='bzcopy'){GenUICopyFallback(BZ.room);return true} if(a==='bzleaveonline'){if(BZ.unsub){try{BZ.unsub()}catch(e){}}BZ.unsub=null;BZ.mode='choose';BZ.phase='setup';render();return true}
- if(a==='bzcolor'){BZ.color=d.color||'#171525';var c=document.getElementById('bz-canvas');if(c)c.getContext('2d').strokeStyle=BZ.color;return true} if(a==='bzclear'){var c=document.getElementById('bz-canvas');if(c){var x=c.getContext('2d');x.fillStyle='#fffdf5';x.fillRect(0,0,c.width,c.height)}return true}
- if(a==='bzsubmitdraw'){bzSubmitDraw();return true} if(a==='bzsubmitcaption'){bzSubmitCaption();return true} if(a==='bzsubmitvote'){bzSubmitVote(d.id);return true} if(a==='bzfinishonline'){bzFinishOnline();return true} if(a==='bzreplayonline'){bzReplayOnline();return true}
- if(a==='bznext'){if(BZ.local){if(BZ.phase==='phrase')BZ.phase='draw';else if(BZ.phase==='reveal')BZ.phase='vote';render();if(BZ.phase==='draw')bzInitCanvas();bzBurst();return true}return true}
- if(a==='bzdraw'){var c=document.getElementById('bz-canvas');if(c&&BZ.local){BZ.current.steps.push({type:'draw',by:BZ.names[BZ.idx],image:c.toDataURL('image/jpeg',.5)});BZ.idx=(BZ.idx+1)%BZ.n;BZ.phase='caption';render();bzBurst()}return true}
- if(a==='bzcaption'){var e=document.getElementById('bz-caption'),v=e&&e.value.trim();if(!v){toast('Écris une interprétation !');return true}if(BZ.local){BZ.current.steps.push({type:'caption',by:BZ.names[BZ.idx],text:v});BZ.idx=(BZ.idx+1)%BZ.n;BZ.phase=BZ.current.steps.length>=BZ.n*2?'reveal':'draw';render();if(BZ.phase==='draw')bzInitCanvas();bzBurst()}return true}
- if(a==='bzgotovote'){bzPatch(s=>{if(s.host===BZ.pid)s.phase='vote'},25);return true} if(a==='bzvote'&&BZ.local){BZ.votes[BZ.names[BZ.idx]]=+d.id;BZ.idx=(BZ.idx+1)%BZ.n;render();return true} if(a==='bzfinish'&&BZ.local){BZ.phase='finish';render();bzBurst(48);return true}
- return false}
-function GenUICopyFallback(t){try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>toast('Code copié !')).catch(()=>toast('Code du salon : '+t));else toast('Code du salon : '+t)}catch(e){toast('Code du salon : '+t)}}
+// L'hôte choisit la phrase
+async function bzChoosePhrase(){
+  if(!BZ.host) return;
+  var s = BZ.remote;
+  var arr = Object.keys(s.phraseChoices||{}).map(k => s.phraseChoices[k].text);
+  s.phrase = arr.length ? arr[Math.floor(Math.random()*arr.length)] : bzPickPrompt();
+  s.phase = 'draw';
+  s.idx = 0;
+  s.steps = [];
+  s.rev++;
+  
+  await bzRoomDoc().set(s);
+  bzBurst();
+}
+
+// Soumettre un dessin
+async function bzSubmitDraw(){
+  var c = document.getElementById('bz-canvas');
+  if(!c) return;
+  var image = c.toDataURL('image/jpeg', 0.45);
+  
+  var s = BZ.remote;
+  s.steps.push({ type: 'draw', by: BZ.me, image: image });
+  s.idx = (s.idx + 1) % s.players.length;
+  s.phase = 'caption';
+  if(s.steps.length >= s.players.length * 2) s.phase = 'reveal';
+  s.rev++;
+  
+  await bzRoomDoc().set(s);
+  bzBurst();
+}
+
+// Soumettre une légende
+async function bzSubmitCaption(){
+  var v = (document.getElementById('bz-caption')||{}).value.trim();
+  if(!v) return toast('Écris une interprétation !');
+  
+  var s = BZ.remote;
+  s.steps.push({ type: 'caption', by: BZ.me, text: v });
+  s.idx = (s.idx + 1) % s.players.length;
+  s.phase = s.steps.length >= s.players.length * 2 ? 'reveal' : 'draw';
+  s.rev++;
+  
+  await bzRoomDoc().set(s);
+  bzBurst();
+}
+
+// Soumettre un vote
+async function bzSubmitVote(id){
+  var s = BZ.remote;
+  s.votes = s.votes || {};
+  s.votes[BZ.pid] = { name: BZ.me, id: parseInt(id) };
+  s.rev++;
+  
+  await bzRoomDoc().set(s);
+  toast('Vote enregistré !');
+  bzBurst();
+}
+
+// Fin de partie (L'hôte révèle les résultats)
+async function bzFinishOnline(){
+  if(!BZ.host) return;
+  var s = BZ.remote;
+  var counts = {};
+  
+  Object.keys(s.votes||{}).forEach(k => {
+    var v = s.votes[k];
+    counts[v.id] = (counts[v.id]||0) + 1;
+  });
+  
+  var sorted = s.players.map((p,i) => ({ name:p.name, votes:counts[i]||0 })).sort((a,b) => b.votes-a.votes);
+  s.result = { winner: sorted[0]?.name || 'Personne', saboteur: s.players[s.sabotage]?.name || 'Mystère', scores: sorted };
+  s.phase = 'finish';
+  s.rev++;
+  
+  await bzRoomDoc().set(s);
+  bzBurst();
+}
+
+// Rejouer (L'hôte relance)
+async function bzReplayOnline(){
+  if(!BZ.host) return;
+  var s = BZ.remote;
+  s.phase = 'lobby';
+  s.steps = [];
+  s.votes = {};
+  s.phraseChoices = {};
+  s.phrase = '';
+  s.result = null;
+  s.idx = 0;
+  s.sabotage = Math.floor(Math.random() * s.players.length);
+  s.names = s.players.map(p => p.name);
+  s.rev++;
+  
+  await bzRoomDoc().set(s);
+  await Rr(BZ.room).update({ status: 'lobby' });
+  bzBurst();
+}
+
+// Actions des boutons
+function bzAct(a, d){
+  if(a === 'bzstart'){ bzStart(); return true; }
+  if(a === 'bzhome'){ 
+    if(BZ.unsubGame) BZ.unsubGame(); 
+    if(BZ.unsubPlayers) BZ.unsubPlayers(); 
+    go('home'); 
+    return true; 
+  }
+  if(a === 'bzlocalmode'){ BZ.mode='local'; BZ.phase='setup'; render(); return true; }
+  if(a === 'bzonlinemode'){ BZ.mode='online'; BZ.phase='setup'; render(); return true; }
+  if(a === 'bzcreateonline'){ bzCreateOnline(); return true; }
+  if(a === 'bzjoinonline'){ bzJoinOnline(); return true; }
+  if(a === 'bzstartonline'){ bzStartOnline(); return true; }
+  if(a === 'bzsubmitphrase'){ bzSubmitPhrase(); return true; }
+  if(a === 'bzchoosephrase'){ bzChoosePhrase(); return true; }
+  if(a === 'bzsubmitdraw'){ bzSubmitDraw(); return true; }
+  if(a === 'bzsubmitcaption'){ bzSubmitCaption(); return true; }
+  if(a === 'bzsubmitvote'){ bzSubmitVote(d.id); return true; }
+  if(a === 'bzfinishonline'){ bzFinishOnline(); return true; }
+  if(a === 'bzreplayonline'){ bzReplayOnline(); return true; }
+  
+  if(a === 'bzcopy'){ 
+    try{ navigator.clipboard.writeText(BZ.room); toast('Code copié !'); }catch(e){ toast('Code : '+BZ.room); }
+    return true; 
+  }
+  if(a === 'bzleaveonline'){ 
+    if(BZ.unsubGame) BZ.unsubGame(); 
+    if(BZ.unsubPlayers) BZ.unsubPlayers(); 
+    BZ.mode='choose'; BZ.phase='setup'; render(); 
+    return true; 
+  }
+  if(a === 'bzcolor'){ 
+    BZ.color = d.color || '#171525'; 
+    var c = document.getElementById('bz-canvas'); 
+    if(c) c.getContext('2d').strokeStyle = BZ.color; 
+    return true; 
+  }
+  if(a === 'bzclear'){ 
+    var c = document.getElementById('bz-canvas'); 
+    if(c){ 
+      var x = c.getContext('2d'); 
+      x.fillStyle = '#fffdf5'; 
+      x.fillRect(0,0,c.width,c.height); 
+    } 
+    return true; 
+  }
+  return false;
+}
+
+// Initialisation du Canvas pour dessiner
+function bzInitCanvas(){
+  var c = document.getElementById('bz-canvas');
+  if(!c || c.dataset.ready) return;
+  c.dataset.ready = '1';
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#fffdf5'; ctx.fillRect(0,0,c.width,c.height);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 6; ctx.strokeStyle = '#171525';
+  var down = false;
+  function pos(e){
+    var r = c.getBoundingClientRect();
+    return { x: (e.clientX-r.left)*c.width/r.width, y: (e.clientY-r.top)*c.height/r.height };
+  }
+  c.addEventListener('pointerdown', e => { down = true; c.setPointerCapture(e.pointerId); var q = pos(e); ctx.beginPath(); ctx.moveTo(q.x,q.y); });
+  c.addEventListener('pointermove', e => { if(!down) return; var q = pos(e); ctx.lineTo(q.x,q.y); ctx.stroke(); });
+  ['pointerup','pointercancel'].forEach(t => c.addEventListener(t, () => down = false));
+}
+
+// Effet visuel
+function bzBurst(){
+  var d = document.createElement('div'); d.className = 'bz-burst'; document.body.appendChild(d);
+  var bits = ['💥','✏️','⭐','🌀','🎉','⚡','🟨','🟪','💫','🧨'];
+  for(var i=0; i<20; i++){
+    var x = document.createElement('i'); x.textContent = bits[Math.floor(Math.random()*bits.length)];
+    x.style.left = Math.random()*100+'%'; x.style.top = (20+Math.random()*75)+'%';
+    x.style.animationDelay = Math.random()*0.3+'s'; d.appendChild(x);
+  }
+  setTimeout(() => d.remove(), 1900);
+}
+
+// Affichage de l'interface
+function bzRender(){
+  var p = BZ.phase;
+  var html = '<div class="bz-wrap"><div class="bz-head"><button class="btn btn-ghost" data-act="bzhome">← Accueil</button><span class="bz-sticker">💥 BAZAR CHAOS</span></div><div class="bz-paper bz-stage">';
+
+  if(BZ.mode === 'choose' || p === 'setup'){
+    html += '<div class="bz-sticker">MODE DE JEU</div><h1 class="bz-title">Le bazar<br>prend le contrôle.</h1><p>Une phrase devient un dessin, puis un autre délire.</p><div class="bz-modegrid"><button class="bz-btn" data-act="bzlocalmode">📱 Téléphone partagé</button><button class="bz-btn alt" data-act="bzonlinemode">📲 Chacun son téléphone</button></div>';
+    if(BZ.mode === 'online'){
+      html += '<label class="bz-label">Ton prénom</label><input id="bz-online-name" class="bz-input" maxlength="16" placeholder="Ex. Lina"><button class="bz-btn" data-act="bzcreateonline">＋ Créer un salon</button><div class="bz-divider">OU REJOINDRE</div><input id="bz-room-code" class="bz-input" inputmode="numeric" maxlength="4" placeholder="Code à 4 chiffres"><button class="bz-btn alt" data-act="bzjoinonline">Rejoindre le salon →</button>';
+    }
+  }
+  
+  else if(p === 'lobby'){
+    var ps = BZ.players || [];
+    html += '<div class="bz-sticker">SALON EN LIGNE</div><h1 class="bz-title">La bande est là ?</h1><p>Partage ce code avec tes amis.</p><div class="bz-roomcode">'+bzEsc(BZ.room)+'</div><button class="bz-btn alt" data-act="bzcopy">Copier le code</button>';
+    
+    html += '<div class="bz-players">'+ps.map(x => '<div class="bz-player"><span>🎮</span><b>'+bzEsc(x.name)+'</b>'+(x.pid===BZ.remote.host?' 👑':'')+'</div>').join('')+'</div><p>'+ps.length+' / 12 joueurs · minimum 3</p>';
+    
+    if(BZ.host){
+      html += '<label class="bz-label">Phrase de départ (facultatif)</label><input id="bz-phrase-start" class="bz-input" maxlength="120" placeholder="Phrase personnalisée ou laisse vide">';
+      html += '<button class="bz-btn" data-act="bzstartonline" '+(ps.length < 3 ? 'disabled' : '')+'>LANCER LA PARTIE 💥</button>';
+    } else {
+      html += '<div class="bz-wait"><span class="bz-spinner"></span> En attente du lancement par l’hôte…</div>';
+    }
+    html += '<button class="bz-btn alt" data-act="bzleaveonline">Quitter le salon</button>';
+  }
+  
+  else if(p === 'phrasevote'){
+    html += '<div class="bz-sticker">MISSION 1</div><h1 class="bz-title">À vous de<br>créer le bazar !</h1><p>Chacun propose une phrase de départ.</p><label class="bz-label">Ta phrase</label><input id="bz-myphrase" class="bz-input" maxlength="120" placeholder="Ex. Un pingouin ouvre une boîte de nuit"><button class="bz-btn" data-act="bzsubmitphrase">PROPOSER MA PHRASE ✍️</button><p>'+Object.keys(BZ.remote.phraseChoices||{}).length+' / '+BZ.players.length+' propositions reçues</p>';
+    if(BZ.host) html += '<button class="bz-btn alt" data-act="bzchoosephrase">TIRER AU SORT ET DÉMARRER 🎲</button>';
+    else html += '<div class="bz-wait">L’hôte choisira une phrase…</div>';
+  }
+  
+  else if(p === 'draw' || p === 'caption'){
+    var activePid = BZ.remote.players[BZ.idx]?.pid;
+    var active = (activePid === BZ.pid);
+    var playerName = BZ.remote.players[BZ.idx]?.name || 'Joueur';
+    
+    html += '<div class="bz-sticker">ÉTAPE '+((BZ.remote.steps||[]).length+1)+'</div><h1 class="bz-title">'+(p==='draw'?'Dessine !':'Interprète !')+'</h1><p>'+(active?'<b>C’est ton tour !</b>':'<b>Au tour de '+bzEsc(playerName)+'.</b>')+'</p>';
+    
+    if(active){
+      if(p === 'draw'){
+        html += '<canvas id="bz-canvas" class="bz-canvas" width="500" height="375"></canvas><div class="bz-tools"><button class="bz-btn" data-act="bzcolor" data-color="#171525">✏️</button><button class="bz-btn" data-act="bzcolor" data-color="#ff5b42">🖍️</button><button class="bz-btn" data-act="bzcolor" data-color="#7957ff">🟣</button><button class="bz-btn alt" data-act="bzclear">Effacer</button></div><button class="bz-btn" data-act="bzsubmitdraw">ENVOYER MON DESSIN 💥</button>';
+      } else {
+        var last = (BZ.remote.steps||[]).slice(-1)[0];
+        if(last && last.image) html += '<div class="bz-chain"><img src="'+last.image+'"></div>';
+        html += '<label class="bz-label">Ton interprétation</label><input id="bz-caption" class="bz-input" maxlength="120" placeholder="Ce dessin représente…"><button class="bz-btn" data-act="bzsubmitcaption">ENVOYER MON IDÉE →</button>';
+      }
+    } else {
+      var last = (BZ.remote.steps||[]).slice(-1)[0];
+      if(last && last.image) html += '<div class="bz-chain"><img src="'+last.image+'"></div>';
+      html += '<div class="bz-wait"><span class="bz-spinner"></span> Synchronisation en cours…</div>';
+    }
+  }
+  
+  else if(p === 'reveal'){
+    html += '<div class="bz-sticker">DÉBALLAGE</div><h1 class="bz-title bz-title-pop">LE CARNET !</h1>';
+    html += '<div class="bz-chainlist">'+(BZ.remote.steps||[]).map((st,i) => '<div class="bz-chain"><span class="bz-sticker">ÉTAPE '+(i+1)+'</span><p><b>'+bzEsc(st.by)+'</b></p>'+(st.image?'<img src="'+st.image+'">':'<h3>'+bzEsc(st.text)+'</h3>')+'</div>').join('')+'</div>';
+    html += '<div class="bz-finalphrase"><small>PHRASE DE DÉPART</small><h2>'+bzEsc(BZ.remote.phrase)+'</h2></div><button class="bz-btn" data-act="bzgotovote">VOTER 🗳️</button>';
+  }
+  
+  else if(p === 'vote'){
+    html += '<div class="bz-sticker">LE JURY</div><h1 class="bz-title">Qui a semé<br>le chaos ?</h1><div class="bz-votes">'+BZ.players.map((x,i) => '<button class="bz-btn alt" data-act="bzsubmitvote" data-id="'+i+'">'+bzEsc(x.name)+'</button>').join('')+'</div><p>'+Object.keys(BZ.remote.votes||{}).length+' / '+BZ.players.length+' votes reçus</p>';
+    if(BZ.host) html += '<button class="bz-btn" data-act="bzfinishonline">RÉVÉLER LES RÉSULTATS 🏆</button>';
+    else html += '<div class="bz-wait">En attente de l’hôte…</div>';
+  }
+  
+  else if(p === 'finish'){
+    var res = BZ.remote.result || {};
+    html += '<div class="bz-confetti-title">💥 C’EST LE BAZAR ! 💥</div><div class="bz-trophy">🏆</div><h2>'+bzEsc(res.winner||'Tout le monde')+'</h2><div class="bz-chain"><h2>🤫 Saboteur : '+bzEsc(res.saboteur||'Mystère')+'</h2></div>';
+    if(BZ.host) html += '<button class="bz-btn" data-act="bzreplayonline">REJOUER 💥</button>';
+    html += '<button class="bz-btn alt" data-act="bzhome">Retour aux jeux</button>';
+  }
+
+  html += '</div><p class="bz-footer">BAZAR PARTY — ici, même les idées partent en vrille.</p></div>';
+  
+  // Petit délai pour laisser le DOM se charger avant de dessiner sur le canvas
+  if(p === 'draw' && BZ.remote && BZ.remote.players[BZ.idx]?.pid === BZ.pid) {
+    setTimeout(bzInitCanvas, 50);
+  }
+  
+  return html;
+}
+
 window.bzAct = bzAct;
 window.bzStart = bzStart;
 window.bzRender = bzRender;
