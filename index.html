@@ -5999,22 +5999,32 @@ async function bzJoinOnline(){
 async function bzStartOnline(){
   try{
     var phrase=((document.getElementById('bz-phrase-start')||{}).value||'').trim();
-    if(!BZ.host || !BZ.players || BZ.players.length < 3){
-        toast('Il faut au moins 3 joueurs connectés.'); return;
+    
+    // On va chercher la vraie liste de joueurs directement sur le serveur
+    var q = await Rp(BZ.room).get();
+    if(q.docs.length < 3){
+        toast('Il faut au moins 3 joueurs connectés.'); 
+        return;
     }
+    
+    // On récupère les vrais noms depuis le serveur
+    var realNames = q.docs.map(function(doc){ return doc.data().name; });
+
     await bzPatch(function(s){
       if(s.host!==BZ.pid)return;
       s.phase='phrasevote';
-      s.names=BZ.players.map(function(p){return p.name});
+      s.names=realNames; // On utilise la liste fraîche du serveur
       s.phraseChoices={};
-      s.sabotage=Math.floor(Math.random()*BZ.players.length);
+      s.sabotage=Math.floor(Math.random()*realNames.length);
       s.steps=[];
       s.phrase=phrase;
       s.idx=0;
       s.votes={};
       s.result=null;
     },30);
-  }catch(e){ toast('Lancement impossible : '+(e.message||e)); }
+  }catch(e){ 
+    toast('Lancement impossible : '+(e.message||e)); 
+  }
 }
 /* Helpers manquants pour BAZAR CHAOS online */
 function Rr(c){return BZ.db.doc('rooms/'+c)}
