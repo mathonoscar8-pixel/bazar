@@ -1171,7 +1171,8 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
   try{uid=localStorage.getItem('bazar-uid')}catch(e){}
   if(!uid){uid='u'+Math.random().toString(36).slice(2,12);try{localStorage.setItem('bazar-uid',uid)}catch(e){}}
   var DBN={doc:doc,collection:coll},USR={id:async function(){return uid},can:async function(){return true},isOwner:async function(){return false},canEdit:async function(){return false}};
-  window.claude={use:function(n){return Promise.resolve(n==='db'?DBN:(n==='user'?USR:null))}};
+  window.claude_userId_raw = uid;
+window.claude={use:function(n){return Promise.resolve(n==='db'?DBN:(n==='user'?USR:null))},userId:function(){return uid}};
 })();
 </script>
 <div id="splash-screen">
@@ -5876,8 +5877,151 @@ function bzNewState(names,phrases){return {game:'bazar-chaos',phase:'phrasevote'
 async function bzDB(){if(!BZ.db){if(!window.claude||!window.claude.use)throw Error('Le service de salon en ligne n’est pas disponible sur ce site.');BZ.db=await window.claude.use('db')}return BZ.db}
 function bzRoomDoc(){return BZ.db.doc('rooms/'+BZ.room)}
 function bzWatch(){if(BZ.unsub){try{BZ.unsub()}catch(e){}}BZ.unsub=bzRoomDoc().onSnapshot(function(s){if(!s||!s.exists)return;var d=s.data();if(!d||d.game!=='bazar-chaos')return;var old=BZ.rev;BZ.remote=d;BZ.rev=d.rev||0;BZ.names=d.names||[];BZ.n=BZ.names.length;BZ.phase=d.phase;BZ.idx=d.idx||0;BZ.current={phrase:d.phrase,steps:d.steps||[]};BZ.votes=d.votes||{};BZ.sabotage=d.sabotage;BZ.chains=d.chains||[];BZ.result=d.result;BZ.host=d.host===BZ.pid;BZ.me=(d.players||[]).find(p=>p.pid===BZ.pid)?.name||BZ.me;if(S.screen!=='bzgame'){S.screen='bzgame'}render();if(BZ.rev!==old&&BZ.rev>1)bzBurst(BZ.phase==='finish'?48:22);if(BZ.phase==='draw')bzInitCanvas()},function(e){console.warn('BAZAR sync',e)})}
-async function bzCreateOnline(){try{await bzDB();var room=String(1000+Math.floor(Math.random()*9000));BZ.room=room;BZ.pid='p'+Math.random().toString(36).slice(2,10);BZ.host=true;BZ.me=(document.getElementById('bz-online-name')||{}).value.trim().slice(0,16)||'Hôte';var state={game:'bazar-chaos',phase:'lobby',room:room,names:[],players:[{pid:BZ.pid,name:BZ.me}],host:BZ.pid,idx:0,steps:[],phraseChoices:{},votes:{},sabotage:-1,rev:1,created:Date.now(),result:null};await bzRoomDoc().set(state);BZ.remote=state;BZ.phase='lobby';bzWatch();render()}catch(e){toast('Impossible de créer le salon : '+(e.message||e))}}
-async function bzJoinOnline(){try{await bzDB();var room=((document.getElementById('bz-room-code')||{}).value||'').trim().replace(/\D/g,'');var name=((document.getElementById('bz-online-name')||{}).value||'').trim().slice(0,16);if(room.length!==4||!name){toast('Entre un code à 4 chiffres et ton prénom.');return}BZ.room=room;BZ.pid='p'+Math.random().toString(36).slice(2,10);BZ.me=name;var ref=bzRoomDoc(),snap=await ref.get();if(!snap.exists)throw Error('Salon introuvable. Vérifie le code.');var d=snap.data();if(d.phase!=='lobby')throw Error('La partie a déjà commencé.');if((d.players||[]).length>=12)throw Error('Salon complet (12 joueurs maximum).');if((d.players||[]).some(p=>p.name.toLowerCase()===name.toLowerCase()))name=name.slice(0,12)+Math.floor(Math.random()*90+10);BZ.me=name;d.players.push({pid:BZ.pid,name:name});d.rev=(d.rev||0)+1;await ref.set(d);BZ.remote=d;BZ.phase='lobby';bzWatch();render()}catch(e){toast(e.message||'Connexion impossible au salon.')}}
+/* ---------- BAZAR CHAOS : salon online aligné sur les jeux existants ---------- */
+async function bzCreateOnline(){
+  try{
+    await bzDB();
+    var name=((document.getElementById('bz-online-name')||{}).value||'').trim().slice(0,16);
+    if(!name){toast('Choisis un prénom.');return}
+    // Génère un code à 4 chiffres libre
+    var code=null;
+    for(var i=0;i<5&&!code;i++){
+      var c=String(1000+Math.floor(Math.random()*9000));
+      var sn=await Rr(c).get();
+      if(!sn.exists||Date.now()-(sn.data().ts||0)>6*36e5) code=c;
+    }
+    if(!code){toast('Impossible de créer le salon. Réessaie.');return}
+    BZ.room=code;
+    BZ.pid='p'+Math.random().toString(36).slice(2,10)+'~'+(window.claude&&window.claude.userId?window.claude.userId():'');
+    BZ.host=true;
+    BZ.me=name;
+    // 1. Crée le salon à la RACINE (comme Dessins, Undercover…)
+    await Rr(code).set({
+      code:code,
+      host:BZ.pid,
+      game:'bz',
+      status:'lobby',
+      cfg:'{}',
+      s:'',
+      scores:'{}',
+      wins:'[0,0]',
+      ts:Date.now(),
+      v:Date.now()
+    });
+    // 2. Ajoute l'hôte dans la collection players (comme les autres jeux)
+    await Pd(code,BZ.pid).set({
+      name:name,
+      ci:0,
+      team:0,
+      spy:false,
+      ts:Date.now(),
+      act:'',
+      avatar:null
+    });
+    // 3. Écrit l'état du jeu dans /bz/state
+    var state={
+      game:'bazar-chaos',
+      phase:'lobby',
+      room:code,
+      names:[],
+      players:[{pid:BZ.pid,name:name}],
+      host:BZ.pid,
+      idx:0,
+      steps:[],
+      phraseChoices:{},
+      votes:{},
+      sabotage:-1,
+      rev:1,
+      created:Date.now(),
+      result:null
+    };
+    await bzRoomDoc().set(state);
+    BZ.remote=state;
+    BZ.phase='lobby';
+    bzWatch();
+    render();
+  }catch(e){
+    toast('Impossible de créer le salon : '+(e.message||e));
+  }
+}
+
+async function bzJoinOnline(){
+  try{
+    await bzDB();
+    var room=((document.getElementById('bz-room-code')||{}).value||'').trim().replace(/\D/g,'');
+    var name=((document.getElementById('bz-online-name')||{}).value||'').trim().slice(0,16);
+    if(room.length!==4){toast('Le code doit faire 4 chiffres.');return}
+    if(!name){toast('Choisis un prénom.');return}
+    // 1. Vérifie que le salon existe à la RACINE (comme les autres jeux)
+    var sn=await Rr(room).get();
+    if(!sn.exists){toast('Partie introuvable. Vérifie le code.');return}
+    var roomData=sn.data();
+    if(roomData.status==='closed'){toast('Cette partie est fermée.');return}
+    if(roomData.status==='play'){toast('La partie a déjà commencé.');return}
+    if(roomData.game!=='bz'){toast('Ce salon n\'est pas un BAZAR CHAOS.');return}
+    // 2. Vérifie que le joueur n'est pas déjà dans le salon
+    var myPid='p'+Math.random().toString(36).slice(2,10)+'~'+(window.claude&&window.claude.userId?window.claude.userId():'');
+    var existing=await Pd(room,myPid).get();
+    if(!existing.exists){
+      var q=await Rp(room).get();
+      if(q.docs.length>=12){toast('Salon complet (12 max).');return}
+      await Pd(room,myPid).set({
+        name:name,
+        ci:0,
+        team:0,
+        spy:false,
+        ts:Date.now(),
+        act:'',
+        avatar:null
+      });
+    }
+    // 3. Récupère l'état BAZAR CHAOS
+    var bzSnap=await bzRoomDoc().get();
+    if(!bzSnap.exists){toast('Erreur : état BAZAR CHAOS introuvable. Redemande le code à l\'hôte.');return}
+    BZ.room=room;
+    BZ.pid=myPid;
+    BZ.me=name;
+    BZ.host=false;
+    // 4. Ajoute le joueur dans la liste des joueurs BAZAR CHAOS
+    var state=bzSnap.data();
+    if(!state.players.some(function(p){return p.pid===myPid})){
+      state.players.push({pid:myPid,name:name});
+      state.rev=(state.rev||0)+1;
+      await bzRoomDoc().set(state);
+    }
+    BZ.remote=state;
+    BZ.phase=state.phase||'lobby';
+    bzWatch();
+    render();
+  }catch(e){
+    toast('Connexion impossible : '+(e.message||e));
+  }
+}
+
+async function bzStartOnline(){
+  try{
+    var phrase=((document.getElementById('bz-phrase-start')||{}).value||'').trim();
+    await bzPatch(function(s){
+      if(s.host!==BZ.pid)return;
+      if(!s.players||s.players.length<3)return;
+      s.phase='phrasevote';
+      s.names=s.players.map(function(p){return p.name});
+      s.phraseChoices={};
+      s.sabotage=Math.floor(Math.random()*s.players.length);
+      s.steps=[];
+      s.phrase=phrase;
+      s.idx=0;
+      s.votes={};
+      s.result=null;
+    },30);
+  }catch(e){
+    toast('Lancement impossible : '+(e.message||e));
+  }
+}
+/* Helpers manquants pour BAZAR CHAOS online */
+function Rr(c){return BZ.db.doc('rooms/'+c)}
+function Rp(c){return BZ.db.collection('rooms/'+c+'/players')}
+function Pd(c,id){return BZ.db.doc('rooms/'+c+'/players/'+id)}
 async function bzPatch(mutator,anim){if(!BZ.remote||BZ.submitting)return;BZ.submitting=true;try{var d=await bzRoomDoc().get();if(!d.exists)throw Error('Salon fermé');var state=d.data();mutator(state);state.rev=(state.rev||0)+1;state.updated=Date.now();await bzRoomDoc().set(state);BZ.remote=state;BZ.rev=state.rev;if(anim)bzBurst(anim); }catch(e){toast(e.message||'Synchronisation impossible. Réessaie.')}finally{BZ.submitting=false}}
 function bzRender(){var p=BZ.phase,html='<div class="bz-wrap"><div class="bz-head"><button class="btn btn-ghost" data-act="bzhome">← Accueil</button><span class="bz-sticker">💥 BAZAR CHAOS</span></div><div class="bz-paper bz-stage">';
 if(BZ.mode==='choose'||p==='setup'){html+='<div class="bz-sticker">MODE DE JEU</div><h1 class="bz-title">Le bazar<br>prend le contrôle.</h1><p>Une phrase devient un dessin, puis un autre délire. À la fin, le carnet explose.</p><div class="bz-modegrid"><button class="bz-btn" data-act="bzlocalmode">📱 Téléphone partagé</button><button class="bz-btn alt" data-act="bzonlinemode">📲 Chacun son téléphone</button></div><p class="bz-note">3 à 12 joueurs · dessin, interprétation, sabotage et révélations.</p>';
@@ -5900,7 +6044,7 @@ function bzInitCanvas(){var c=document.getElementById('bz-canvas');if(!c||c.data
 function bzSetPlayers(){var raw=(document.getElementById('bz-names')||{}).value||'',names=raw.split(/\n|,/).map(x=>x.trim()).filter(Boolean).slice(0,12);if(names.length<3){toast('Il faut au moins 3 joueurs !');return}BZ.names=names;BZ.n=names.length;BZ.mode='local';var custom=((document.getElementById('bz-phrase-start')||{}).value||'').trim();BZ.sabotage=Math.floor(Math.random()*BZ.n);BZ.current={phrase:custom||bzPickPrompt(),steps:[]};BZ.idx=0;BZ.votes={};BZ.phase='phrase';BZ.local=true;render();bzBurst(30)}
 function bzLocalNext(){if(BZ.phase==='phrase')BZ.phase='draw';else if(BZ.phase==='reveal')BZ.phase='vote';render();if(BZ.phase==='draw')bzInitCanvas();bzBurst()}
 function bzBurst(n){var d=document.createElement('div');d.className='bz-burst';document.body.appendChild(d);var bits=['💥','✏️','⭐','🌀','🎉','⚡','🟨','🟪','💫','🧨'];for(var i=0;i<(n||24);i++){var x=document.createElement('i');x.textContent=bits[Math.floor(Math.random()*bits.length)];x.style.left=Math.random()*100+'%';x.style.top=(20+Math.random()*75)+'%';x.style.setProperty('--rot',(Math.random()*90-45)+'deg');x.style.animationDelay=Math.random()*.3+'s';d.appendChild(x)}setTimeout(()=>d.remove(),1900)}
-async function bzStartOnline(){var phrase=((document.getElementById('bz-phrase-start')||{}).value||'').trim();await bzPatch(function(s){if(s.host!==BZ.pid||s.players.length<3)return;s.phase='phrasevote';s.names=s.players.map(p=>p.name);s.phraseChoices={};s.sabotage=Math.floor(Math.random()*s.players.length);s.steps=[];s.phrase=phrase;s.idx=0;s.votes={};s.result=null},30)}
+
 async function bzSubmitPhrase(){var text=((document.getElementById('bz-myphrase')||{}).value||'').trim();if(!text){toast('Écris une phrase ou choisis une proposition !');return}await bzPatch(function(s){s.phraseChoices=s.phraseChoices||{};s.phraseChoices[BZ.pid]={name:BZ.me,text:text}},18);toast('Phrase envoyée !')}
 async function bzChoosePhrase(){await bzPatch(function(s){if(s.host!==BZ.pid)return;var arr=Object.keys(s.phraseChoices||{}).map(k=>s.phraseChoices[k].text);s.phrase=s.phrase|| (arr.length?arr[Math.floor(Math.random()*arr.length)]:bzPickPrompt());s.phase='draw';s.idx=0;s.steps=[];s.names=s.players.map(p=>p.name)},40)}
 async function bzSubmitDraw(){var c=document.getElementById('bz-canvas');if(!c)return;var image=c.toDataURL('image/jpeg',.45);await bzPatch(function(s){if(s.players[s.idx].pid!==BZ.pid)return;s.steps.push({type:'draw',by:BZ.me,image:image});s.idx=(s.idx+1)%s.players.length;s.phase='caption';if(s.steps.length>=s.players.length*2)s.phase='reveal'},30)}
