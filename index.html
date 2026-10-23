@@ -5999,31 +5999,42 @@ async function bzJoinOnline(){
 async function bzStartOnline(){
   try{
     var phrase=((document.getElementById('bz-phrase-start')||{}).value||'').trim();
+    if(!BZ.host) return;
     
-    // On va chercher la vraie liste de joueurs directement sur le serveur
+    toast('Préparation de la partie...');
+
+    // 1. On récupère TOUS les joueurs enregistrés sur le serveur
     var q = await Rp(BZ.room).get();
-    if(q.docs.length < 3){
-        toast('Il faut au moins 3 joueurs connectés.'); 
+    var realPlayers = q.docs.map(function(doc){ 
+        return { pid: doc.id, name: doc.data().name }; 
+    });
+
+    if(realPlayers.length < 3){
+        toast('Il faut au moins 3 joueurs dans le salon. Actuellement : ' + realPlayers.length); 
         return;
     }
-    
-    // On récupère les vrais noms depuis le serveur
-    var realNames = q.docs.map(function(doc){ return doc.data().name; });
 
+    var realNames = realPlayers.map(function(p){ return p.name; });
+
+    // 2. On modifie le jeu avec la liste fraîche
     await bzPatch(function(s){
-      if(s.host!==BZ.pid)return;
-      s.phase='phrasevote';
-      s.names=realNames; // On utilise la liste fraîche du serveur
-      s.phraseChoices={};
-      s.sabotage=Math.floor(Math.random()*realNames.length);
-      s.steps=[];
-      s.phrase=phrase;
-      s.idx=0;
-      s.votes={};
-      s.result=null;
-    },30);
-  }catch(e){ 
-    toast('Lancement impossible : '+(e.message||e)); 
+      if(s.host !== BZ.pid) return;
+      
+      s.phase = 'phrasevote';
+      s.players = realPlayers; // On force la liste à jour
+      s.names = realNames;     // On force les noms à jour
+      s.phraseChoices = {};
+      s.sabotage = Math.floor(Math.random() * realPlayers.length);
+      s.steps = [];
+      s.phrase = phrase;
+      s.idx = 0;
+      s.votes = {};
+      s.result = null;
+      s.rev = (s.rev || 0) + 1; // On force la mise à jour
+    }, 30);
+
+  } catch(e){ 
+    toast('Erreur : '+(e.message||e)); 
   }
 }
 /* Helpers manquants pour BAZAR CHAOS online */
