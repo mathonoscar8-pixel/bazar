@@ -6004,9 +6004,7 @@ async function bzJoinOnline(){
 // Écouter les modifications du salon
 function bzWatch(){
   if(BZ.unsubGame){try{BZ.unsubGame()}catch(e){}}
-  if(BZ.unsubPlayers){try{BZ.unsubPlayers()}catch(e){}}
   
-  // Écoute de l'état du jeu
   BZ.unsubGame = bzRoomDoc().onSnapshot(function(s){
     if(!s || !s.exists) return;
     var d = s.data();
@@ -6023,7 +6021,10 @@ function bzWatch(){
     if(S.screen !== 'bzgame') S.screen = 'bzgame';
     render();
     if(BZ.rev !== old && BZ.rev > 1) bzBurst();
+  }, function(e){
+    console.warn('BAZAR sync error', e);
   });
+}
 
   // Écoute de la liste des joueurs (la VRAIE liste, synchronisée)
   BZ.unsubPlayers = Rp(BZ.room).onSnapshot(function(q){
@@ -6043,12 +6044,9 @@ async function bzStartOnline(){
   try{
     if(!BZ.host) return;
     
-    // On va chercher la vraie liste à jour sur le serveur
-    var q = await Rp(BZ.room).get();
-    var realPlayers = q.docs.map(function(doc){ 
-        return { pid: doc.id, name: doc.data().name }; 
-    });
-
+    // On utilise la liste des joueurs stockée dans l'état du jeu (BZ.remote)
+    var realPlayers = BZ.remote.players || [];
+    
     if(realPlayers.length < 3){
         return toast('Il faut au moins 3 joueurs (actuellement : '+realPlayers.length+').'); 
     }
@@ -6056,10 +6054,8 @@ async function bzStartOnline(){
     var phrase = (document.getElementById('bz-phrase-start')||{}).value.trim();
     var realNames = realPlayers.map(function(p){ return p.name; });
 
-    // On sauvegarde tout dans le state du jeu
     var s = BZ.remote;
     s.phase = 'phrasevote';
-    s.players = realPlayers;
     s.names = realNames;
     s.phraseChoices = {};
     s.sabotage = Math.floor(Math.random() * realPlayers.length);
@@ -6071,7 +6067,7 @@ async function bzStartOnline(){
     s.rev = (s.rev || 0) + 1;
 
     await bzRoomDoc().set(s);
-    await Rr(BZ.room).update({ status: 'play' }); // On dit au serveur que le jeu commence
+    await Rr(BZ.room).update({ status: 'play' });
     bzBurst();
   } catch(e){
     toast('Erreur de lancement : '+(e.message||e));
@@ -6284,8 +6280,8 @@ function bzRender(){
     }
   }
   
-  else if(p === 'lobby'){
-    var ps = BZ.players || [];
+    else if(p === 'lobby'){
+    var ps = BZ.remote.players || [];
     html += '<div class="bz-sticker">SALON EN LIGNE</div><h1 class="bz-title">La bande est là ?</h1><p>Partage ce code avec tes amis.</p><div class="bz-roomcode">'+bzEsc(BZ.room)+'</div><button class="bz-btn alt" data-act="bzcopy">Copier le code</button>';
     
     html += '<div class="bz-players">'+ps.map(x => '<div class="bz-player"><span>🎮</span><b>'+bzEsc(x.name)+'</b>'+(x.pid===BZ.remote.host?' 👑':'')+'</div>').join('')+'</div><p>'+ps.length+' / 12 joueurs · minimum 3</p>';
