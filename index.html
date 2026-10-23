@@ -2785,6 +2785,7 @@ async function olCreate(){
     // Définition des règles (cfg) pour chaque jeu
     var cfg = {};
             if(OH.game==='bz') {
+OH.err = '';
       BZ.mode = 'online';
       go('bzgame');
       return;
@@ -5909,11 +5910,9 @@ function bzStart(){
 async function bzCreateOnline(){
   try{
     await bzDB();
-        var nameInput = document.getElementById('bz-online-name');
-    var name = nameInput ? nameInput.value.trim().slice(0,16) : (OH && OH.name ? OH.name : '');
+    var name = (document.getElementById('bz-online-name')||{}).value.trim().slice(0,16);
     if(!name) return toast('Choisis un prénom.');
     
-    // ID unique sauvegardé sur le téléphone
     BZ.pid = localStorage.getItem('bazar-bz-pid');
     if(!BZ.pid){
       BZ.pid = 'p'+Math.random().toString(36).slice(2,10);
@@ -5932,10 +5931,18 @@ async function bzCreateOnline(){
     BZ.host = true;
     BZ.me = name;
 
+    // 1. On crée le salon principal
     await Rr(code).set({ code:code, host:BZ.pid, game:'bz', status:'lobby', cfg:'{}', s:'', scores:'{}', wins:'[0,0]', ts:Date.now(), v:Date.now() });
+    
+    // 2. On crée le joueur dans la liste globale
     await Pd(code, BZ.pid).set({ name:name, ci:0, team:0, spy:false, ts:Date.now(), act:'', avatar:null });
     
-    var state = { game:'bazar-chaos', phase:'lobby', room:code, names:[], players:[{pid:BZ.pid,name:name}], host:BZ.pid, idx:0, steps:[], phraseChoices:{}, votes:{}, sabotage:-1, rev:1, created:Date.now(), result:null };
+    // 3. On crée l'état du jeu avec le joueur DÉJÀ À L'INTÉRIEUR
+    var state = { 
+      game:'bazar-chaos', phase:'lobby', room:code, names:[name], 
+      players:[{pid:BZ.pid, name:name}], // <-- Le joueur est ajouté ici
+      host:BZ.pid, idx:0, steps:[], phraseChoices:{}, votes:{}, sabotage:-1, rev:1, created:Date.now(), result:null 
+    };
     
     await bzRoomDoc().set(state);
     BZ.remote = state;
@@ -5946,6 +5953,7 @@ async function bzCreateOnline(){
   } catch(e){
     toast('Erreur création : '+(e.message||e));
   }
+}
 }
 
 // Rejoindre un salon
@@ -5985,6 +5993,7 @@ async function bzJoinOnline(){
     BZ.host = false;
 
     var state = bzSnap.data();
+    // On vérifie si le joueur est déjà dans la liste du jeu
     if(!state.players.some(p => p.pid === BZ.pid)){
       state.players.push({pid:BZ.pid, name:name});
       state.rev = (state.rev||0) + 1;
