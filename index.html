@@ -2771,6 +2771,7 @@ async function olCreate(){
     else if(OH.game==='s') cfg = {};
     else if(OH.game==='dd') cfg = {};
     else if(OH.game==='c') cfg = {};
+    else if(OH.game==='tel') cfg = {rounds: 3, tdraw: 60, twrite: 40};
     else if(OH.game==='f') cfg = {};
     else cfg = {uc:1,mw:0,cats:CATS.slice(),reveal:true}; // Undercover par défaut
 
@@ -3098,6 +3099,7 @@ function hostAct(uid,a){
   else if(g.g==='f')  r=hfAct(uid,a,g);
   else if(g.g==='dd') r=hdAct2(uid,a,g);
   else if(g.g==='l')  r=hlAct(uid,a,g);
+else if(g.g==='tel') r=htAct(uid,a,g);
   else                r=false;
   if(g.g==='l'||g.g==='d') hlSched();
   if(r!==false) commit();
@@ -3138,6 +3140,7 @@ async function olStart(){
     else if(OL.game==='l') g = mkGameL();
     else if(OL.game==='d') g = mkGameD();
     else if(OL.game==='p') g = mkGameP();
+else if(OL.game==='tel') g = mkGameTel();
     else g = mkGameU();
     
     // On sauvegarde les secrets (mots, questions)
@@ -3412,6 +3415,7 @@ function vOHome(){
   '<section class="card"><h2>1. Choisis un jeu</h2>'+
   gameBtn('u', 'Undercover', 'Bluff et déduction')+
   gameBtn('m', 'Codenames', 'Indices par équipes')+
+  gameBtn('tel', 'BAZAR Téléphone', 'Le jeu du téléphone dessiné')+
   gameBtn('l', 'Petit Bac', 'Petit bac et phrases à trous')+
   gameBtn('d', 'Dessins', 'Dessine, bluffe, vote')+
   gameBtn('s', 'Susceptible', 'Votez pour le meilleur ami')+
@@ -3490,6 +3494,8 @@ function vOnline(){
     
     // Si c'est Undercover, on utilise le nouvel écran TV
     if (OL.game === 'u') return vOTVUndercover();
+
+if (OL.game === 'tel') return vOLobbyTel();
     
     return '<div class="wrap wide" style="text-align:center;padding-top:20vh;"><h1>La partie a commencé !</h1><p class="lead">Suivez les instructions sur vos téléphones.</p></div>';
   }
@@ -3523,6 +3529,7 @@ function vOnline(){
   if (OL.game === 'c') return vOConfessWrite();
   if (OL.game === 'f') return vOFauxWrite();
   if (OL.game === 's') return vOSusceptVote();
+if (OL.game === 'tel') return vOGameTel();
   return vOGameU();
 }
 
@@ -3714,6 +3721,8 @@ function generateShareImage(gameType){
 function olAct(a,d){
   var c=OL.cfg||{},i;
   switch(a){
+    case 'dtel_col': if(OL.drTel){OL.drTel.color=+d.i;render()}break;
+    case 'dtel_done': if(OL.drTel){sendAct('tel_draw', {data: JSON.stringify(OL.drTel.strokes)}); OL.drTel.sent=true; olRender();}break;
     case 'otv_mode': {
       var c = prompt("Entre le code du salon (4 chiffres) pour l'afficher sur cet écran :");
       if(c && /^\d{4}$/.test(c)) {
@@ -5829,6 +5838,71 @@ function hfAct(uid,a,g){
 }
 function hfToVote(g){g.ph='vote';g.voted=[];g.votes={};g.vk=Date.now()+'-v';var arr=[{id:'real',t:g.real}];for(var uid in g.answers){arr.push({id:uid,t:g.answers[uid]})}g.opts=shuffle(arr);}
 function hfTally(g){var gains={};g.players.forEach(function(id){gains[id]=0});var mx=0,win=null;for(var uid in g.votes){var opt=g.votes[uid];if(opt.id==='real'){gains[uid]+=2;}else{gains[opt.id]+=1;}}g.players.forEach(function(id){if(gains[id]>mx){mx=gains[id];win=id;}});g.gains=gains;g.winner=win;g.maxVotes=mx;g.ph='result';}
+/* ================= LOGIQUE ET VUES : BAZAR TÉLÉPHONE ================= */
+var TEL_PROMPTS = [
+  "Un chat qui fait du vélo", "Un astronaute qui mange une pizza", "Un dragon qui a peur des souris",
+  "Une licorne qui joue au basket", "Un robot qui arrose des fleurs", "Une sirène qui lit un livre",
+  "Un lapin qui fait de la magie", "Un chien qui conduit une voiture", "Un ours qui mange une glace",
+  "Un extraterrestre qui fait du shopping", "Un chevalier avec un parapluie", "Un pirate qui cherche son trésor",
+  "Un vampire qui a mal aux dents", "Un loup qui se déguise en mouton", "Un poisson qui fume"
+];
+
+function vOLobbyTel(){
+  var h=OL.host, iss=OL.plist.length<3?'Il faut au moins 3 joueurs.':'';
+  var set = h ? '<section class="card"><h2>Réglages</h2><p class="muted small">3 manches · '+OL.cfg.tdraw+' s pour dessiner</p></section>' : '';
+  return obar('Téléphone Dessiné')+'<div class="wrap">'+olShare()+olPlayers()+
+  '<section class="card"><h2>Le Téléphone Dessiné</h2><p class="muted small">Une phrase devient un dessin, qui devient une phrase, etc. À la fin, on révèle les chaînes les plus drôles !</p></section>'+
+  set + '</div>' + olDock(iss)
+}
+
+function mkGameTel(){
+  var ids = OL.plist.map(function(p){return p.id});
+  var prompts = shuffle(TEL_PROMPTS).slice(0, ids.length * OL.cfg.rounds);
+  var chains = {};
+  ids.forEach(function(id) { chains[id] = []; });
+  var g = {
+    g: 'tel', gid: String(Date.now()), ph: 'write', 
+    round: 1, maxRounds: OL.cfg.rounds, 
+    ids: ids, chains: chains, 
+    timeLeft: OL.cfg.twrite, currentStep: 0
+  };
+  var secs = [];
+  ids.forEach(function(id, i) { secs.push([id, {k: g.gid, startPrompt: prompts[i]}]); });
+  g.secs = secs;
+  return g;
+}
+
+function pubTel(g) {
+  return {
+    g: 'tel', gid: g.gid, ph: g.ph, round: g.round, maxRounds: g.maxRounds,
+    ids: g.ids, timeLeft: g.timeLeft, currentStep: g.currentStep,
+    chainLengths: Object.keys(g.chains).map(function(id){ return g.chains[id].length; })
+  };
+}
+
+function vOGameTel() {
+  var s = OL.s, me = PID;
+  if (!s) return vOLoad('Chargement...');
+  
+  if (s.ph === 'write') {
+    var prompt = 'Chargement...';
+    if (OL.sec && OL.sec.startPrompt) prompt = OL.sec.startPrompt;
+    return obar('Manche '+s.round+' / '+s.maxRounds)+'<div class="wrap">'+
+      '<div class="now"><span class="eyebrow">À toi d\'écrire</span><div class="big" style="font-size:24px">'+esc(prompt)+'</div></div>'+
+      '<form id="telwriteform" style="display:flex;flex-direction:column;gap:14px"><input class="field" id="telinput" autocomplete="off" placeholder="Ta phrase..." style="height:56px;font-size:18px"><button class="btn btn-primary" type="submit">Envoyer</button></form>'+
+      '</div>';
+  }
+  
+  if (s.ph === 'draw') {
+    return obar('Manche '+s.round+' / '+s.maxRounds)+'<div class="wrap">'+
+      '<div class="now"><span class="eyebrow">À toi de dessiner</span><div class="big" style="font-size:20px">La phrase de la personne précédente</div></div>'+
+      '<div class="dcv"><canvas id="dcvTel"></canvas></div>'+
+      '<div class="dtools"><div class="dcols">'+DCOL.map(function(c,k){return '<button class="dsw" data-act="dtel_col" data-i="'+k+'" style="background:'+c[0]+'"></button>'}).join('')+'</div></div>'+
+      '<button class="btn btn-primary" data-act="dtel_done" style="margin-top:20px">J\'ai fini !</button>'+
+      '</div>';
+  }
+  return vOLoad('En attente des autres joueurs...');
+}
 S._fresh=true;olBoot();render();
 
 // Animation d'intro
