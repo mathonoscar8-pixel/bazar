@@ -2784,7 +2784,11 @@ async function olCreate(){
     
     // Définition des règles (cfg) pour chaque jeu
     var cfg = {};
-        if(OH.game==='bz') { bzCreateOnline(); return; }
+            if(OH.game==='bz') {
+      BZ.mode = 'online';
+      go('bzgame');
+      return;
+    }
 if(OH.game==='m') cfg = {size:S.my.size,names:[S.my.names[0],S.my.names[1]]};
     else if(OH.game==='l') cfg = {np:6,rounds:2,secs:90,cats:LCATS.slice()};
     else if(OH.game==='d') cfg = {rounds:2,per:1,tdraw:60,tfake:40,tvote:25,cats:DCATS.slice(),custom:'',clear:false,dbl:true,hearts:true,hint:true,who:true,display:true};
@@ -5905,7 +5909,8 @@ function bzStart(){
 async function bzCreateOnline(){
   try{
     await bzDB();
-    var name = (document.getElementById('bz-online-name')||{}).value.trim().slice(0,16);
+        var nameInput = document.getElementById('bz-online-name');
+    var name = nameInput ? nameInput.value.trim().slice(0,16) : (OH && OH.name ? OH.name : '');
     if(!name) return toast('Choisis un prénom.');
     
     // ID unique sauvegardé sur le téléphone
